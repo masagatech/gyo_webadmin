@@ -183,7 +183,7 @@ var currentApi = function( req, res, next ){
 				var _ins = {
 					'is_idle' : 1
 				};
-				dclass._update( 'tbl_vehicle', _ins, " AND i_driver_id = '"+_data.driver.id+"' ", function( status, data ){ 
+				dclass._update( 'tbl_user', _ins, " AND id = '"+_data.driver.id+"' ", function( status, data ){ 
 					callback( null );
 				});
 			},

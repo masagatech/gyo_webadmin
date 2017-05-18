@@ -431,7 +431,7 @@ var currentApi = function( req, res, next ){
 				var ins = {
 					is_idle : 1
 				};
-				dclass._update( 'tbl_vehicle', ins, " AND id = '"+_data.ride.i_vehicle_id+"' ", function( status, data ){
+				dclass._update( 'tbl_user', ins, " AND id = '"+_data.ride.i_driver_id+"' ", function( status, data ){
 					callback( null );
 				});
 			},

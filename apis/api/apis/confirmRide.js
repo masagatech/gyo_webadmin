@@ -247,8 +247,8 @@ var currentApi = function( req, res, next ){
 							_q += " WHERE a.e_status = 'active' ";
 							_q += " AND a.v_token != '' ";
 							_q += " AND a.v_role = 'driver' ";
+							_q += " AND a.is_idle = '1' ";
 							_q += " AND b.v_type = '"+( _ride.l_data.vehicle_type )+"' ";
-							_q += " AND b.is_idle = '1' ";
 							_q += " AND b.same_ride_buzz_count <= '0' ";
 							_q += " ORDER BY  ";
 							_q += " b.distance ASC ";
@@ -262,7 +262,7 @@ var currentApi = function( req, res, next ){
 								mainData.isDirectAssign = 0;
 								if( _entity.premium_driver.check && _entity.premium_driver.value == 1 ){
 									mainData.isDirectAssign = 1;
-									_q += " AND b.is_premium = '1' ";
+									_q += " AND a.is_premium = '1' ";
 								}
 								if( _entity.lowest_trip.check ){ _q += " AND b.trip_count <= '"+( _entity.lowest_trip.value )+"' "; }	
 								if( _entity.max_dry_run.check ){ _q += " AND b.distance <= '"+( _entity.max_dry_run.value )+"' "; }
@@ -464,7 +464,7 @@ var currentApi = function( req, res, next ){
 											
 											var _q_Arr = [];
 											_q_Arr.push( "UPDATE tbl_ride SET i_driver_id = '"+buzzIns.i_driver_id+"', i_vehicle_id = '"+buzzIns.i_vehicle_id+"', e_status = 'confirm' WHERE id = '"+_ride.id+"'; ");
-											_q_Arr.push( "UPDATE tbl_vehicle SET is_idle = '0' WHERE id = '"+buzzIns.i_vehicle_id+"'; ");
+											_q_Arr.push( "UPDATE tbl_user SET is_idle = '0' WHERE id = '"+buzzIns.i_driver_id+"'; ");
 											_q_Arr.push( "UPDATE tbl_buzz SET i_status = '1', is_alive = '0' WHERE id = '"+i_buzz_id+"'; ");
 											_q_Arr = _q_Arr.join('');
 											dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){
@@ -482,7 +482,7 @@ var currentApi = function( req, res, next ){
 										else{
 											
 											var _q_Arr = [];
-											_q_Arr.push( "UPDATE tbl_vehicle SET is_idle = '1' WHERE id = '"+buzzIns.i_vehicle_id+"'; ");
+											_q_Arr.push( "UPDATE tbl_user SET is_idle = '1' WHERE id = '"+buzzIns.i_driver_id+"'; ");
 											_q_Arr.push( "UPDATE tbl_buzz SET i_status = '-4', is_alive = '0' WHERE id = '"+i_buzz_id+"'; ");
 											_q_Arr = _q_Arr.join('');
 											dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){
@@ -574,7 +574,7 @@ var currentApi = function( req, res, next ){
 									}
 									else {
 										var _q_Arr = [];
-										_q_Arr.push( "UPDATE tbl_vehicle SET is_idle = '0' WHERE i_driver_id IN ("+buzzSentDriverIDs['succ'].join(',')+"); ");
+										_q_Arr.push( "UPDATE tbl_user SET is_idle = '0' WHERE id IN ("+buzzSentDriverIDs['succ'].join(',')+"); ");
 										_q_Arr = _q_Arr.join('');
 										dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){
 											callback( null );
@@ -589,7 +589,7 @@ var currentApi = function( req, res, next ){
 									}
 									else{
 										var _q_Arr = [];
-										_q_Arr.push( "UPDATE tbl_vehicle SET is_idle = '1' WHERE i_driver_id IN ("+buzzSentDriverIDs['fail'].join(',')+"); ");
+										_q_Arr.push( "UPDATE tbl_user SET is_idle = '1' WHERE id IN ("+buzzSentDriverIDs['fail'].join(',')+"); ");
 										_q_Arr.push( "UPDATE tbl_buzz SET i_status = '-4', is_alive = '0' WHERE i_ride_id = '"+_ride.id+"' AND i_round_id = '"+_round.id+"' i_driver_id IN ("+buzzSentDriverIDs['fail'].join(',')+"); ");
 										_q_Arr = _q_Arr.join('');
 										dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){

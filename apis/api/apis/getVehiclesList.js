@@ -70,13 +70,11 @@ var currentApi = function( req, res, next ){
 					_q += " tbl_vehicle a ";
 					_q += " WHERE true ";
 					_q += " AND v_type = '"+v_type+"' ";
-					_q += " AND is_idle = '1' ";
 					_q += " AND e_status = 'active' ";
-					
 				_q += " ) AS sub ";
 				_q += " WHERE true ";
 				_q += " AND distance <= "+radius+" ";
-				_q += " AND i_driver_id IN ( SELECT id FROM tbl_user WHERE v_role = 'driver' AND e_status = 'active' ) ";
+				_q += " AND i_driver_id IN ( SELECT id FROM tbl_user WHERE v_role = 'driver' AND e_status = 'active' AND is_idle = '1' ) ";
 				_q += " ORDER BY ";
 				_q += " distance ASC ";
 				

@@ -82,14 +82,12 @@ var currentApi = function saveDriverInfo( req, res, done ){
 				response : response,
 			});
 		});
-		
+	
 	}
 	
-	
 	else if( action == 'free_drivers'  ){
-		
 		var _q = [];
-		_q.push( 'update tbl_vehicle SET is_idle = 1;' );
+		_q.push( "update tbl_user SET is_idle = 1 WHERE v_role = 'driver' ;" );
 		dclass._query( _q.join(''), function( status, data ){
 			gnrl._api_response( res, 1, 'free_drivers', {});
 		})

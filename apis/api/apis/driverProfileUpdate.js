@@ -36,10 +36,14 @@ var currentApi = function( req, res, next ){
 		var params 				= gnrl._frm_data( req );
 		
 		var fileArr = {
-			'v_image' 			: { 'name' : '', 'path' : '', },
-			'v_image_rc_book' 	: { 'name' : '', 'path' : '', },
-			'v_image_puc' 		: { 'name' : '', 'path' : '', },
-			'v_image_insurance' : { 'name' : '', 'path' : '', },
+			'v_image' 				: { 'name' : '', 'path' : '', },
+			'v_image_rc_book' 		: { 'name' : '', 'path' : '', },
+			'v_image_puc' 			: { 'name' : '', 'path' : '', },
+			'v_image_insurance' 	: { 'name' : '', 'path' : '', },
+			'v_image_license' 		: { 'name' : '', 'path' : '', },
+			'v_image_adhar_card'	: { 'name' : '', 'path' : '', },
+			'v_image_permit_copy'	: { 'name' : '', 'path' : '', },
+			'v_image_police_copy' 	: { 'name' : '', 'path' : '', },
 		};
 		
 		for( var k in req.files ){
@@ -69,6 +73,7 @@ var currentApi = function( req, res, next ){
 		if( _status && !validator.isEmail( v_email ) ){ _status = 0; _message = 'err_invalid_email'; }
 		if( _status && !v_vehicle_number.trim() ){ _status = 0; _message = 'err_req_vehicle_number'; }
 		if( _status && !v_vehicle_type.trim() ){ _status = 0; _message = 'err_req_vehicle_type'; }
+		if( _status && !v_imei_number.trim() ){ _status = 0; _message = 'err_req_imei_number'; }
 		
 		if( err ){
 			gnrl._remove_loop_file( fs, fileArr );
@@ -121,12 +126,13 @@ var currentApi = function( req, res, next ){
 									
 									fs.rename( fileArr['v_image'].path, dirUploads+'/users/'+fileArr['v_image'].name, function(err){});
 									var _ins = {
-										'v_name'     : v_name,
-										'v_email'    : v_email,
-										'v_phone'    : v_phone,
-										'v_gender' 	 : v_gender,
-										'v_image'    : fileArr['v_image'].name ? fileArr['v_image'].name : _row.v_image,
-										'd_modified' : gnrl._db_datetime(),
+										'v_name'     	: v_name,
+										'v_email'    	: v_email,
+										'v_phone'    	: v_phone,
+										'v_gender' 	 	: v_gender,
+										'v_imei_number' : v_imei_number,
+										'v_image'    	: fileArr['v_image'].name ? fileArr['v_image'].name : _row.v_image,
+										'd_modified' 	: gnrl._db_datetime(),
 									};
 									
 									dclass._update( 'tbl_user', _ins, " AND id = '"+( login_id )+"' ", function( status, data ){ 
@@ -151,6 +157,12 @@ var currentApi = function( req, res, next ){
 															'v_image_rc_book'	: fileArr['v_image_rc_book'].name ? fileArr['v_image_rc_book'].name : data[0].v_image_rc_book,
 															'v_image_puc'		: fileArr['v_image_puc'].name ? fileArr['v_image_puc'].name : data[0].v_image_puc,
 															'v_image_insurance'	: fileArr['v_image_insurance'].name ? fileArr['v_image_insurance'].name : data[0].v_image_insurance,
+															
+															'v_image_license' 		: fileArr['v_image_license'].name ? fileArr['v_image_license'].name : data[0].v_image_license,
+															'v_image_adhar_card' 	: fileArr['v_image_adhar_card'].name ? fileArr['v_image_adhar_card'].name : data[0].v_image_adhar_card,
+															'v_image_permit_copy' 	: fileArr['v_image_permit_copy'].name ? fileArr['v_image_permit_copy'].name : data[0].v_image_permit_copy,
+															'v_image_police_copy' 	: fileArr['v_image_police_copy'].name ? fileArr['v_image_police_copy'].name : data[0].v_image_police_copy,
+															
 														};
 														_status = 1;
 														_message = '';
@@ -173,6 +185,12 @@ var currentApi = function( req, res, next ){
 																	fs.rename( fileArr['v_image_rc_book'].path, dirUploads+'/vehicles/'+fileArr['v_image_rc_book'].name, function(err){});
 																	fs.rename( fileArr['v_image_puc'].path, dirUploads+'/vehicles/'+fileArr['v_image_puc'].name, function(err){});
 																	fs.rename( fileArr['v_image_insurance'].path, dirUploads+'/vehicles/'+fileArr['v_image_insurance'].name, function(err){});
+																	
+																	fs.rename( fileArr['v_image_license'].path, dirUploads+'/vehicles/'+fileArr['v_image_license'].name, function(err){});
+																	fs.rename( fileArr['v_image_adhar_card'].path, dirUploads+'/vehicles/'+fileArr['v_image_adhar_card'].name, function(err){});
+																	fs.rename( fileArr['v_image_permit_copy'].path, dirUploads+'/vehicles/'+fileArr['v_image_permit_copy'].name, function(err){});
+																	fs.rename( fileArr['v_image_police_copy'].path, dirUploads+'/vehicles/'+fileArr['v_image_police_copy'].name, function(err){});
+																	
 																	gnrl._api_response( res, 1, 'succ_profile_updated', {} );
 																}
 															});

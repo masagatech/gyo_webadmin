@@ -24,7 +24,28 @@ var currentApi = function( req, res, next ){
 	if( _status && !v_token ){ _status = 0; _message = 'err_req_auth_token'; }
 	
 	if( _status ){
-		dclass._query( "SELECT a.v_image,a.v_name,a.v_email,b.v_vehicle_number,b.v_image_rc_book,b.v_image_puc,b.v_image_insurance,a.v_phone,a.v_password,a.v_token FROM tbl_user AS a LEFT JOIN tbl_vehicle AS b ON a.id = b.i_driver_id WHERE a.id = '"+id+"' AND a.v_role = 'driver' ", function( status, data ){
+		
+		var _q = " SELECT ";
+		_q += " a.v_image, a.v_name, a.v_email, a.v_phone, a.v_password, a.v_token ";
+		_q += " , b.v_vehicle_number ";
+		_q += " , b.v_image_rc_book ";
+		_q += " , b.v_image_puc ";
+		_q += " , b.v_image_insurance ";
+		
+		_q += " , b.v_image_license ";
+		_q += " , b.v_image_adhar_card ";
+		_q += " , b.v_image_permit_copy ";
+		_q += " , b.v_image_police_copy ";
+		
+		_q += " FROM ";
+		_q += " tbl_user AS a ";
+		_q += " LEFT JOIN tbl_vehicle AS b ON a.id = b.i_driver_id ";
+		_q += " WHERE true ";
+		_q += " AND a.v_role = 'driver' ";
+		_q += " AND a.id = '"+id+"'  ";
+		
+		
+		dclass._query( _q, function( status, data ){
 			if( status && !data.length ){
 				gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 			}
@@ -33,9 +54,22 @@ var currentApi = function( req, res, next ){
 					gnrl._api_response( res, 0, 'err_invalid_auth_token', {} );
 				}
 				else{
-					if( data[0].v_image ){
-						data[0].v_image = gnrl._uploads( 'users/'+data[0].v_image )
+					
+					
+					var fileArr = {
+						'v_image' 				: 'users',
+						'v_image_rc_book' 		: 'vehicles',
+						'v_image_puc' 			: 'vehicles',
+						'v_image_insurance' 	: 'vehicles',
+						'v_image_license' 		: 'vehicles',
+						'v_image_adhar_card'	: 'vehicles',
+						'v_image_permit_copy'	: 'vehicles',
+						'v_image_police_copy' 	: 'vehicles',
+					};
+					for( var k in fileArr ){
+						if( data[0][k] ){ data[0][k] = gnrl._uploads( fileArr[k]+'/'+data[0][k] ) }
 					}
+					
 					gnrl._api_response( res, 1, '', data[0] );
 				}
 			}

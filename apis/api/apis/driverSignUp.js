@@ -48,10 +48,15 @@ var currentApi = function( req, res, next ){
 		var params = gnrl._frm_data( req );
 		
 		var fileArr = {
-			'v_image' 			: { 'name' : '', 'path' : '', },
-			'v_image_rc_book' 	: { 'name' : '', 'path' : '', },
-			'v_image_puc' 		: { 'name' : '', 'path' : '', },
-			'v_image_insurance' : { 'name' : '', 'path' : '', },
+			'v_image' 				: { 'name' : '', 'path' : '', },
+			'v_image_rc_book' 		: { 'name' : '', 'path' : '', },
+			'v_image_puc' 			: { 'name' : '', 'path' : '', },
+			'v_image_insurance' 	: { 'name' : '', 'path' : '', },
+			'v_image_license' 		: { 'name' : '', 'path' : '', },
+			'v_image_adhar_card'	: { 'name' : '', 'path' : '', },
+			'v_image_permit_copy'	: { 'name' : '', 'path' : '', },
+			'v_image_police_copy' 	: { 'name' : '', 'path' : '', },
+			
 		};
 		
 		for( var k in req.files ){
@@ -72,6 +77,8 @@ var currentApi = function( req, res, next ){
 		var v_gender 			= gnrl._is_undf( params.v_gender, 'male' );
 		var v_password 			= gnrl._is_undf( params.v_password );
 		var v_device_token 		= gnrl._is_undf( params.v_device_token );
+		var v_imei_number 		= gnrl._is_undf( params.v_imei_number );
+		
 		var v_vehicle_type 		= gnrl._is_undf( params.v_vehicle_type );
 		var v_vehicle_number 	= gnrl._is_undf( params.v_vehicle_number );
 		var l_latitude 			= gnrl._is_undf( params.l_latitude );
@@ -88,6 +95,9 @@ var currentApi = function( req, res, next ){
 		if( _status && !v_password.trim() ){ _status = 0; _message = 'err_req_password'; }
 		if( _status && !validator.isLength( v_password, { min : 6, max : 10 } ) ){ _status = 0; _message = 'err_validation_password'; }
 		if( _status && !v_device_token.trim() ){ _status = 0; _message = 'err_req_device_token'; }
+		if( _status && !v_imei_number.trim() ){ _status = 0; _message = 'err_req_imei_number'; }
+		
+		
 		if( _status && !l_latitude.trim() ){ _status = 0; _message = 'err_req_latitude'; }
 		if( _status && !l_longitude.trim() ){ _status = 0; _message = 'err_req_longitude'; }
 		
@@ -100,6 +110,11 @@ var currentApi = function( req, res, next ){
 		if( _status && !fileArr['v_image_rc_book'].name ){ _status = 0; _message = 'err_req_rc_book_image'; }
 		if( _status && !fileArr['v_image_puc'].name ){ _status = 0; _message = 'err_req_puc_image'; }
 		if( _status && !fileArr['v_image_insurance'].name ){ _status = 0; _message = 'err_req_insurance_image'; }
+		
+		if( _status && !fileArr['v_image_license'].name ){ _status = 0; _message = 'err_req_image_license'; }
+		if( _status && !fileArr['v_image_adhar_card'].name ){ _status = 0; _message = 'err_req_image_adhar_card'; }
+		if( _status && !fileArr['v_image_permit_copy'].name ){ _status = 0; _message = 'err_req_image_permit_copy'; }
+		if( _status && !fileArr['v_image_police_copy'].name ){ _status = 0; _message = 'err_req_image_police_copy'; }
 		
 		if( err ){
 			gnrl._remove_loop_file( fs, fileArr );
@@ -154,6 +169,7 @@ var currentApi = function( req, res, next ){
 							'v_email' 			: v_email,
 							'v_phone' 			: v_phone,
 							'v_gender' 			: v_gender,
+							'v_imei_number' 	: v_imei_number,
 							'v_password' 		: md5( v_password ),
 							'v_otp' 			: v_otp,
 							'd_added' 			: gnrl._db_datetime(),
@@ -177,23 +193,33 @@ var currentApi = function( req, res, next ){
 								fs.rename( fileArr['v_image'].path, dirUploads+'/users/'+fileArr['v_image'].name, function(err){});
 								
 								dclass._insert( 'tbl_vehicle', {
-									'i_driver_id' 		: user_insert.id,
-									'v_type' 			: v_vehicle_type,
-									'v_vehicle_number' 	: v_vehicle_number,
-									'v_image_rc_book' 	: fileArr['v_image_rc_book'].name,
-									'v_image_puc' 		: fileArr['v_image_puc'].name,
-									'v_image_insurance' : fileArr['v_image_insurance'].name,
-									'd_added' 			: gnrl._db_datetime(),
-									'd_modified' 		: gnrl._db_datetime(),
-									'e_status' 			: 'active',
-									'l_latitude' 		: l_latitude,
-									'l_longitude' 		: l_longitude,
+									'i_driver_id' 			: user_insert.id,
+									'v_type' 				: v_vehicle_type,
+									'v_vehicle_number' 		: v_vehicle_number,
+									'v_image_rc_book' 		: fileArr['v_image_rc_book'].name,
+									'v_image_puc' 			: fileArr['v_image_puc'].name,
+									'v_image_insurance' 	: fileArr['v_image_insurance'].name,
+									'v_image_license' 		: fileArr['v_image_license'].name,
+									'v_image_adhar_card' 	: fileArr['v_image_adhar_card'].name,
+									'v_image_permit_copy' 	: fileArr['v_image_permit_copy'].name,
+									'v_image_police_copy' 	: fileArr['v_image_police_copy'].name,
+									
+									'd_added' 				: gnrl._db_datetime(),
+									'd_modified' 			: gnrl._db_datetime(),
+									'e_status' 				: 'active',
+									'l_latitude' 			: l_latitude,
+									'l_longitude' 			: l_longitude,
 									
 								}, function( vehicle_status, vehicle_data ){ 
 									if( vehicle_status ){
 										fs.rename( fileArr['v_image_rc_book'].path, dirUploads+'/vehicles/'+fileArr['v_image_rc_book'].name, function(err){});
 										fs.rename( fileArr['v_image_puc'].path, dirUploads+'/vehicles/'+fileArr['v_image_puc'].name, function(err){});
 										fs.rename( fileArr['v_image_insurance'].path, dirUploads+'/vehicles/'+fileArr['v_image_insurance'].name, function(err){});
+										
+										fs.rename( fileArr['v_image_license'].path, dirUploads+'/vehicles/'+fileArr['v_image_license'].name, function(err){});
+										fs.rename( fileArr['v_image_adhar_card'].path, dirUploads+'/vehicles/'+fileArr['v_image_adhar_card'].name, function(err){});
+										fs.rename( fileArr['v_image_permit_copy'].path, dirUploads+'/vehicles/'+fileArr['v_image_permit_copy'].name, function(err){});
+										fs.rename( fileArr['v_image_police_copy'].path, dirUploads+'/vehicles/'+fileArr['v_image_police_copy'].name, function(err){});
 										
 										gnrl._api_response( res, 1, 'succ_register_successfully', { 'id' : user_insert.id } );
 									}

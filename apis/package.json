@@ -1,0 +1,25 @@
+{
+  "name": "goyo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www.js"
+  },
+  "dependencies": {
+    "async": "^2.3.0",
+    "bluebird": "^3.5.0",
+    "body-parser": "~1.16.0",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.0",
+    "express": "~4.14.1",
+    "jade": "~1.11.0",
+    "morgan": "~1.7.0",
+    "multer": "^1.3.0",
+    "nodemailer": "^4.0.1",
+    "pg": "^6.1.0",
+    "pg-promise": "^5.6.4",
+    "sendmail": "^1.1.1",
+    "serve-favicon": "~2.3.2",
+    "socket.io": "^1.7.3"
+  }
+}

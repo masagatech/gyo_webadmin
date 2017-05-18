@@ -273,9 +273,9 @@ $gnrl->isPageAccess(BASE_FILE);
                 $restepm = $dclass->query($ssql);
                 $row = $dclass->fetchResults($restepm);
                 $row = $row[0];
-                if($_REQUEST['D']='1'){
-                    _P($row);
-                }
+                // if($_REQUEST['D']=='1'){
+                //     _P($row);
+                // }
                 extract( $row );
                 $l_data = json_decode($l_data,true);
 			}

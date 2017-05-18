@@ -250,6 +250,10 @@ var lables = {
 		'err_req_rc_book_image' 		: 'RC book image is required.',
 		'err_req_puc_image' 			: 'PUC image is required.',
 		'err_req_insurance_image' 		: 'Insurance image is required.',
+		'err_req_image_license' 		: 'License copy is required.',
+		'err_req_image_adhar_card' 		: 'Adhar Card copy is required.',
+		'err_req_image_permit_copy' 	: 'Permit copy is required.',
+		'err_req_image_police_copy' 	: 'Police copy is required.',
 		'err_req_lang' 					: 'Language is required.',
 		'err_req_type' 					: 'Type is required.',
 		'err_req_driver_id' 			: 'Driver ID required.',
@@ -296,6 +300,7 @@ var lables = {
 		'err_req_track_code'          	: 'Track code is required.',
 		'err_req_key'          			: 'Key is required.',
 		'err_req_transaction_id'        : 'Transaction ID is required.',
+		'err_req_imei_number'        	: 'IMEI number is required.',
 		
 		
 		'err_not_verified'              : 'Account is not verified.',

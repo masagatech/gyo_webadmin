@@ -64,7 +64,7 @@ var currentApi = function( req, res, next ){
 				var _q = " SELECT ";
 				_q += " * ";
 				_q += " FROM ";
-				_q += " tbl_vehicle_type_city_fair ";
+				_q += " tbl_vehicle_fairs ";
 				_q += " WHERE i_city_id = '"+i_city_id+"' ";
 				_q += "  AND v_type = 'city_wise' ";
 				

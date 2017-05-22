@@ -1,7 +1,5 @@
-var express 	= require('express');
-var validator 	= require('validator');
-var md5 		= require('md5');
-
+var express = require('express');
+var async = require('async');
 
 
 var currentApi = function( req, res, next ){
@@ -19,14 +17,37 @@ var currentApi = function( req, res, next ){
 	
 	var login_id = gnrl._is_undf( params.login_id ).trim();
 	if( _status ){
-		var _q = "SELECT a.v_token, b.e_status FROM tbl_user AS a LEFT JOIN tbl_vehicle AS b ON a.id = b.i_driver_id WHERE a.id = '"+login_id+"' ";
-		dclass._query( _q, function( status, data ){
-			if( !status ){
-				gnrl._api_response( res, 0, '', {} );
-			}
-			else{
-				gnrl._api_response( res, 1, '', { e_status : data[0].e_status });
-			}
+		
+		
+		async.series([
+			
+			// Get Duty Status
+			function( callback ){
+				
+				User.get( login_id, function( status, data ){
+					
+					if( !status ){
+						gnrl._api_response( res, 0, '', {} );
+					}
+					else if( !data.length ){
+						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
+					}
+					else{
+						
+						gnrl._api_response( res, 1, '', { 
+							e_status : data[0].is_onduty ? 'active' : 'inactive' 
+						});
+						
+						callback( null );
+					}
+					
+				});
+			},
+			
+		], function( error, results ){
+			
+			gnrl._api_response( res, 0, '', {} );
+			
 		});
 	}
 	else{

@@ -14,14 +14,14 @@ var currentApi = function( req, res, next ){
 	var params = gnrl._frm_data( req );
 	var _lang = gnrl._getLang( params );
 	
-	var _status   = 1;
-	var _message  = '';
+	var _status = 1;
+	var _message = '';
 	var _response = {};
 	
-	var login_id 	   = gnrl._is_undf( params.login_id );
-	var i_ride_id 	   = gnrl._is_undf( params.i_ride_id );
-	var l_latitude     = gnrl._is_undf( params.l_latitude );
-	var l_longitude    = gnrl._is_undf( params.l_longitude );
+	var login_id = gnrl._is_undf( params.login_id );
+	var i_ride_id = gnrl._is_undf( params.i_ride_id );
+	var l_latitude = gnrl._is_undf( params.l_latitude, 0 );
+	var l_longitude = gnrl._is_undf( params.l_longitude, 0 );
 	
 	if( !i_ride_id.trim() ){ _status = 0; _message = 'err_req_ride_id'; }
 
@@ -75,8 +75,8 @@ var currentApi = function( req, res, next ){
 			function( callback ){
 				var _ins = {
 					'i_ride_id'   : i_ride_id,
-					'l_latitude'  : l_latitude ? l_latitude : 0,
-					'l_longitude' : l_longitude ? l_longitude : 0,
+					'l_latitude'  : l_latitude,
+					'l_longitude' : l_longitude,
 					'd_added'     : gnrl._db_datetime(),
 				};
 

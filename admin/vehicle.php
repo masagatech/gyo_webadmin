@@ -28,10 +28,6 @@ $gnrl->isPageAccess(BASE_FILE);
 			'v_name'  => $v_name,
 			'v_type' =>$v_type,
 			'v_vehicle_number' 	=> $v_vehicle_number,
-            'l_description' => $l_description,
-            'e_status' => $e_status ,
-            'd_added' => date('Y-m-d H:i:s'),
-            'd_modified' => date('Y-m-d H:i:s')
 		);
 		
 		$id = $dclass->insert( $table, $ins );
@@ -42,36 +38,9 @@ $gnrl->isPageAccess(BASE_FILE);
 	if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
-			if($_REQUEST['chkaction'] == 'delete') {
-                if($gnrl->checkAction('delete') == '1'){
-                    $dclass->delete( $table ," id = '".$id."'");
-                    $gnrl->redirectTo($page.".php?succ=1&msg=del");
-                }else{
-                    $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
-                }
-            }
-            // make records active
-            else if($_REQUEST['chkaction'] == 'active'){
-                if($gnrl->checkAction('edit') == '1'){
-                    $ins = array('e_status'=>'active');
-                    $dclass->update( $table, $ins, " id = '".$id."'");
-                    $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
-                }else{
-                    $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
-                }
-            }
-            // make records inactive
-            else if($_REQUEST['chkaction'] == 'inactive'){
-                if($gnrl->checkAction('edit') == '1'){
-                    $ins = array( 'e_status' => 'inactive' );
-                    $dclass->update( $table, $ins, " id = '".$id."'");
-                    $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
-                }else{
-                    $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
-                }
-            }
-            // make records active
-            else if($_REQUEST['chkaction'] == 'delete_image'){
+			
+            
+            if($_REQUEST['chkaction'] == 'delete_image'){
                 $ins = array('v_image'=>'');
                 $dclass->update($table,$ins," id='$id'");
                 $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -93,13 +62,8 @@ $gnrl->isPageAccess(BASE_FILE);
                         'v_name'  => $v_name,
                         'v_type' =>$v_type,
                         'v_vehicle_number'  => $v_vehicle_number,
-                        'l_description' => $l_description,
-                        'e_status' => $e_status ,
-                        'd_added' => date('Y-m-d H:i:s'),
-                        'd_modified' => date('Y-m-d H:i:s')
                     );
                     
-    				// $dclass->update( $table, $ins, " id = '".$id."' ");
 
                     $keyVal = array();
                     foreach( $filesArray as $imgKey ){
@@ -320,19 +284,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="form-group">
-                                                <label>Description</label>
-                                                <textarea class="form-control" name="l_description"><?php echo $l_description; ?></textarea>
-                                            </div>
                                             
-
-                                           
-                                            <div class="form-group">
-                                                <label>Status</label>
-                                                <select class="select2" name="e_status" id="e_status">
-                                                    <?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
-                                                </select>
-                                            </div>
                                             <div class="form-group">
                                                 <button class="btn btn-primary" type="submit" name="submit_btn" value="<?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?>"><?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?></button>
                                                 <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
@@ -367,7 +319,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                     $wh = " AND ( 
                                        LOWER(u.v_name) like LOWER('%".$keyword."%')  OR
                                        LOWER(v.v_type) like LOWER('%".$keyword."%')  OR
-                                        LOWER(v.e_status) like LOWER('%".$keyword."%')  OR
+                                       
                                        LOWER(v.v_vehicle_number) like LOWER('%".$keyword."%') 
                                          
                                     )";
@@ -427,7 +379,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <th width="25%">Driver Name</th>
                                                         <th width="10%">Vehicle Type</th>
                                                         <th width="10%">Vehicle No.</th>
-                                                        <th width="5%">Status</th>
+                                                        
                                                         <th width="5%">Added Date</th>
                                                         <th width="5%"><span class="pull-right">Action</span></th>
                                                     </tr>
@@ -445,7 +397,7 @@ $gnrl->isPageAccess(BASE_FILE);
 
                                                                 <td><?php echo $row['v_type'];?></td>
                                                                 <td><?php echo $row['v_vehicle_number'];?></td>
-                                                                 <td><?php echo $row['e_status'];?></td>
+                                                                 
                                                                  <td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
                                                                 <td>
                                                                     <?php if($gnrl->checkAction('edit')=='1'){?> 
@@ -456,9 +408,6 @@ $gnrl->isPageAccess(BASE_FILE);
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
                                                                             <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
                                                                         </ul>
                                                                     </div>
                                                                     <?php } ?>

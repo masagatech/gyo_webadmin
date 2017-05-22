@@ -19,8 +19,8 @@ var currentApi = function( req, res, next ){
 	var _response = {};
 	
 	var v_type = gnrl._is_undf( params.v_type ).trim();
-	var l_latitude = gnrl._is_undf( params.l_latitude ).trim();
-	var l_longitude = gnrl._is_undf( params.l_longitude ).trim();
+	var l_latitude = gnrl._is_undf( params.l_latitude, 0 ).trim();
+	var l_longitude = gnrl._is_undf( params.l_longitude, 0 ).trim();
 	
 	if( !v_type ){ _status = 0; _message = 'err_req_vehicle_type'; }
 	if( _status && !l_latitude ){ _status = 0; _message = 'err_req_latitude'; } // 
@@ -64,17 +64,18 @@ var currentApi = function( req, res, next ){
 				_q += " FROM ";
 				_q += " ( ";
 					_q += " SELECT ";
-					_q += " id, i_driver_id, v_type, l_latitude, l_longitude, CONCAT( l_latitude, ',', l_longitude ) AS latlong ";
-					_q += ", "+gnrl._distQuery( l_latitude, l_longitude, "l_latitude::double precision", "l_longitude::double precision" )+" AS distance"
+					_q += " a.id, a.i_driver_id, a.v_type, b.l_latitude, b.l_longitude ";
+					_q += ", "+gnrl._distQuery( l_latitude, l_longitude, "b.l_latitude::double precision", "b.l_longitude::double precision" )+" AS distance"
 					_q += " FROM ";
 					_q += " tbl_vehicle a ";
+					_q += " LEFT JOIN tbl_user b ON b.id = a.i_driver_id ";
 					_q += " WHERE true ";
-					_q += " AND v_type = '"+v_type+"' ";
-					_q += " AND e_status = 'active' ";
+					_q += " AND a.v_type = '"+v_type+"' ";
+					_q += " AND b.v_role = 'driver' AND b.e_status = 'active' AND b.is_idle = '1' AND b.is_onduty = '1' ";
 				_q += " ) AS sub ";
 				_q += " WHERE true ";
 				_q += " AND distance <= "+radius+" ";
-				_q += " AND i_driver_id IN ( SELECT id FROM tbl_user WHERE v_role = 'driver' AND e_status = 'active' AND is_idle = '1' ) ";
+				_q += " AND i_driver_id IN ( SELECT id FROM tbl_user WHERE v_role = 'driver' AND e_status = 'active' AND is_idle = '1' AND is_onduty = '1' ) ";
 				_q += " ORDER BY ";
 				_q += " distance ASC ";
 				

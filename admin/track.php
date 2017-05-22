@@ -6,7 +6,7 @@ $gnrl->check_login();
 	$page_title = "Manage Tracking";
 	$page = "track";
 	$table = 'tbl_temp_track';
-    // $table2 = 'tbl_vehicle';
+
 	$title2 = 'Tracking';
 	$v_role ='driver';
     $folder = 'vehicle_type';

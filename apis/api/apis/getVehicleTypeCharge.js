@@ -83,7 +83,7 @@ var currentApi = function( req, res, next ){
 				var _q = " SELECT ";
 				_q += " * ";
 				_q += " FROM ";
-				_q += " tbl_vehicle_type_city_fair ";
+				_q += " tbl_vehicle_fairs ";
 				_q += " WHERE i_city_id IN ( ";
 					_q += " SELECT c.id FROM tbl_city c WHERE lower( v_name ) = '"+( city.toLowerCase() )+"' LIMIT 1 ";
 				_q += "  ) ";
@@ -122,7 +122,7 @@ var currentApi = function( req, res, next ){
 				var _q = " SELECT ";
 				_q += " * ";
 				_q += " FROM ";
-				_q += " ( SELECT *, ("+gnrl._distQuery( latitude, longitude, "( l_data->'geo'->>'latitude' )::double precision", "( l_data->'geo'->>'longitude' )::double precision" )+") AS distance, l_data->'hours'->>'start_hour' AS start_hour, l_data->'hours'->>'end_hour' AS end_hour FROM tbl_vehicle_type_city_fair ) AS a ";
+				_q += " ( SELECT *, ("+gnrl._distQuery( latitude, longitude, "( l_data->'geo'->>'latitude' )::double precision", "( l_data->'geo'->>'longitude' )::double precision" )+") AS distance, l_data->'hours'->>'start_hour' AS start_hour, l_data->'hours'->>'end_hour' AS end_hour FROM tbl_vehicle_fairs ) AS a ";
 				_q += " WHERE i_city_id IN ( ";
 					_q += " SELECT c.id FROM tbl_city c WHERE lower( v_name ) = '"+( city.toLowerCase() )+"' LIMIT 1 ";
 				_q += "  ) ";

@@ -8,7 +8,7 @@ $gnrl->isPageAccess(BASE_FILE);
 	$page_title = "Manage Vehicle Fair (Vehicle Wise)";
 	
 	$page = "fair_vehicle_wise";
-	$table = 'tbl_vehicle_type_city_fair';
+	$table = 'tbl_vehicle_fairs';
 	$table2 = 'tbl_vehicle_type';
 	$title2 = 'Vehicle Fair (Vehicle Wise)';
 	$folder = 'vehicle_type';
@@ -317,7 +317,7 @@ $gnrl->isPageAccess(BASE_FILE);
 									v.v_vehicle_number as vehicle_number,
 									u.v_name as driver_name
 								FROM 
-									tbl_vehicle_type_city_fair a
+									tbl_vehicle_fairs a
 
 								LEFT JOIN 
 									tbl_vehicle as v ON a.i_vehicle_id = v.id 

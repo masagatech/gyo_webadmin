@@ -8,7 +8,7 @@ $gnrl->isPageAccess(BASE_FILE);
 	
 	$page_title = "Manage Vehicle Fair (Area Wise)";
 	$page = "fair_area_wise";
-	$table = 'tbl_vehicle_type_city_fair';
+	$table = 'tbl_vehicle_fairs';
 	$table2 = 'tbl_vehicle_type';
 	$title2 = 'Vehicle Fair (Area Wise)';
 	$folder = 'vehicle_type';
@@ -442,7 +442,7 @@ $gnrl->isPageAccess(BASE_FILE);
 									a.*,
 									e.v_name as city_name
 								FROM 
-									tbl_vehicle_type_city_fair a
+									tbl_vehicle_fairs a
 								LEFT JOIN 
 									tbl_city as e ON a.i_city_id = e.id 
 									

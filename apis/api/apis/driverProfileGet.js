@@ -23,10 +23,12 @@ var currentApi = function( req, res, next ){
 	if( !id ){ _status = 0; _message = 'err_req_user_id'; }
 	if( _status && !v_token ){ _status = 0; _message = 'err_req_auth_token'; }
 	
+	var folder = 'drivers';
+	
 	if( _status ){
 		
 		var _q = " SELECT ";
-		_q += " a.v_image, a.v_name, a.v_email, a.v_phone, a.v_password, a.v_token ";
+		_q += " a.v_image, a.v_name, a.v_email, a.v_phone, a.v_password, a.v_gender, a.v_token ";
 		_q += " , b.v_vehicle_number ";
 		_q += " , b.v_image_rc_book ";
 		_q += " , b.v_image_puc ";
@@ -57,14 +59,14 @@ var currentApi = function( req, res, next ){
 					
 					
 					var fileArr = {
-						'v_image' 				: 'users',
-						'v_image_rc_book' 		: 'vehicles',
-						'v_image_puc' 			: 'vehicles',
-						'v_image_insurance' 	: 'vehicles',
-						'v_image_license' 		: 'vehicles',
-						'v_image_adhar_card'	: 'vehicles',
-						'v_image_permit_copy'	: 'vehicles',
-						'v_image_police_copy' 	: 'vehicles',
+						'v_image' 				: folder,
+						'v_image_rc_book' 		: folder,
+						'v_image_puc' 			: folder,
+						'v_image_insurance' 	: folder,
+						'v_image_license' 		: folder,
+						'v_image_adhar_card'	: folder,
+						'v_image_permit_copy'	: folder,
+						'v_image_police_copy' 	: folder,
 					};
 					for( var k in fileArr ){
 						if( data[0][k] ){ data[0][k] = gnrl._uploads( fileArr[k]+'/'+data[0][k] ) }

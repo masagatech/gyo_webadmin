@@ -144,7 +144,7 @@ var currClass = function( params ){
 				// Get Vehicle Wise Charge
 				function( callback ){
 					
-					var _q = " SELECT * FROM tbl_vehicle_type_city_fair ";
+					var _q = " SELECT * FROM tbl_vehicle_fairs ";
 					_q += " WHERE true ";
 					_q += " AND v_type = 'vehicle_wise' ";
 					_q += " AND e_status = 'active' ";

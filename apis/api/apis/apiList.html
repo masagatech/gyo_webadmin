@@ -189,8 +189,8 @@
 					{ name : 'v_image_police_copy', required : true, info : 'Image' },
 					
 					
-					{ name : 'l_latitude', required : true, info : 'Vehicle Latitude' },
-					{ name : 'l_longitude', required : true, info : 'Vehicle Longitude' },
+					{ name : 'l_latitude', required : true, info : 'Latitude' },
+					{ name : 'l_longitude', required : true, info : 'Longitude' },
 					{ name : 'lang', required : false, info : 'Language' },
 				],
 				response   : [],
@@ -469,14 +469,7 @@
 				params 	: [
 					{ name : 'i_driver_id', required : true, info : 'Driver ID' },
 				],
-				response   : [
-					{ name : 'data', info : (
-							'{'
-								+BR+'l_latitude : ,'
-								+BR+'l_longitude : ,'
-							+BR+'}'
-					) }
-				]
+				response   : []
 			},	
 			{
 				id 		: 'getDriverEarning',
@@ -1188,15 +1181,7 @@
 					{ name : 'l_latitude', required : true, info : 'Current Latitude' },
 					{ name : 'l_longitude', required : true, info : 'Current Longitude' },
 				],
-				response   : [
-					{ name : 'data', info : (
-						'['+BR+
-						'{ <br />id : <br />i_driver_id : <br />v_type : <br />l_latitude : <br />l_longitude : <br />distance : <br/>}'
-						+',{ <br />id : <br />i_driver_id : <br />v_type : <br />l_latitude : <br />l_longitude : <br />distance : <br/>}'
-						+BR+']'
-					) }
-					
-				],
+				response   : [],
 			},
 			
 			{

@@ -11,9 +11,8 @@ $gnrl->isPageAccess(BASE_FILE);
     $table2 = 'tbl_vehicle';
 	$title2 = 'Driver';
 	$v_role ='driver';
-    $folder = 'vehicles';
-    $folder2 = 'users';
-	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
+    $folder = 'drivers';
+    $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
 
 	$filesArray = array(
         'v_image_rc_book',
@@ -48,7 +47,7 @@ $gnrl->isPageAccess(BASE_FILE);
             $id=$id['0'];
             $keyVal = array();
             if( isset( $_FILES['v_image']['name'] ) && $_FILES['v_image']['name'] != "" ) {
-                $dest = UPLOAD_PATH.$folder2."/";
+                $dest = UPLOAD_PATH.$folder."/";
                 $file_name = $gnrl->removeChars( time().'-'.$_FILES['v_image']['name'] ); 
                 if( move_uploaded_file( $_FILES['v_image']['tmp_name'], $dest.$file_name ) ){
                     $keyVal['v_image'] = $file_name;
@@ -66,9 +65,7 @@ $gnrl->isPageAccess(BASE_FILE);
                 'v_name' =>$vehicle_name,
                 'v_type' =>$v_type,
                 'v_vehicle_number'   => $v_vehicle_number,
-                'e_status' => $e_status ,
-                'd_added' => date('Y-m-d H:i:s'),
-                'd_modified' => date('Y-m-d H:i:s')
+                
             );
             
             ## FOR PROOF 
@@ -529,8 +526,8 @@ $gnrl->isPageAccess(BASE_FILE);
                                                 v.v_name AS vehicle_name,
                                                 v.v_type AS vehicle_type,
                                                 v.v_vehicle_number AS vehicle_number,
-                                                v.l_latitude AS lat,
-                                                v.l_longitude AS long
+                                                u.l_latitude AS lat,
+                                                u.l_longitude AS long
                                               FROM ".$table." as u
                                              LEFT JOIN tbl_vehicle 
                                             as v ON u.id = v.i_driver_id

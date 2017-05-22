@@ -1,7 +1,7 @@
 var express 	= require('express');
 var validator 	= require('validator');
 var md5 		= require('md5');
-
+var async = require('async');
 
 
 var currentApi = function( req, res, next ){
@@ -19,8 +19,8 @@ var currentApi = function( req, res, next ){
 	
 	var login_id = gnrl._is_undf( params.login_id ).trim();
 	var i_vehicle_id = gnrl._is_undf( params.i_vehicle_id ).trim();
-	var l_latitude = gnrl._is_undf( params.l_latitude ).trim();
-	var l_longitude = gnrl._is_undf( params.l_longitude ).trim();
+	var l_latitude = gnrl._is_undf( params.l_latitude, 0 ).trim();
+	var l_longitude = gnrl._is_undf( params.l_longitude, 0 ).trim();
 	var i_ride_id = gnrl._is_undf( params.i_ride_id, 0 );
 	var distance = gnrl._is_undf( params.distance, '' );
 	var run_type = gnrl._is_undf( params.distance, '' );
@@ -33,10 +33,6 @@ var currentApi = function( req, res, next ){
 		gnrl._api_response( res, 0, _message, {} );
 	}
 	else{
-		var _ins = {
-			'l_latitude' 	: l_latitude,
-			'l_longitude'   : l_longitude,
-		};
 		
 		if( distance ){
 			var temp = distance.split(' ');
@@ -47,23 +43,43 @@ var currentApi = function( req, res, next ){
 			}
 		}
 		
-		dclass._update( 'tbl_vehicle', _ins, " AND id = '"+i_vehicle_id+"' ", function( status, data ){
-			var _ins = {
-				'i_driver_id' 	: login_id,
-				'i_vehicle_id' 	: i_vehicle_id,
-				'd_time' 		: gnrl._db_datetime(),
-				'l_latitude' 	: l_latitude,
-				'l_longitude'   : l_longitude,
-				'l_data'        : gnrl._json_encode({
-					'i_ride_id' : i_ride_id,
-					'distance' 	: distance,
-					'run_type' 	: run_type,
-				}),
-			};
-			dclass._insert( 'tbl_track_vehicle_location', _ins, function( status, data ){
-				gnrl._api_response( res, 1, 'succ_location_updated', {} );
-			});
+		var _ins = {
+			'l_latitude' 	: l_latitude,
+			'l_longitude'   : l_longitude,
+		};
+		
+		async.series([
+			
+			// Update Driver Table
+			function( callback ){
+				dclass._update( 'tbl_user', _ins, " AND id = '"+login_id+"' ", function( status, data ){
+					callback( null );	
+				});
+			},
+			
+			// Take Entry in Track Table
+			function( callback ){
+				var _ins = {
+					'i_driver_id' 	: login_id,
+					'i_vehicle_id' 	: i_vehicle_id,
+					'd_time' 		: gnrl._db_datetime(),
+					'l_latitude' 	: l_latitude,
+					'l_longitude'   : l_longitude,
+					'l_data'        : gnrl._json_encode({
+						'i_ride_id' : i_ride_id,
+						'distance' 	: distance,
+						'run_type' 	: run_type,
+					}),
+				};
+				dclass._insert( 'tbl_track_vehicle_location', _ins, function( status, data ){
+					callback( null );
+				});
+			},
+			
+		], function( error, results ){
+			gnrl._api_response( res, 1, 'succ_location_updated', {} );
 		});
+		
 	}
 };
 

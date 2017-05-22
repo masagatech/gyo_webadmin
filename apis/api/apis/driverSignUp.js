@@ -110,27 +110,28 @@ var currentApi = function( req, res, next ){
 		if( _status && !fileArr['v_image_rc_book'].name ){ _status = 0; _message = 'err_req_rc_book_image'; }
 		if( _status && !fileArr['v_image_puc'].name ){ _status = 0; _message = 'err_req_puc_image'; }
 		if( _status && !fileArr['v_image_insurance'].name ){ _status = 0; _message = 'err_req_insurance_image'; }
-		
 		if( _status && !fileArr['v_image_license'].name ){ _status = 0; _message = 'err_req_image_license'; }
 		if( _status && !fileArr['v_image_adhar_card'].name ){ _status = 0; _message = 'err_req_image_adhar_card'; }
 		if( _status && !fileArr['v_image_permit_copy'].name ){ _status = 0; _message = 'err_req_image_permit_copy'; }
 		if( _status && !fileArr['v_image_police_copy'].name ){ _status = 0; _message = 'err_req_image_police_copy'; }
+		
+		var folder = 'drivers';
 		
 		if( err ){
 			gnrl._remove_loop_file( fs, fileArr );
 			gnrl._api_response( res, 0, 'error_file_upload' );
 		}
 		else{
+			
 			if( _status ){
 				
-				// ##EMAIL, ##SMS
 				var _setting = [];
 				var _email_template = [];
 				var _user_insert = [];
 				
 				async.series([
+					
 					function( callback ){
-
 						dclass._select( '*', 'tbl_user', " AND ( LOWER( v_email ) = '"+v_email.toLowerCase()+"' )", function( status, user ){ 
 							if( !status ){
 								gnrl._remove_loop_file( fs, fileArr );
@@ -170,12 +171,15 @@ var currentApi = function( req, res, next ){
 							'v_phone' 			: v_phone,
 							'v_gender' 			: v_gender,
 							'v_imei_number' 	: v_imei_number,
+							'is_onduty'			: 0,
 							'v_password' 		: md5( v_password ),
 							'v_otp' 			: v_otp,
 							'd_added' 			: gnrl._db_datetime(),
 							'd_modified' 		: gnrl._db_datetime(),
 							'e_status' 			: 'inactive',
 							'v_device_token' 	: v_device_token,
+							'l_latitude' 		: l_latitude,
+							'l_longitude' 		: l_longitude,
 							'l_data'            : gnrl._json_encode({
 								'rate'            : 0,
 								'rate_total'      : 0,
@@ -185,12 +189,14 @@ var currentApi = function( req, res, next ){
 						};
 						dclass._insert( 'tbl_user', _ins, function( status, user_insert ){ 
 						
+							_user_insert = user_insert;
+						
 							if( !status ){
 								gnrl._api_response( res, 0, 'error', {} );
 							}
 							else{
 
-								fs.rename( fileArr['v_image'].path, dirUploads+'/users/'+fileArr['v_image'].name, function(err){});
+								fs.rename( fileArr['v_image'].path, dirUploads+'/'+folder+'/'+fileArr['v_image'].name, function(err){});
 								
 								dclass._insert( 'tbl_vehicle', {
 									'i_driver_id' 			: user_insert.id,
@@ -204,24 +210,20 @@ var currentApi = function( req, res, next ){
 									'v_image_permit_copy' 	: fileArr['v_image_permit_copy'].name,
 									'v_image_police_copy' 	: fileArr['v_image_police_copy'].name,
 									
-									'd_added' 				: gnrl._db_datetime(),
-									'd_modified' 			: gnrl._db_datetime(),
-									'e_status' 				: 'active',
-									'l_latitude' 			: l_latitude,
-									'l_longitude' 			: l_longitude,
 									
 								}, function( vehicle_status, vehicle_data ){ 
 									if( vehicle_status ){
-										fs.rename( fileArr['v_image_rc_book'].path, dirUploads+'/vehicles/'+fileArr['v_image_rc_book'].name, function(err){});
-										fs.rename( fileArr['v_image_puc'].path, dirUploads+'/vehicles/'+fileArr['v_image_puc'].name, function(err){});
-										fs.rename( fileArr['v_image_insurance'].path, dirUploads+'/vehicles/'+fileArr['v_image_insurance'].name, function(err){});
+										fs.rename( fileArr['v_image_rc_book'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_rc_book'].name, function(err){});
+										fs.rename( fileArr['v_image_puc'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_puc'].name, function(err){});
+										fs.rename( fileArr['v_image_insurance'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_insurance'].name, function(err){});
 										
-										fs.rename( fileArr['v_image_license'].path, dirUploads+'/vehicles/'+fileArr['v_image_license'].name, function(err){});
-										fs.rename( fileArr['v_image_adhar_card'].path, dirUploads+'/vehicles/'+fileArr['v_image_adhar_card'].name, function(err){});
-										fs.rename( fileArr['v_image_permit_copy'].path, dirUploads+'/vehicles/'+fileArr['v_image_permit_copy'].name, function(err){});
-										fs.rename( fileArr['v_image_police_copy'].path, dirUploads+'/vehicles/'+fileArr['v_image_police_copy'].name, function(err){});
+										fs.rename( fileArr['v_image_license'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_license'].name, function(err){});
+										fs.rename( fileArr['v_image_adhar_card'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_adhar_card'].name, function(err){});
+										fs.rename( fileArr['v_image_permit_copy'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_permit_copy'].name, function(err){});
+										fs.rename( fileArr['v_image_police_copy'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_police_copy'].name, function(err){});
 										
-										gnrl._api_response( res, 1, 'succ_register_successfully', { 'id' : user_insert.id } );
+										callback( null );
+										// gnrl._api_response( res, 1, 'succ_register_successfully', { 'id' : user_insert.id } );
 									}
 									else{
 										dclass._delete( 'tbl_user', " AND id = '"+data.id+"' ", function( status, data ){
@@ -231,8 +233,7 @@ var currentApi = function( req, res, next ){
 									}
 								});
 
-								_user_insert = user_insert;
-								callback( null );
+								
 							}
 						});
 					},
@@ -277,7 +278,7 @@ var currentApi = function( req, res, next ){
 			}
 			else{
 				gnrl._remove_loop_file( fs, fileArr );
-				gnrl._api_response( res, 0, _message );
+				gnrl._api_response( res, 0, _message, {} );
 			}
 		}
 	});

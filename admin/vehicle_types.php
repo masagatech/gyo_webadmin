@@ -7,7 +7,7 @@ $gnrl->isPageAccess(BASE_FILE);$gnrl->isPageAccess(BASE_FILE);$gnrl->isPageAcces
 	$page_title = "Manage Vehicle Types";
 	$page = "vehicle_types";
 	$table = 'tbl_vehicle_type';
-	$table2 = 'tbl_vehicle_type_city_fair';
+	$table2 = 'tbl_vehicle_fairs';
 	$title2 = 'Vehicle Type';
 	$folder = 'vehicle_type';
 	

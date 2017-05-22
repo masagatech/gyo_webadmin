@@ -26,8 +26,9 @@ var currentApi = function( req, res, next ){
 		
 		var _driver = [];
 		async.series([
+		
 			function( callback ){
-				dclass._select( 'l_latitude, l_longitude', 'tbl_vehicle', " AND i_driver_id = '"+i_driver_id+"'", function( status, driver ){ 
+				dclass._select( 'l_latitude, l_longitude', 'tbl_user', " AND id = '"+i_driver_id+"'", function( status, driver ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, _message );
 					}
@@ -40,6 +41,7 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
+			
 		], 
 		function( error, results ){
 			gnrl._api_response( res, 1, '', _driver );

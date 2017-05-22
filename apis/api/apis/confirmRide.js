@@ -233,21 +233,20 @@ var currentApi = function( req, res, next ){
 							
 							_q += " FROM tbl_user a ";
 							_q += " LEFT JOIN ( ";
-							
 								_q += " SELECT ";
-								_q += " * ";
-								_q += " , "+gnrl._distQuery( pickup_lat, pickup_lng, "l_latitude::double precision", "l_longitude::double precision" )+" AS distance";
+								_q += " inb.* ";
+								_q += " , "+gnrl._distQuery( pickup_lat, pickup_lng, "U.l_latitude::double precision", "U.l_longitude::double precision" )+" AS distance";
 								_q += " , ( SELECT COUNT(*) FROM tbl_ride WHERE e_status = 'complete' AND i_vehicle_id = inb.id AND d_time >= '"+gnrl._db_ymd('Y-m-d')+" 00:00:00' AND d_time <= '"+gnrl._db_ymd('Y-m-d')+" 23:59:00' ) AS trip_count ";
 								_q += " , ( SELECT COUNT(*) FROM tbl_buzz WHERE ( i_status = -1 OR i_status = -2 ) AND i_vehicle_id = inb.id AND d_time >= '"+gnrl._db_ymd('Y-m-d')+" 00:00:00' AND d_time <= '"+gnrl._db_ymd('Y-m-d')+" 23:59:00' ) AS buzz_count ";
 								_q += " , ( SELECT COUNT(*) FROM tbl_buzz WHERE ( i_status != -1 AND i_status != 1 ) AND i_ride_id = '"+i_ride_id+"' AND i_vehicle_id = inb.id ) AS same_ride_buzz_count ";
-								
 								_q += " FROM tbl_vehicle inb ";
+								_q += " LEFT JOIN tbl_user U ON U.id = inb.i_driver_id ";
+								_q += " WHERE true ";
+								_q += " AND U.v_role = 'driver' AND U.e_status = 'active' AND U.is_onduty = '1' AND U.is_idle = '1' ";
 							_q += " ) b ON a.id = b.i_driver_id ";
-							
-							_q += " WHERE a.e_status = 'active' ";
+							_q += " WHERE true ";
+							_q += " AND a.v_role = 'driver' AND a.e_status = 'active' AND a.is_onduty = '1' AND a.is_idle = '1' ";
 							_q += " AND a.v_token != '' ";
-							_q += " AND a.v_role = 'driver' ";
-							_q += " AND a.is_idle = '1' ";
 							_q += " AND b.v_type = '"+( _ride.l_data.vehicle_type )+"' ";
 							_q += " AND b.same_ride_buzz_count <= '0' ";
 							_q += " ORDER BY  ";

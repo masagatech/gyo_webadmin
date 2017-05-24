@@ -25,6 +25,7 @@ var currentApi = function( req, res, next ){
 	var v_password 		= gnrl._is_undf( params.v_password );
 	var v_device_token 	= gnrl._is_undf( params.v_device_token );
 	var v_otp 			= gnrl._get_otp();
+	var i_city_id 		= gnrl._is_undf( params.i_city_id, 0 );
 	var referred_by 	= gnrl._is_undf( params.referred_by, '' );
 	var lang 	        = gnrl._is_undf( params.lang );
 	
@@ -37,7 +38,6 @@ var currentApi = function( req, res, next ){
 	if( _status && !validator.isLength( v_password, { min : 6, max : 10 } ) ){ _status = 0; _message = 'err_validation_password'; }
 	if( _status && !v_device_token.trim() ){ _status = 0; _message = 'err_req_device_token'; }
 	
-	// ##EMAIL, ##SMS
 	if( _status ){
 
 		var _setting = [];
@@ -83,8 +83,9 @@ var currentApi = function( req, res, next ){
 					'v_otp' 			: v_otp,
 					'd_added' 			: gnrl._db_datetime(),
 					'd_modified' 		: gnrl._db_datetime(),
-					'e_status' 			: 'active',
+					'e_status' 			: 'inactive',
 					'v_device_token' 	: v_device_token,
+					'i_city_id' 		: i_city_id,
 					'l_data'            : gnrl._json_encode({
 						'lang'            : lang ? lang : _lang,
 						'is_otp_verified' : 0,
@@ -111,6 +112,7 @@ var currentApi = function( req, res, next ){
 					_key 		: 'user_registration',
 					_keywords 	: {
 						'[user_name]' : v_name,
+						'[otp]' : v_otp,
 					},
 				};
 				SMS.send( params, function( error_mail, error_info ){
@@ -126,6 +128,7 @@ var currentApi = function( req, res, next ){
 					_key 		: 'user_registration',
 					_keywords 	: {
 						'[user_name]' : v_name,
+						'[otp]' : v_otp,
 					},
 				};
 				Email.send( params, function( error_mail, error_info ){
@@ -133,8 +136,12 @@ var currentApi = function( req, res, next ){
 				});
 			},
 		], 
+		
 		function( error, results ){
-			gnrl._api_response( res, 1, 'succ_register_successfully', { 'id' : _user_insert.id } );
+			gnrl._api_response( res, 1, 'succ_register_successfully', { 
+				'id' : _user_insert.id,
+				'v_phone' : v_phone
+			});
 		});
 		
 	}

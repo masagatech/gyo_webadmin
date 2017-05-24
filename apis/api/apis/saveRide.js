@@ -52,50 +52,74 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 		
-		var v_pin = gnrl._get_otp();
+		var v_pin = Ride.getPin();
 		
-		var _ins = { 
-			'v_ride_code' 		: gnrl._get_random_key( 10 ),
-			'i_user_id' 		: login_id,
-			'i_driver_id' 		: 0,
-			'i_vehicle_id' 		: 0,
-			'i_round_id' 		: 0,
-			'v_pin' 			: v_pin,
-			'd_time' 			: ( ride_type == 'ride_later' ) ? ride_time : gnrl._db_datetime(),
+		var i_city_id = 0;
+		
+		async.series([
 			
-			'e_status' 		    : ( ride_type == 'ride_now' ? 'pending' : 'scheduled' ),
-			'l_data'            : gnrl._json_encode( {
-				'round_id'              : 0,
-				'round_order'           : 0,
+			// Get City ID
+			function( callback ){
+				City.getByName( city, function( status, data ){
+					if( status && data.length ){
+						i_city_id = data[0].id;
+					}
+					callback( null );
+				});
+			},
+			
+			// Save Ride
+			function( callback ){
 				
-				'vehicle_type'          : vehicle_type,
-				'pickup_address'        : pickup_address,
-				'pickup_latitude'       : pickup_latitude,
-				'pickup_longitude'      : pickup_longitude,
-				'destination_address'   : destination_address,
-				'destination_latitude'  : destination_latitude,
-				'destination_longitude' : destination_longitude,
-				'estimate_km'           : estimate_km,
-				'estimate_time'         : estimate_time,
-				'estimate_amount'       : estimate_amount,
-				'time_added'       		: gnrl._db_datetime(),
-				'ride_type'       		: ride_type,
-				'ride_time'       		: ride_time,
-				'city'       			: city,
-				'charges'       		: JSON.parse( charges ),
-			}),
-		};
-		dclass._insert( 'tbl_ride', _ins, function( status, data ){ 
-			if( status ){
-				gnrl._api_response( res, 1, "", { 
-					'i_ride_id' : data.id,
-					'v_pin' : v_pin,
+				var _ins = { 
+					'v_ride_code' 		: gnrl._get_random_key( 10 ),
+					'i_user_id' 		: login_id,
+					'i_driver_id' 		: 0,
+					'i_vehicle_id' 		: 0,
+					'i_round_id' 		: 0,
+					'v_pin' 			: v_pin,
+					'd_time' 			: ( ride_type == 'ride_later' ) ? ride_time : gnrl._db_datetime(),
+					'e_status' 		    : ( ride_type == 'ride_now' ? 'pending' : 'scheduled' ),
+					'l_data'            : gnrl._json_encode( {
+						'round_id'              : 0,
+						'round_order'           : 0,
+						'vehicle_type'          : vehicle_type,
+						'pickup_address'        : pickup_address,
+						'pickup_latitude'       : pickup_latitude,
+						'pickup_longitude'      : pickup_longitude,
+						'destination_address'   : destination_address,
+						'destination_latitude'  : destination_latitude,
+						'destination_longitude' : destination_longitude,
+						'estimate_km'           : estimate_km,
+						'estimate_time'         : estimate_time,
+						'estimate_amount'       : estimate_amount,
+						'time_added'       		: gnrl._db_datetime(),
+						'ride_type'       		: ride_type,
+						'ride_time'       		: ride_time,
+						'city'       			: city,
+						'i_city_id'       		: i_city_id,
+						'charges'       		: JSON.parse( charges ),
+					}),
+				};
+				dclass._insert( 'tbl_ride', _ins, function( status, data ){ 
+					if( status ){
+						gnrl._api_response( res, 1, "", { 
+							'i_ride_id' : data.id,
+							'v_pin' : v_pin,
+						});
+					}
+					else{
+						gnrl._api_response( res, 0, _message );
+					}
 				});
 			}
-			else{
-				gnrl._api_response( res, 0, _message );
-			}
+		], function( error, results ){
+			
+			gnrl._api_response( res, 0, _message );
+			
 		});
+		
+		
 	}
 };
 

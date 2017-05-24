@@ -58,13 +58,9 @@
 				var data = JSON.parse( response );
 				var redirect_link = data.redirect_link;
 				if( data.success ){
-					if( redirect_link != "null" || redirect_link != "" ){
-						redirectTo( redirect_link );
-					}
-					else{
-						redirectTo( 'sitesettings.php' );
-					}
-				}else{
+					redirectTo( 'invalid-access.php' );
+				}
+				else{
 					jQuery("#response").html(getError(data.msg));
 				}
 			},

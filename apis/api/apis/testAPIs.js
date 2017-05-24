@@ -27,17 +27,6 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		gnrl._api_response( res, 1, 'Done', gnrl._timestamp( '2017-04-21 12:50:55+05:30' ) );
 	}
 	
-	else if( action == 'User' ){
-		
-		User.get( '3', function( status, data ){
-			gnrl._api_response( res, 1, 'Done', {
-				status : status,
-				data : data
-			});
-		});
-	}
-	
-	
 	else if( action == 'fcm2' ){
 		
 		var tokens = [];
@@ -164,14 +153,7 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		});
 		
 	}
-	else if( action == 'userget' ){
-		User.get( 1, function( status, data ){
-			gnrl._api_response( res, 1, 'Done', { 
-				status : status,
-				data : data,
-			});
-		});
-	}
+	
 	else if( action == 'commission' ){
 		var company_commission = '5%';
 		gnrl._api_response( res, 1, 'Done', { 
@@ -208,66 +190,6 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		function( error, results ){
 			gnrl._api_response( res, 1, 'Done', results );
 		});
-	}
-	
-	else if( action == 'settings' ){
-		async.series([
-			function( callback ){
-				callback( null, {} );
-			},
-			function( callback ){
-				callback( null, {} );
-			},
-		], 
-		function( error, results ){
-			gnrl._api_response( res, 1, 'Done', results );
-		});
-	}
-	
-	else if( action == 'callProcedure' ){
-		db.callProcedure("select " + gnrl._db_schema("fun_get_user_list") + "($1,$2::json);", [ 'users', params ], function( data ){
-			gnrl._api_response( res, 1, _message, data.rows, 0 );
-		}, function(err) {
-			gnrl._api_response( res, 0, _message );
-		});
-	}
-	
-	else if( action == 'OverWriteVehicleCharges' ){
-		Ride.overWriteChargeVehicleWise({
-			i_ride_id : 1
-		}, function( status, data ){
-			var tmp = {
-				status : status,
-				data : data,
-			};
-			Ride.get( 1, function( st, dt ){
-				tmp.st = st;
-				tmp.dt = dt;
-				gnrl._api_response( res, 0, _message, tmp );
-			})
-		});
-	}
-	
-	else if( action == 'crypt' ){
-		
-		var _data = {
-			str : '',
-		};
-		
-		// Encrypt 
-		_data.crypt = Crypt.encrypt( _data.str );
-		
-		// Decrypt 
-		_data.decrypt = Crypt.decrypt( _data.crypt );
-		
-		// Decrypt 
-		_data.decrypt2 = Crypt.decrypt( 'U2FsdGVkX1+6RJwtmNWfVFFfz3YTJZiIM/JdsSjIhHQ=' );
-		
-		_data.getPaymentModes = Wallet.getPaymentModes();
-		
-		_data.getPaymentModeName = Wallet.getPaymentModeName('payu');
-		
-		gnrl._api_response( res, 1, _message, _data );
 	}
 	
 	else{

@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 	
 $page_title = "General Settings";
 $page = "sitesettings";
@@ -15,14 +15,12 @@ if( isset( $_REQUEST['act'] ) && $_REQUEST['act'] == 'delimg' && trim( $_REQUEST
 ## Update Site Setting Table
 if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ){
 	unset($_POST['submit_btn']);
-	if( $gnrl->checkAction('edit') == '1' ){
-		foreach( $_POST as $key => $val ){
-			$gnrl->save_site_setting( $key, addslashes( stripslashes( $val ) ) );
-		}
-		$gnrl->redirectTo( $page.'.php?succ=1&msg=edit');
-	}else{
-		$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
+	
+	foreach( $_POST as $key => $val ){
+		$gnrl->save_site_setting( $key, addslashes( stripslashes( $val ) ) );
 	}
+	$gnrl->redirectTo( $page.'.php?succ=1&msg=edit');
+	
 }
 else {
 	$sql = "SELECT * FROM ".$table;

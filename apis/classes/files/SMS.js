@@ -30,7 +30,7 @@ var currClass = function( params ){
 				
 				// Disabled For Live
 				function( callback ){
-					if( _config._live ){  return cb( 0, 'live' ); }
+					// if( _config._live ){  return cb( 0, 'live' ); }
 					callback( null );
 				},
 						

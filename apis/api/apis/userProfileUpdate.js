@@ -56,6 +56,7 @@ var currentApi = function( req, res, next ){
 			var v_email 		= gnrl._is_undf( params.v_email ).trim();
 			var v_phone 		= gnrl._is_undf( params.v_phone ).trim();
 			var v_gender 		= gnrl._is_undf( params.v_gender, 'male' );
+			var i_city_id 		= gnrl._is_undf( params.i_city_id, 0 );
 			
 			if( !v_name.trim() ){ _status = 0; _message = 'err_req_name'; }
 			if( _status && !login_id.trim() ){ _status = 0; _message = 'err_req_login_id'; }
@@ -105,7 +106,9 @@ var currentApi = function( req, res, next ){
 											'v_email' 	: v_email,
 											'v_phone' 	: v_phone,
 											'v_gender'	: v_gender,
+											'i_city_id' : i_city_id,
 											'v_image' 	: fileArr['v_image'].name ? fileArr['v_image'].name : _row.v_image,
+											
 											'd_modified': gnrl._db_datetime(),
 										};
 										dclass._update( 'tbl_user', _ins, " AND id = '"+login_id+"' ", function( status, data ){ 

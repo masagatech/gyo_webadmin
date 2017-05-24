@@ -13,20 +13,19 @@ var currentApi = function( req, res, next ){
 	var params = gnrl._frm_data( req );
 	var _lang = gnrl._getLang( params );
 	
-	var _status  	= 1;
-	var _message 	= '';
-	var _response 	= {};
+	var _status = 1;
+	var _message = '';
+	var _response = {};
 	
-	
-	dclass._select( 'id, v_name', 'tbl_city', " AND e_status = 'active' ORDER BY id ASC", function( status, data ){ 
+	City.getActiveList( function( status, data ){
 		if( !status ){
 			gnrl._api_response( res, 0, _message );
 		}
 		else if( !data.length ){
-			gnrl._api_response( res, 0, 'err_no_records', {} );
+			gnrl._api_response( res, 0, 'err_no_records', [] );
 		}
 		else{
-			gnrl._api_response( res, 1, _message, data, 0 );
+			gnrl._api_response( res, 1, _message, data );
 		}
 	});
 	

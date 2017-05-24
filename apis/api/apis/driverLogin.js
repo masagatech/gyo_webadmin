@@ -32,15 +32,20 @@ var currentApi = function( req, res, next ){
 	else{
 		
 		var _user = [];
+		
 		var v_token;
+		
 		async.series([
 			function( callback ){
 				
 				v_username = v_username.toLowerCase();
 				
-				dclass._select( '*', 'tbl_user', " AND v_role = 'driver' AND ( LOWER( v_email ) = '"+v_username+"' OR LOWER( v_phone ) = '"+v_username+"' )", function( status, user ){ 
+				dclass._select( '*', 'tbl_user', " AND v_role = 'driver' AND ( LOWER( v_email ) = '"+v_username+"' OR v_phone = '"+v_username+"' )", function( status, user ){ 
+					
+					// 
+					
 					if( !status ){
-						gnrl._api_response( res, 0, 'error', {} );
+						gnrl._api_response( res, 0, 'error', { } );
 					}
 					else if( !user.length ){
 						gnrl._api_response( res, 0, 'err_no_records', {} );
@@ -48,8 +53,18 @@ var currentApi = function( req, res, next ){
 					else{
 						
 						_user = user[0];
+						
 						v_password = v_password ? md5( v_password ) : v_password;
-						if( !_user.l_data.is_otp_verified ){
+						
+						
+						
+						if( !_user.l_data ){
+							gnrl._api_response( res, 2, 'err_not_verified', {
+								'id' 		: _user.id,
+								'phone' 	: _user.v_phone,
+							});
+						}
+						else if( !_user.l_data.is_otp_verified ){
 							gnrl._api_response( res, 2, 'err_not_verified', {
 								'id' 		: _user.id,
 								'phone' 	: _user.v_phone,

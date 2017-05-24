@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 // _P($_REQUEST);
 // exit;
 	extract( $_POST );
@@ -15,21 +15,18 @@ $gnrl->isPageAccess(BASE_FILE);
 	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
 	
 	## Insert Record in database starts
-	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
-		// _P($_REQUEST);
-		// exit;
+	if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Submit' ){
 		$ins = array(
 			'v_key'  => $v_key,
 			'v_name' => $v_name,
 			'e_status' 	=> $e_status,
 		);
-		
 		$id = $dclass->insert( $table, $ins );
 		$gnrl->redirectTo($page.".php?succ=1&msg=add");
 	}
 
 	## Delete Record from the database starts
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
+	if( isset( $_REQUEST['a']) && $_REQUEST['a']==3) {
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
@@ -104,24 +101,11 @@ $gnrl->isPageAccess(BASE_FILE);
             <div class="row">
                 <div class="col-md-12">
                     <div class="block-flat">
-                        <div class="header">
-                            <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
-                                <?php if( !$script ){?>
-                                     <!-- <?php if( !$script && $gnrl->checkAction('add') == '1'){?>
-
-                                        <a href="<?php echo $page?>.php?script=add" class="fright">
-                                            <button class="btn btn-primary" type="button">Add <?php echo ' '.ucfirst( $title2 );?></button>
-                                        </a>
-                                        
-                                    <?php } ?> -->
-                                
-								
-								<?php } ?>
-                            </h3>
-                        </div>
+					
+						<?php include('_page_list_header.php'); ?>
+						
                         <?php 
-                        if( ( $script == 'add' || $script == 'edit' ) && $gnrl->checkAction($script) == '1' ){?>
+                        if( ( $script == 'add' || $script == 'edit' )){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-12">
@@ -134,7 +118,6 @@ $gnrl->isPageAccess(BASE_FILE);
                                                 <label>Key</label>
                                                 <input type="text" class="form-control" id="v_key" name="v_key" value="<?php echo $v_key; ?>" required <?php echo $script == 'edit' ? 'readonly' : '' ?> />
                                             </div>
-                                        	
                                             <div class="form-group">
                                                 <label>Status</label>
                                                 <select class="select2" name="e_status" id="e_status">
@@ -153,7 +136,7 @@ $gnrl->isPageAccess(BASE_FILE);
 							<?php 
                         }
                         else{
-						    if($gnrl->checkAction($script) == '1'){
+						    
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
                                 }
@@ -173,7 +156,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                 $wh = '';
                                 if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
                                     $keyword =  trim( $_REQUEST['keyword'] );
-                                    $wh = " AND ( 
+                                    $wh .= " AND ( 
                                        LOWER(v_name) like LOWER('%".$keyword."%')  OR
                                         LOWER(v_key) like LOWER('%".$keyword."%') OR
                                          LOWER(e_status) like LOWER('%".$keyword."%')
@@ -182,8 +165,8 @@ $gnrl->isPageAccess(BASE_FILE);
                                 
                                 $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
                                             
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+                               $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'v_name';
+                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st'] != '') ? $_REQUEST['st'] : 'ASC';
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
@@ -220,14 +203,23 @@ $gnrl->isPageAccess(BASE_FILE);
                                             
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
+                                                <!-- <thead>
                                                     <tr>
                                                         <th>Name</th>
                                                         <th>Key</th>
                                                         <th>Status</th>
                                                         <th width="20%"><span class="pull-right"> Action</span></th>
                                                     </tr>
-                                                </thead>
+                                                </thead> -->
+                                                <?php
+                                                
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    'v_key' => array( 'order' => 1, 'title' => 'Key' ),
+                                                    'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
@@ -237,32 +229,16 @@ $gnrl->isPageAccess(BASE_FILE);
                                                             ?>
                                                             <tr>
                                                                 <td>
-                                                                    <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">
+                                                                    
                                                                         <?php echo $row['v_name']; ?>
-                                                                    </a>
+                                                                  
                                                                 </td>
                                                                 <td><?php echo $row['v_key']; ?></td>
                                                                 
                                                                 <td><?php echo $row['e_status'];?></td>
-                                                                <td class="text-right" >
-                                                                    <?php 
-                                                                        if($gnrl->checkAction('edit')=='1'){ ?>
-                                                                            <div class="btn-group">
-                                                                            <button class="btn btn-default btn-xs" type="button">Actions</button>
-                                                                            <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
-                                                                                <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
-                                                                            </button>
-                                                                            <ul role="menu" class="dropdown-menu pull-right">
-                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                                <!-- <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li> -->
-                                                                            </ul>
-                                                                        </div>
-                                                                       <?php }
-                                                                    ?>
-                                                                    
-                                                                </td>
+                                                                
+																<?php include('_page_list_action.php');?>
+																
                                                             </tr><?php 
                                                         }
                                                     }
@@ -291,15 +267,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                         </div>
                                     </form>
                                 </div> 
-                                <?php 
-                            }else{ ?>
-                                    <h3>
-                                        <a href="<?php echo $page?>.php" class="fright">
-                                            <button class="btn btn-primary" type="button">Back</button>
-                                        </a>
-                                    </h3>
-                                    <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
-                        <?php }
+                        <?php 
                         }?>
                     </div>
                 </div>

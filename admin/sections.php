@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 extract( $_POST );
 $page_title = "Manage Sections";
 $page = "sections";
@@ -10,12 +10,8 @@ $title2 = 'Sections';
 // $v_role ='user';
 $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
 
-##SELECT PARENT SECTION
-$parent_section= $dclass->select('id,v_key,v_title,v_name','tbl_sections','AND is_parent=1');
-$parent_arr=array();
-foreach ($parent_section as $s_key => $s_value) {
-    $parent_arr[$s_value['id']]=$s_value['v_name'];
-}
+
+
 ## Insert Record in database starts
 if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
 
@@ -28,7 +24,7 @@ if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
             'v_title'  => $v_title,
             'v_name' => $v_name,
             'v_key' => $v_key,
-            'is_parent' =>$is_parent,
+
             'i_parent_id' =>$i_parent_id,
             'v_icon' =>$v_icon,
             'i_order' =>$i_order,
@@ -47,7 +43,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
 	if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 		$id = $_REQUEST['id'];
 		    if($_REQUEST['chkaction'] == 'delete') {
-                if($gnrl->checkAction('delete') == '1'){
+                if(1){
                     $dclass->delete( $table ," id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
@@ -56,7 +52,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array('e_status'=>'active');
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -66,7 +62,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
             }
             // make records inactive
             else if($_REQUEST['chkaction'] == 'inactive'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array( 'e_status' => 'inactive' );
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
@@ -96,7 +92,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                 'v_title'  => $v_title,
                 'v_name' => $v_name,
                 'v_key' => $v_key,
-                'is_parent' =>$is_parent,
+
                 'i_parent_id' =>$i_parent_id,
                 'v_icon' =>$v_icon,
                 'i_order' =>$i_order,
@@ -108,16 +104,18 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
 		}
 		else {
 			$row = $dclass->select('*',$table," AND id = '".$id."'");
-
 			$row = $row[0];
-            // _P($row);
-            // exit;
-			extract( $row );
-            // $l_data=json_decode($l_data,true);
+            extract( $row );
 		}
 	}
 }
 
+##SELECT PARENT SECTION
+$parent_arr=array();
+$parent_section = $dclass->select( 'id, v_key, v_title, v_name', $table, "AND i_parent_id = '0' ORDER BY i_order ");
+foreach ($parent_section as $s_key => $s_value) {
+    $parent_arr[$s_value['id']]=$s_value['v_title'];
+}
 	
 
 ?>
@@ -142,9 +140,9 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
+                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
                                 <?php if( !$script ){?>
-                                    <?php if( !$script && $gnrl->checkAction('add') == '1'){?>
+                                    <?php if( !$script && 1){?>
                                         <a href="<?php echo $page?>.php?script=add" class="fright">
                                             <button class="btn btn-primary" type="button">Add</button>
                                         </a>
@@ -153,7 +151,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                             </h3>
                         </div>
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && $gnrl->checkAction($script) == '1'){?>
+                        if( ($script == 'add' || $script == 'edit') && 1){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-12">
@@ -170,16 +168,12 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                 <label>Key (unique)</label>
                                                 <input type="text" class="form-control" id="v_key" name="v_key" value="<?php echo $v_key; ?>" required />
                                             </div>
-                                            <div class="form-group">
-                                                <label>Parent/Child</label>
-                                                <select class="select2" name="is_parent" id="is_parent">
-                                                    <?php echo $gnrl->get_keyval_drop($globalParentChild,$is_parent); ?>
-                                                </select>
-                                            </div>
+                                            
                                             <div class="form-group">
                                                 <label>Select Parent</label>
                                                 <select class="select2" name="i_parent_id" id="i_parent_id">
-                                                    <?php echo $gnrl->get_keyval_drop($parent_arr,$i_parent_id); ?>
+													<option value="0" > - Parent - </option>
+                                                    <?php echo $gnrl->get_keyval_drop( $parent_arr, $i_parent_id ); ?>
                                                 </select>
                                             </div>
                                             <div class="form-group">
@@ -207,86 +201,20 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
 							<?php 
                         }
                         else{
-						    if($gnrl->checkAction($script) == '1'){
-                                if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
-                                    $limit = $_REQUEST['pageno'];
-                                }
-                                else{
-                                    $limit = $gnrl->getSettings('RECORD_PER_PAGE');
-                                }
-                        
-                                $form = 'frm';
-                                
-                                if ( isset($_REQUEST['limitstart']) && $_REQUEST['limitstart'] != '' ){
-                                    $limitstart = $_REQUEST['limitstart'];
-                                }
-                                else{
-                                    $limitstart = 0;
-                                }
-                                
-                                $wh = '';
-                                if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
-                                    $keyword =  trim( $_REQUEST['keyword'] );
-                                    $wh = " AND ( 
-                                       LOWER(v_name) like LOWER('%".$keyword."%')  OR
-                                         LOWER(e_status) like LOWER('%".$keyword."%')
-                                    )";
-                                }
-                                if( isset( $_REQUEST['city_sel'] ) && $_REQUEST['city_sel'] != '' ){
-                                    $keyword =  trim( $_REQUEST['city_sel'] );
-                                    $wh .= " AND id =".$keyword."";
-                                }
-                                
-                               $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
-                                            
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'i_order';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'DESC' : 'ASC';
-                                
-                                $nototal = $dclass->numRows($ssql);
-                                $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
-                                $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
-                                $restepm = $dclass->query($sqltepm);
-                                $row_Data = $dclass->fetchResults($restepm);
-                                // _P($row_Data);
-                                // exit;
-                                
-                                
+						    if( 1 ){
+								
+                                $row_Data = $gnrl->getSections();
+								
                                 ?>
                                 <div class="content">
                                     <form name="frm" action="" method="get" >
                                         <div class="table-responsive">
                                         
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <div class="pull-right">
-                                                        <div class="dataTables_filter" id="datatable_filter">
-                                                            <label>
-                                                                <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
-                                                                <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
-                                                            </label>
-                                                        </div>
-                                                        <?php 
-                                                            if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
-                                                                <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" > Clear Search </a>
-                                                        <?php } ?>
-                                                    </div>
-                                                    <div class="pull-left">
-                                                        <div id="datatable_length" class="dataTables_length">
-                                                            <label><?php $pagen->writeLimitBox(); ?></label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="clearfix"></div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- <?php chk_all('drop');?> -->
-                                            <table class="table table-bordered" id="datatable" style="width:100%;" >
+										    <table class="table table-bordered" id="datatable" style="width:100%;" >
                                                 <thead>
                                                     <tr>
-                                                        <th>Title</th>
-                                                        <th>Page Name</th>
-                                                         <th>Key</th>
-                                                        <th>Parent(1)/ Child(0)</th>
+                                                        <th>Section Title (Key)</th>
+                                                        <th>File Name</th>
                                                         <th>Order</th>
                                                         <th>Status</th>
                                                         <th><span class="pull-right">Action</span></th>
@@ -294,22 +222,21 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                 </thead>
                                                 <tbody>
                                                     <?php 
-                                                    if($nototal > 0){
-                                                            $i=0;
-                                                        foreach($row_Data as $row){
-                                                            $i++;
+                                                    if( count( $row_Data ) ){
+                                                        foreach( $row_Data as $row ){
                                                             ?>
                                                             <tr>
                                                                 <td>
-                                                                    <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['v_title']; ?></a>
+                                                                    <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">
+																		<?php echo $row['v_title']; ?>
+																	</a>
+																	(<?php echo $row['v_key'];?>)
                                                                 </td>
-                                                                <td><?php echo $row['v_name']; ?></td>
-                                                                <td><?php echo $row['v_key']; ?></td>
-                                                                <td><?php echo $row['is_parent']; ?></td>
-                                                                <td><?php echo $row['i_order']; ?></td>
-                                                                <td><?php echo $row['e_status']; ?></td>
+																<td><?php echo $row['v_name'];?></td>
+                                                                <td><?php echo $row['i_order'];?></td>
+                                                                <td><?php echo $row['e_status'];?></td>
                                                                 <td class="text-right" >
-                                                                    <?php if($gnrl->checkAction('edit')=='1'){?> 
+                                                                    <?php if(1){?> 
                                                                         <div class="btn-group">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>
                                                                         <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
@@ -326,6 +253,45 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                                     
                                                                 </td>
                                                             </tr><?php 
+															
+															$parentRow = $row;
+															
+															if( count( $parentRow['childs'] ) ){
+																foreach( $parentRow['childs'] as $row ){
+																	?>
+																	<tr>
+																		<td>
+																			<a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">
+																				<?php // echo $parentRow['v_title']; ?>
+																				<?php echo '&nbsp;&nbsp;&nbsp; &raquo;&nbsp;';?>
+																				<?php echo $row['v_title']; ?>
+																			</a>
+																			(<?php echo $row['v_key'];?>)
+																		</td>
+																		<td><?php echo $row['v_name'];?></td>
+																		<td><?php echo $row['i_order'];?></td>
+																		<td><?php echo $row['e_status'];?></td>
+																		<td class="text-right" >
+																			<?php if(1){?> 
+																				<div class="btn-group">
+																				<button class="btn btn-default btn-xs" type="button">Actions</button>
+																				<button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
+																					<span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+																				</button>
+																				<ul role="menu" class="dropdown-menu pull-right">
+																					<li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+																					<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+																					<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+																					<li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+																				</ul>
+																			</div>
+																			<?php } ?>
+																			
+																		</td>
+																	</tr><?php 
+																} 
+															 }
+															
                                                         }
                                                     }
                                                     else{?>
@@ -333,36 +299,13 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                     }?>
                                                 </tbody>
                                             </table>
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <div class="pull-left"> <?php echo $pagen->getPagesCounter();?> </div>
-                                                    <div class="pull-right">
-                                                        <div class="dataTables_paginate paging_bs_normal">
-                                                            <ul class="pagination">
-                                                                <?php $pagen->writePagesLinks(); ?>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="clearfix"></div>
-                                                </div>
-                                            </div>
-                                            <input type="hidden" name="a" value="<?php echo @$_REQUEST['a'];?>" />
-                                            <input type="hidden" name="st" value="<?php echo @$_REQUEST['st'];?>" />
-                                            <input type="hidden" name="sb" value="<?php echo @$_REQUEST['sb'];?>" />
-                                            <input type="hidden" name="np" value="<?php //echo @$_SERVER['HTTP_REFERER'];?>" />
+                                            
+                                            
                                         </div>
                                     </form>
                                 </div> 
                             <?php }
-                            else{ ?>
-                                    <h3>
-                                        <a href="<?php echo $page?>.php" class="fright">
-                                            <button class="btn btn-primary" type="button">Back</button>
-                                        </a>
-                                    </h3>
-                                    <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
-                            <?php 
-                            }
+                            else{}
                         }?>
                     </div>
                 </div>

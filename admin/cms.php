@@ -42,7 +42,7 @@ $gnrl->check_login();
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
-				if($gnrl->checkAction('delete') == '1'){
+				if(1){
                     $dclass->delete( $table ," id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
@@ -51,7 +51,7 @@ $gnrl->check_login();
 			}
 			// make records active
 			else if($_REQUEST['chkaction'] == 'active'){
-				if($gnrl->checkAction('edit') == '1'){
+				if(1){
                     $ins = array('e_status'=>'active');
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -61,7 +61,7 @@ $gnrl->check_login();
 			}
 			// make records inactive
 			else if($_REQUEST['chkaction'] == 'inactive'){
-				if($gnrl->checkAction('edit') == '1'){
+				if(1){
                     $ins = array( 'e_status' => 'inactive' );
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
@@ -159,10 +159,10 @@ $gnrl->check_login();
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
+                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
                                 <?php 
                                     if( !$script ){
-                                        if( !$script && $gnrl->checkAction('add') == '1'){?>
+                                        if( !$script && 1){?>
                                             <a href="<?php echo $page?>.php?script=add" class="fright">
                                                 <button class="btn btn-primary" type="button">Add</button>
                                             </a>
@@ -174,7 +174,7 @@ $gnrl->check_login();
                             </h3>
                         </div>
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && $gnrl->checkAction($script) == '1' ){?>
+                        if( ($script == 'add' || $script == 'edit') && 1 ){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     
@@ -272,7 +272,7 @@ $gnrl->check_login();
 							<?php 
                         }
                         else{
-                            if($gnrl->checkAction($script) == '1'){
+                            if(1){
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
                                 }
@@ -369,7 +369,7 @@ $gnrl->check_login();
                                                                     <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['v_key']; ?></td></a>
                                                                 </td>
                                                                 <td>
-                                                                    <?php if($gnrl->checkAction('edit')=='1'){?> 
+                                                                    <?php if(1){?> 
                                                                         <div class="btn-group">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>
                                                                         <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
@@ -415,12 +415,7 @@ $gnrl->check_login();
                                 </div> 
                            <?php
                             }else{ ?>
-                                    <h3>
-                                        <a href="<?php echo $page?>.php" class="fright">
-                                            <button class="btn btn-primary" type="button">Back</button>
-                                        </a>
-                                    </h3>
-                                    <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
+                                    
                             <?php 
                             }
                         }?>

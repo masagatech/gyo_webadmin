@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 
 	extract( $_POST );
 	$page_title = "Manage User";
@@ -54,7 +54,7 @@ $gnrl->isPageAccess(BASE_FILE);
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete' ) {
-                if( $gnrl->checkAction('delete') == '1' ){
+                if( 1 ){
     				$dclass->delete( $table ," id = '".$id."'");
     				$gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
@@ -63,7 +63,7 @@ $gnrl->isPageAccess(BASE_FILE);
 			}
 			// make records active
 			else if($_REQUEST['chkaction'] == 'active'){
-                 if( $gnrl->checkAction('edit') == '1' ){
+                 if( 1 ){
     				$ins = array('e_status'=>'active');
     				$dclass->update( $table, $ins, " id = '".$id."'");
     				$gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -73,7 +73,7 @@ $gnrl->isPageAccess(BASE_FILE);
 			}
 			// make records inactive
 			else if($_REQUEST['chkaction'] == 'inactive'){
-                if( $gnrl->checkAction('edit') == '1' ){
+                if( 1 ){
     				$ins = array( 'e_status' => 'inactive' );
     				$dclass->update( $table, $ins, " id = '".$id."'");
     				$gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
@@ -169,8 +169,8 @@ $gnrl->isPageAccess(BASE_FILE);
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
-                                <?php if( !$script && $gnrl->checkAction('add') == '1'){?>
+                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
+                                <?php if( !$script && 1){?>
 
                                 <a href="<?php echo $page?>.php?script=add" class="fright">
                                     <button class="btn btn-primary" type="button">Add <?php echo ' '.ucfirst( $title2 );?></button>
@@ -180,7 +180,7 @@ $gnrl->isPageAccess(BASE_FILE);
                             </h3>
                         </div>
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && $gnrl->checkAction($script) == '1' ){
+                        if( ($script == 'add' || $script == 'edit') && 1 ){
                            
                             ?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
@@ -240,7 +240,7 @@ $gnrl->isPageAccess(BASE_FILE);
 							<?php 
                         }
                         else{
-                            if($gnrl->checkAction($script) == '1'){
+                            if(1){
                                 
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
@@ -272,15 +272,14 @@ $gnrl->isPageAccess(BASE_FILE);
                                 
                                 $ssql = "SELECT * FROM ".$table." WHERE true AND v_role='".$v_role."'".$wh;
                                             
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'v_name';
+                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']!='') ? $_REQUEST['st'] : 'ASC';
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
                                 $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
-                                
                                 
                                 ?>
                                 <div class="content">
@@ -310,19 +309,21 @@ $gnrl->isPageAccess(BASE_FILE);
                                                 </div>
                                             </div>
                                             
-                                            <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
-                                                    <tr>
-                                                        <th width="45%">Name</th>
-                                                        <th width="10%">Email</th>
-                                                        <th width="10%">Role</th>
-                                                        <th width="5%">Phone</th>
-                                                        <th width="5%">Added Date</th>
-                                                         <th width="5%">Status</th>
-                                                        <th width="14%"><span class="pull-right">Action</span></th>
-                                                    </tr>
-                                                </thead>
+											
+												<?php
+												
+												echo $gnrl->renderTableHeader(array(
+													'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+													'v_email' => array( 'order' => 1, 'title' => 'Email' ),
+													'v_phone' => array( 'order' => 1, 'title' => 'Phone' ),
+													'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+													'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+													'action' => array( 'order' => 0, 'title' => 'Action' ),
+												));
+												?>
+											
+                                               
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
@@ -332,16 +333,16 @@ $gnrl->isPageAccess(BASE_FILE);
                                                             ?>
                                                             <tr>
                                                                 
-                                                                <td><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['v_name']; ?></a></td>
+                                                                <td><?php echo $row['v_name']; ?></td>
 
                                                                 <td><?php echo $row['v_email'];?></td>
-                                                                <td><?php echo $row['v_role'];?></td>
+                                                                
                                                                  <td><?php echo $row['v_phone'];?></td>
                                                                   <td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
                                                                   <td><?php echo $row['e_status'];?></td>
                                                                 <td>
                                                                     <?php 
-                                                                        if($gnrl->checkAction('edit')=='1'){ ?>
+                                                                        if(1){ ?>
 
                                                                          <div class="btn-group">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>
@@ -390,16 +391,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                 </div>
                                 <?php 
                             } 
-                            else{ 
-                                ?>
-                                <h3>
-                                    <a href="<?php echo $page?>.php" class="fright">
-                                        <button class="btn btn-primary" type="button">Back</button>
-                                    </a>
-                                </h3>
-                                <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
-                            <?php 
-                            }
+                            else{}
                         }
 						?>
                     </div>

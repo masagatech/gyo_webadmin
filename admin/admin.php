@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 // _P($_REQUEST);
 // exit;
     extract( $_POST );
@@ -77,6 +77,9 @@ $gnrl->isPageAccess(BASE_FILE);
 
 			$id = $_REQUEST['id'];
 			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
+				
+				// _p( $_REQUEST ); exit;
+				
                 $email_exit = $dclass->select('*',$table," AND id != ".$id." AND v_email = '".$v_email."'");
                
                 if(count($email_exit) && !empty($email_exit)){
@@ -118,8 +121,9 @@ $gnrl->isPageAccess(BASE_FILE);
                 // _P($row);
                 // exit;
 				extract( $row );
-                $l_data=json_decode($l_data,true);
-                $i_city_ids= $l_data['L_CITY'];
+                $l_data = json_decode( $l_data, true );
+                $i_city_ids = $l_data['L_CITY'];
+				$page_access = $l_data['pages'];
 
                 $check_box_arr=array();
                 if(count($l_data['pages'])){
@@ -127,9 +131,6 @@ $gnrl->isPageAccess(BASE_FILE);
                         $check_box_arr[]= $page_key;
                     }     
                 }
-                // $check_box_arr_action=array();
-                
-
 			}
 		}
 	}
@@ -160,7 +161,7 @@ $gnrl->isPageAccess(BASE_FILE);
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
+                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
                                 <?php if( !$script ){?>
                                 <a href="<?php echo $page?>.php?script=add" class="fright">
                                     <button class="btn btn-primary" type="button">Add <?php echo ' '.ucfirst( $title2 );?></button>
@@ -218,94 +219,98 @@ $gnrl->isPageAccess(BASE_FILE);
                                                     <?php echo $gnrl->get_keyval_drop($globalAdminRole,$v_role); ?>
                                                 </select>
                                             </div>
+											
+											
+											<h3>Select Cities</h3>
+											<div class="row" style="margin-top:0; margin-bottom:0;" >
+													<div class="form-group col-md-5">
+														<label>All Cities</label>
+														<?php $key = 'L_CITY_all'; ?>
+														
+														<select class="left_right" id="<?php echo $key;?>" name="<?php echo $key;?>[]" multiple >
+															<?php
+																foreach( $cities as $temp_row ){ 
+																	if(!in_array($temp_row['id'], $i_city_ids)){ ?>
+																	<option value="<?php echo $temp_row["id"]?>" >
+																		<?php echo $temp_row["v_name"];?>
+																	</option> 
+																<?php } } ?>
+														</select>
+													</div>
+													<?php $key = 'L_CITY'; ?>
+													<div class="form-group col-md-2" style="text-align:center;" >
+														<label>Actions</label>
+														<div class="clear" style="height:10px;" ></div>
+														<button class="btn btn-info" type="button" onClick="left_right( '<?php echo $key;?>', 'add' );" ><i class="fa fa-arrow-right"></i></button>
+														<div class="clear" style="height:10px;" ></div>
+														<button class="btn btn-info" type="button" onClick="left_right( '<?php echo $key;?>', '' );" ><i class="fa fa-arrow-left"></i></button>
+													</div>
+													<div class="form-group col-md-5">
+														<label>Selected Cities</label>
+														<select class="left_right" id="<?php echo $key;?>" name="l_data[<?php echo $key;?>][]" multiple >
+														<?php
+															foreach( $cities as $temp_row2 ){ 
+																if(in_array($temp_row2['id'], $i_city_ids)){ ?>
+																	<option value="<?php echo $temp_row2["id"]?>" selected="selected">
+																		<?php echo $temp_row2["v_name"];?>
+																	</option> 
+																<?php } ?>
+																<?php
+															
+														} ?>
+														</select>
+													</div>
+											</div>
+											
                                             <?php 
-                                                $row = $dclass->select('*','tbl_sections','AND is_parent != 1'," ORDER BY i_order ");
-                                                
-                                                $page_arr=array();
-                                                foreach ($row as $r_key => $r_value) {
-                                                    $page_arr[$r_value['v_title']]= $r_value['v_key'];
-                                                }
-                                                
+                                            $sectionArr = $gnrl->getSections();
+											$page_arr = array();
+											foreach( $sectionArr as $rowSection ){
+												$page_arr[$rowSection['v_key']] = $rowSection['v_title'];
+												if( $rowSection['childs'] ){
+													foreach( $rowSection['childs'] as $rowSection2 ){
+														$page_arr[$rowSection2['v_key']] = '&nbsp;&nbsp;&nbsp; &raquo; &nbsp;&nbsp;'.$rowSection2['v_title'];
+													}
+												}
+											}
                                             ?>
-<div class="row" >
-    <div class="col-md-12">
-        <h3>Page Access</h3>
-        <div class="row" >
-
-           <?php 
-           foreach( $page_arr as $v_title => $v_key ){ ?>
-                <div class="col-md-4" >
-                    <div class="radio"> 
-                        <label class="">
-                            <!-- <div class="icheckbox_square-blue checkbox" style="position: relative; margin-bottom: 10px;" aria-checked="" aria-disabled="false">
-                                <input name="l_data[pages][<?php echo $v_key; ?>]" class="icheck" value="" style="position: absolute; opacity: 0;" type="checkbox" <?php echo in_array( $v_key,$check_box_arr ) ? 'checked' : ''?> >
-                                <ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255) none repeat scroll 0% 0%; border: 0px none; opacity: 0;"></ins>
-                            </div>  -->
-                            &nbsp; <strong><?php echo $v_title?></strong>
-                            </br>
-                            <div style="">
-                            <?php 
-                                $check_box_arr_action=array();
-                                if(count($l_data['pages'][$v_key])){
-                                    foreach ($l_data['pages'][$v_key] as $c_key => $c_value) {
-                                        $check_box_arr_action[]= $c_key;
-                                    }     
-                                }
-                            ?>
-                            <?php foreach ($globalUserAction as $u_key => $u_value) { ?>
-                                <div class="icheckbox_square-blue checkbox" style="position: relative; margin: 10px;" aria-checked="" aria-disabled="false">
-                                <input name="l_data[pages][<?php echo $v_key; ?>][<?php echo $u_key ?>]" class="icheck" value="<?php echo $u_key; ?>" style="position: absolute; opacity: 0;" type="checkbox" <?php echo in_array( $u_key, $check_box_arr_action ) ? 'checked' : ''?> >
-                            </div>
-                            &nbsp; <?php echo $u_value; ?>
-                           <?php  } ?>
-                           </div>
-                        </label>
-                    </div>
-                </div> <?php
-            } ?>
-        </div>
-    </div>
-</div>
- <h3>Select Cities</h3>
-<div class="row" style="margin-top:0; margin-bottom:0;" >
-        <div class="form-group col-md-5">
-            <label>All Cities</label>
-            <?php $key = 'L_CITY_all'; ?>
-            
-            <select class="left_right" id="<?php echo $key;?>" name="<?php echo $key;?>[]" multiple >
-                <?php
-                    foreach( $cities as $temp_row ){ 
-                        if(!in_array($temp_row['id'], $i_city_ids)){ ?>
-                        <option value="<?php echo $temp_row["id"]?>" >
-                            <?php echo $temp_row["v_name"];?>
-                        </option> 
-                    <?php } } ?>
-            </select>
-        </div>
-        <?php $key = 'L_CITY'; ?>
-        <div class="form-group col-md-2" style="text-align:center;" >
-            <label>Actions</label>
-            <div class="clear" style="height:10px;" ></div>
-            <button class="btn btn-info" type="button" onClick="left_right( '<?php echo $key;?>', 'add' );" ><i class="fa fa-arrow-right"></i></button>
-            <div class="clear" style="height:10px;" ></div>
-            <button class="btn btn-info" type="button" onClick="left_right( '<?php echo $key;?>', '' );" ><i class="fa fa-arrow-left"></i></button>
-        </div>
-        <div class="form-group col-md-5">
-            <label>Selected Cities</label>
-            <select class="left_right" id="<?php echo $key;?>" name="l_data[<?php echo $key;?>][]" multiple >
-            <?php
-                foreach( $cities as $temp_row2 ){ 
-                    if(in_array($temp_row2['id'], $i_city_ids)){ ?>
-                        <option value="<?php echo $temp_row2["id"]?>" selected="selected">
-                            <?php echo $temp_row2["v_name"];?>
-                        </option> 
-                    <?php } ?>
-                    <?php
-                
-            } ?>
-            </select>
-        </div>
-</div>
+											<div class="row" >
+												<div class="col-md-12">
+													<h3>
+														Page Access
+														(<input type="checkbox" value="1" onClick="if( this.checked ){ jQuery('.all_access').prop('checked',true); } else { jQuery('.all_access').prop('checked',false); }" /> Check All)
+													</h3>
+													<div class="row" >
+														<div class="col-md-12">
+															<table class="table table-bordered" id="datatable" style="width:100%;" >
+																<thead>
+																	<tr>
+																		<th>Section Title</th>
+																		<th colspan="5" >Access</th>
+																	</tr>
+																</thead>
+																<tbody>
+																	<?php 
+																	foreach( $page_arr as $page_key => $page_title ){ ?>
+																		<tr>
+																			<td width="50%" ><strong><?php echo $page_title?></strong></td>
+																			<?php foreach( $globalUserAction as $actionKey => $actionTitle ){ ?>
+																			<td width="10%" >
+																				<label>
+																					<input class="all_access" name="l_data[pages][<?php echo $page_key;?>][]" value="<?php echo $actionKey;?>" type="checkbox" <?php echo in_array( $actionKey, $page_access[$page_key] ) ? 'checked' : ''?> />
+																					<?php echo $actionTitle;?>
+																				</label>
+																			</td>
+																			<?php } ?>
+																		</tr> <?php
+																	} ?>		
+																</tbody>
+															</table>
+													   	</div>
+													</div>
+												</div>
+											</div>
+											
 
 
                                             <div class="form-group">

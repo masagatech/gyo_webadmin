@@ -1,12 +1,4 @@
-<?php 
-	## GET ALl Page FROM SECTION TABLE
-	$all_pages= $dclass->select('*','tbl_sections','ORDER BY i_order');
-	// _P($all_pages);
 
-	## GET ADMIN PAGES FROM ADMIN TABLE
-	$admin_page_key = $gnrl->getAdminPagesArray();
-	
-?>
 <div class="cl-sidebar" data-position="right" data-step="1" data-intro="<strong>Fixed Sidebar</strong> <br/> It adjust to your needs." >
 	<div class="cl-toggle"><i class="fa fa-bars"></i></div>
 	<div class="cl-navblock">
@@ -30,65 +22,94 @@
 					<?php 
 					function put_active( $data = '' ){
 						if( is_array( $data ) ){
-							echo in_array( BASE_FILE, $data ) ? "active" : "";
+							return in_array( BASE_FILE, $data ) ? "active" : "";
 						}
 						else{ 
-							echo BASE_FILE == $data ? "active" : "";
+							return BASE_FILE == $data ? "active" : "";
 						}
 					}
-					?>
-					<?php 
-						foreach ($all_pages as $a_key => $a_value) {?>
-							<?php 
-								if($a_value['is_parent'] == '1'){ 
-									$child_page= $dclass->select('*','tbl_sections','AND is_parent = 0 AND i_parent_id = '.$a_value['id'].' ORDER BY i_order ');
+					
+					$firstpage = '';
+					
+					$sidebarSections = $gnrl->getSections();
+					
+					$parentSectionArr = array();
+					
+					foreach( $sidebarSections as $rowSidebar ){
+						
+						$tempSidebarRow = $rowSidebar;
+						
+						$childSectionArr = array();
+						
+						if( count( $rowSidebar['childs'] ) ){
+							
+							foreach( $rowSidebar['childs'] as $tempSidebarRow ){
+								
+								if( isset( $_SESSION['page_access']['pages'][ $tempSidebarRow['v_key'] ] ) ){
 									
-									$isProcess = 0;
-									if(count($child_page) && !empty($child_page)){
-										foreach ($child_page as $c_key => $c_value) { 
-											if( in_array($c_value['v_key'],$admin_page_key) ){
-												$isProcess = 1;
-											}
-										}
-									}
-									// _P($isProcess);
-									if( !$isProcess ){
-										continue;
-									}
-									?>
-									<li>
-				     					<a href="javascript:;"><i class="fa <?php echo $a_value['v_icon']?$a_value['v_icon']:'fa-cogs';  ?>"></i> <span><?php echo $a_value['v_title']; ?></span></a>
-										<?php 
-											if(count($child_page) && !empty($child_page)){ ?>
-												<ul class="sub-menu" style="display:none;">
-													<?php 
-														foreach ($child_page as $c_key => $c_value) { 
-															// _P($c_value['v_key']);
-															if( in_array($c_value['v_key'],$admin_page_key) ){ ?>
-
-																<li class="<?php put_active($c_value['v_name']);?>" >
-																	<a href="<?php echo $c_value['v_name']; ?>"><i class="fa <?php echo $c_value['v_icon']?$c_value['v_icon']:'fa-cogs'; ?>"></i><span><?php echo $c_value['v_title']; ?></span></a>
-																</li>
-															
-															<?php } ?>
-													<?php } ?>
-												</ul>
-											<?php } ?>
-				                    </li>
-								<?php 
-								}elseif($a_value['is_parent'] == '2'){
-									if( in_array($a_value['v_key'],$admin_page_key) ){ ?>
-
-									<li class="<?php put_active($a_value['v_name']);?>" >
-										<a href="<?php echo $a_value['v_name']; ?>"><i class="fa <?php echo $a_value['v_icon']?$a_value['v_icon']:'fa-cogs'; ?>"></i><span><?php echo $a_value['v_title']; ?></span></a>
-									</li>
+									$tempStr = '<li class="'.put_active( $tempSidebarRow['v_name'] ).'" >';
+									$tempStr .= '<a href="'.$tempSidebarRow['v_name'].'">';
+									$tempStr .= '<i class="fa '.( $tempSidebarRow['v_icon'] ? $tempSidebarRow['v_icon'] : 'fa-angle-right' ).'"></i>';
+									$tempStr .= '<span>'.$tempSidebarRow['v_title'].'</span>';
+									$tempStr .= '</a>';
+									$tempStr .= '</li>';
+									$childSectionArr[] = $tempStr;
 									
-									<?php } 
+									if( $firstpage == '' ){
+										$firstpage = $tempSidebarRow['v_name'];
+									}
+									
+									
 								}
-							} ?>
-							<li class="" ><a href="javascript:;" onClick="doLogout();" ><i class="fa fa-power-off"></i><span>Logout</span></a></li>
-							<li class="" ><a href="#"><i class=""></i><span>&nbsp;</span></a></li>
-					</ul>
+								
+							}
+							
+							if( count( $childSectionArr ) ){
+							
+								$parentSidebarSTR = '<li>';
+								$parentSidebarSTR .= '<a href="javascript:;" >';
+								$parentSidebarSTR .= '<i class="fa '.( $rowSidebar['v_icon'] ? $rowSidebar['v_icon'] : 'fa-cogs' ).'"></i>';
+								$parentSidebarSTR .= '<span>'.$rowSidebar['v_title'].'</span>';
+								$parentSidebarSTR .= '</a>';
+								$parentSidebarSTR .= '<ul class="sub-menu" style="display:none;">';
+								$parentSidebarSTR .= implode( '', $childSectionArr );
+								$parentSidebarSTR .= '</ul>';
+								$parentSidebarSTR .= '</li>';
+								
+							}
+							
+						}
+						else{
+							
+							$parentSidebarSTR = '<li class="'.put_active( $tempSidebarRow['v_name'] ).'" >';
+							$parentSidebarSTR .= '<a href="'.$tempSidebarRow['v_name'].'" >';
+							$parentSidebarSTR .= '<i class="fa '.( $tempSidebarRow['v_icon'] ? $tempSidebarRow['v_icon'] : 'fa-cogs' ).'"></i>';
+							$parentSidebarSTR .= '<span>'.$tempSidebarRow['v_title'].'</span>';
+							$parentSidebarSTR .= '</a>';
+							$parentSidebarSTR .= '</li>';
+							
+							if( $firstpage == '' ){
+								$firstpage = $tempSidebarRow['v_name'];
+							}
+							
+						}
+						
+						$parentSectionArr[] = $parentSidebarSTR;
+						
+					}
+					
+					if( $_SESSION['redirect_link'] == 'firstpage' && $firstpage ){
+						$_SESSION['redirect_link'] = '';
+						$gnrl->redirectTo( $firstpage );
+					}
+					
+					echo implode( '', $parentSectionArr );
+					
+					?>
+					
+					<li class="" ><a href="javascript:;" onClick="doLogout();" ><i class="fa fa-power-off"></i><span>Logout</span></a></li>
+					<li class="" ><a href="#"><i class=""></i><span>&nbsp;</span></a></li>
+				</ul>
 			</div>
 		</div>
 		<div class="text-right collapse-button" style="padding:7px 9px;">

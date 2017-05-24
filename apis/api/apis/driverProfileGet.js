@@ -28,7 +28,8 @@ var currentApi = function( req, res, next ){
 	if( _status ){
 		
 		var _q = " SELECT ";
-		_q += " a.v_image, a.v_name, a.v_email, a.v_phone, a.v_password, a.v_gender, a.v_token ";
+		_q += " a.v_image, a.v_name, a.v_email, a.v_phone, a.v_password, a.v_gender, a.v_token, a.i_city_id ";
+		_q += " , b.v_type as v_vehicle_type ";
 		_q += " , b.v_vehicle_number ";
 		_q += " , b.v_image_rc_book ";
 		_q += " , b.v_image_puc ";

@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 
 	$page_title = "SMS Settings";
 	$page = "sms_settings";
@@ -24,7 +24,7 @@ $gnrl->isPageAccess(BASE_FILE);
 	
 	if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ){
 		unset($_POST['submit_btn']);
-		if( $gnrl->checkAction('edit') == '1' ){
+		if( 1 ){
 			foreach( $_POST as $key => $val ) {
 				$gnrl->save_site_setting( $key, addslashes( stripslashes( $val ) ) );
 			}

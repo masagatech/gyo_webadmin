@@ -2,7 +2,7 @@
 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 
 // ini_set("display_errors", "1");
 // error_reporting(E_ALL);
@@ -42,7 +42,7 @@ $gnrl->isPageAccess(BASE_FILE);
         if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
             $id = $_REQUEST['id'];
             if($_REQUEST['chkaction'] == 'delete') {
-                if($gnrl->checkAction('delete') == '1'){
+                if(1){
                     $dclass->delete( $table ," id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
@@ -51,7 +51,7 @@ $gnrl->isPageAccess(BASE_FILE);
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array('e_status'=>'active');
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -61,7 +61,7 @@ $gnrl->isPageAccess(BASE_FILE);
             }
             // make records inactive
             else if($_REQUEST['chkaction'] == 'inactive'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array( 'e_status' => 'inactive' );
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
@@ -139,9 +139,9 @@ $gnrl->isPageAccess(BASE_FILE);
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
+                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
                                 <?php if( !$script ){?>
-                                    <?php if( !$script && $gnrl->checkAction('add') == '1'){?>
+                                    <?php if( !$script && 1){?>
                                         <a href="<?php echo $page?>.php?script=add" class="fright">
                                             <button class="btn btn-primary" type="button">Add</button>
                                         </a>
@@ -152,7 +152,7 @@ $gnrl->isPageAccess(BASE_FILE);
                             </h3>
                         </div>
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && $gnrl->checkAction($script) == '1' ){?>
+                        if( ($script == 'add' || $script == 'edit') && 1 ){?>
                             <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-10">
@@ -284,7 +284,7 @@ $gnrl->isPageAccess(BASE_FILE);
                             <?php 
                         }
                         else{
-                            if( $gnrl->checkAction($script) == '1' ){
+                            if( 1 ){
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
                                 }
@@ -382,7 +382,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                                    <td><?php echo $row['e_status'];?></td>
                                                                 <td>
                                                                     <?php
-                                                                     if($gnrl->checkAction('edit')=='1'){ ?>
+                                                                     if(1){ ?>
                                                                      <div class="btn-group pull-right">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>
                                                                         <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
@@ -427,12 +427,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                 </div> 
                             <?php }
                             else{ ?>
-                                    <h3>
-                                        <a href="<?php echo $page?>.php" class="fright">
-                                            <button class="btn btn-primary" type="button">Back</button>
-                                        </a>
-                                    </h3>
-                                    <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
+                                    
                             <?php 
                             }
                         }?>

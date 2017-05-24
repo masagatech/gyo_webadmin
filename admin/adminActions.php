@@ -28,13 +28,14 @@ $table = 'tbl_admin';
 					$_SESSION['adminemail'] = $check[0]['v_email'];
 					$_SESSION['adminname'] = $check[0]['v_name'];
 					$_SESSION['lastlog'] = $check[0]['d_last_login'];
-					$_SESSION['page_access'] =json_decode($check[0]['l_data'],true);
+					$_SESSION['page_access'] =json_decode( $check[0]['l_data'], true );
 					$dclass->update( $table, array( 'd_last_login' => date( 'Y-m-d H:i:s' ) )," id = '".$_SESSION['adminid']."'");
 					$data['success'] = 1;
 					// _P($_SESSION);
 					// exit;
 					$data['level'] = $_SESSION['adminlevel'];
-					$data['redirect_link'] = $_SESSION['admin_after_login'];
+					$data['redirect_link'] = '';
+					$_SESSION['redirect_link'] = 'firstpage';
 				}
 			}
 			echo json_encode( $data );

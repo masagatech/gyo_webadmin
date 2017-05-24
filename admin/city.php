@@ -1,91 +1,79 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
-// _P($_REQUEST);
-// exit;
-$variable="Posted On April 6th By Some Dude";
+extract( $_POST );
+$page_title = "Manage City";
+$page = "city";
+$table = 'tbl_city';
+$title2 = 'City';
+// $v_role ='user';
+$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
 
-// $variable = substr($variable, 0, strpos($variable, "By"));
-// _P($variable);
-// exit;
-
-	extract( $_POST );
-	$page_title = "Manage City";
-	$page = "city";
-	$table = 'tbl_city';
-	$title2 = 'City';
-	// $v_role ='user';
-	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
+## Insert Record in database starts
+if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
+	$temp="";
+	$ins = array(
+		'v_name'  => $v_name,
+        'd_added' => date('Y-m-d H:i:s'),
+        'd_modified' => date('Y-m-d H:i:s'),
+        'l_data' => json_encode($temp),
+	);
+    $id = $dclass->insert( $table, $ins );
 	
-	## Insert Record in database starts
-	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
-		$temp="";
-		$ins = array(
-			'v_name'  => $v_name,
-            'd_added' => date('Y-m-d H:i:s'),
-            'd_modified' => date('Y-m-d H:i:s'),
-            'l_data' => json_encode($temp),
-		);
-        $id = $dclass->insert( $table, $ins );
+	$gnrl->redirectTo($page.".php?succ=1&msg=add");
+}
+
+## Delete Record from the database starts
+if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
+	if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+		$id = $_REQUEST['id'];
+		if($_REQUEST['chkaction'] == 'delete') {
+			$dclass->delete( $table ," id = '".$id."'");
+			$gnrl->redirectTo($page.".php?succ=1&msg=del");
+		}
+		// make records active
+		else if($_REQUEST['chkaction'] == 'active'){
+			$ins = array('e_status'=>'active');
+			$dclass->update( $table, $ins, " id = '".$id."'");
+			$gnrl->redirectTo($page.".php?succ=1&msg=multiact");
+		}
+		// make records inactive
+		else if($_REQUEST['chkaction'] == 'inactive'){
+			$ins = array( 'e_status' => 'inactive' );
+			$dclass->update( $table, $ins, " id = '".$id."'");
+			$gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
+		}
+		// make records active
+		else if($_REQUEST['chkaction'] == 'delete_image'){
+			$ins = array('v_image'=>'');
+			$dclass->update($table,$ins," id='$id'");
+			$gnrl->redirectTo($page.".php?succ=1&msg=multiact");
+		}
 		
-		$gnrl->redirectTo($page.".php?succ=1&msg=add");
-	}
+	}	
+}
 
-	## Delete Record from the database starts
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
-			$id = $_REQUEST['id'];
-			if($_REQUEST['chkaction'] == 'delete') {
-				$dclass->delete( $table ," id = '".$id."'");
-				$gnrl->redirectTo($page.".php?succ=1&msg=del");
-			}
-			// make records active
-			else if($_REQUEST['chkaction'] == 'active'){
-				$ins = array('e_status'=>'active');
-				$dclass->update( $table, $ins, " id = '".$id."'");
-				$gnrl->redirectTo($page.".php?succ=1&msg=multiact");
-			}
-			// make records inactive
-			else if($_REQUEST['chkaction'] == 'inactive'){
-				$ins = array( 'e_status' => 'inactive' );
-				$dclass->update( $table, $ins, " id = '".$id."'");
-				$gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
-			}
-			// make records active
-			else if($_REQUEST['chkaction'] == 'delete_image'){
-				$ins = array('v_image'=>'');
-				$dclass->update($table,$ins," id='$id'");
-				$gnrl->redirectTo($page.".php?succ=1&msg=multiact");
-			}
-			
-		}	
-	}
-	
-	## Edit Process
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+## Edit Process
+if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
+	if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 
-			$id = $_REQUEST['id'];
-			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
-				$ins = array(
-                    'v_name'  => $v_name,
-                    'd_modified' => date('Y-m-d H:i:s')
-                );
-				$dclass->update( $table, $ins, " id = '".$id."' ");
-				$gnrl->redirectTo($page.'.php?succ=1&msg=edit&a=2&script=edit&id='.$_REQUEST['id']);
-			}
-			else {
-				$row = $dclass->select('*',$table," AND id = '".$id."'");
-
-				$row = $row[0];
-                // _P($row);
-                // exit;
-				extract( $row );
-                // $l_data=json_decode($l_data,true);
-			}
+		$id = $_REQUEST['id'];
+		if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
+			$ins = array(
+                'v_name'  => $v_name,
+                'd_modified' => date('Y-m-d H:i:s')
+            );
+			$dclass->update( $table, $ins, " id = '".$id."' ");
+			$gnrl->redirectTo($page.'.php?succ=1&msg=edit&a=2&script=edit&id='.$_REQUEST['id']);
+		}
+		else {
+			$row = $dclass->select('*',$table," AND id = '".$id."'");
+			$row = $row[0];
+			extract( $row );
+            // $l_data=json_decode($l_data,true);
 		}
 	}
+}
 
 	
 
@@ -111,9 +99,9 @@ $variable="Posted On April 6th By Some Dude";
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
+                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
                                 <?php if( !$script ){?>
-                                    <?php if( !$script && $gnrl->checkAction('add') == '1'){?>
+                                    <?php if( !$script && 1){?>
 
                                         <a href="<?php echo $page?>.php?script=add" class="fright">
                                             <button class="btn btn-primary" type="button">Add <?php echo ' '.ucfirst( $title2 );?></button>
@@ -123,7 +111,7 @@ $variable="Posted On April 6th By Some Dude";
                             </h3>
                         </div>
                         <?php 
-                        if( ( $script == 'add' || $script == 'edit' ) && $gnrl->checkAction($script) == '1' ){?>
+                        if( ( $script == 'add' || $script == 'edit' ) && 1 ){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-12">
@@ -149,7 +137,7 @@ $variable="Posted On April 6th By Some Dude";
 							<?php 
                         }
                         else{
-						    if($gnrl->checkAction($script) == '1'){
+						    if(1){
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
                                 }
@@ -229,14 +217,23 @@ $variable="Posted On April 6th By Some Dude";
                                             
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
+                                                <!-- <thead>
                                                     <tr>
                                                         <th>Name</th>
                                                         <th>Added Date</th>
                                                          <th>Status</th>
                                                         <th><span class="pull-right">Action</span></th>
                                                     </tr>
-                                                </thead>
+                                                </thead> -->
+                                                 <?php
+                                                
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+                                                    'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
@@ -246,7 +243,7 @@ $variable="Posted On April 6th By Some Dude";
                                                             ?>
                                                             <tr>
                                                                 <td>
-                                                                    <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['v_name']; ?></a>
+                                                                    <?php echo $row['v_name']; ?>
                                                                 </td>
                                                                 <?php 
                                                                 $d_added = substr($row['d_added'], 0, strpos($row['d_added'], "+"));
@@ -255,7 +252,7 @@ $variable="Posted On April 6th By Some Dude";
                                                                 <td><?php echo $row['e_status']; ?></td>
                                                                 <td class="text-right" >
                                                                     <?php
-                                                                         if($gnrl->checkAction('edit')=='1'){ ?>
+                                                                         if(1){ ?>
                                                                          <div class="btn-group">
                                                                             <button class="btn btn-default btn-xs" type="button">Actions</button>
                                                                             <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
@@ -303,12 +300,7 @@ $variable="Posted On April 6th By Some Dude";
                                  }
                                  <?php 
                             }else{ ?>
-                                    <h3>
-                                        <a href="<?php echo $page?>.php" class="fright">
-                                            <button class="btn btn-primary" type="button">Back</button>
-                                        </a>
-                                    </h3>
-                                    <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
+                                    
                         <?php }
                         }?>
                     </div>

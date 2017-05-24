@@ -408,25 +408,6 @@ var gnrl = {
 		return Math.round( amount * 100 ) / 100;
 	},
 	
-	_getTransactionTypes : function(type = null){
-
-		var types = {
-			'cash' : "Cash",
-			'wallet' : "Goyo Wallet",
-			'paytm' : "Paytm Wallet",
-			'mobikwik' : "Mobi Kwik Wallet",
-			'credit_card' : "Credit Card",
-			'debit_card' : "Debit Card",
-		};
-
-		if( type != null ){
-			return types[type];
-		}
-		return types;
-
-	},
-	
-	
 };
 
 module.exports = gnrl;

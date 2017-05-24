@@ -15,20 +15,8 @@ var storage 	= multer.diskStorage({
 	}
 });
 
-/*
-var upload = multer({ storage : storage }).fields([
-	{ name : 'v_image_rc_book', maxCount : 1 },
-	{ name : 'v_image_puc', maxCount : 1 },
-	{ name : 'v_image_insurance', maxCount : 1 },
-]);*/
-
 var upload = multer({ storage : storage }).any();
-
-
 var dirUploads = __dirname + '/../../public/uploads/';
-
-
-
 
 var currentApi = function( req, res, next ){
 	
@@ -39,8 +27,8 @@ var currentApi = function( req, res, next ){
 	var params = gnrl._frm_data( req );
 	var _lang = gnrl._getLang( params );
 	
-	var _status   = 1;
-	var _message  = '';
+	var _status = 1;
+	var _message = '';
 	var _response = {};
 	
 	upload( req, res, function( err ){
@@ -56,7 +44,6 @@ var currentApi = function( req, res, next ){
 			'v_image_adhar_card'	: { 'name' : '', 'path' : '', },
 			'v_image_permit_copy'	: { 'name' : '', 'path' : '', },
 			'v_image_police_copy' 	: { 'name' : '', 'path' : '', },
-			
 		};
 		
 		for( var k in req.files ){
@@ -71,21 +58,21 @@ var currentApi = function( req, res, next ){
 		// _response.a = req.files;
 		// _response.b = fileArr;
 		
-		var v_name 				= gnrl._is_undf( params.v_name );
-		var v_email 			= gnrl._is_undf( params.v_email );
-		var v_phone 			= gnrl._is_undf( params.v_phone );
-		var v_gender 			= gnrl._is_undf( params.v_gender, 'male' );
-		var v_password 			= gnrl._is_undf( params.v_password );
-		var v_device_token 		= gnrl._is_undf( params.v_device_token );
-		var v_imei_number 		= gnrl._is_undf( params.v_imei_number );
-		
-		var v_vehicle_type 		= gnrl._is_undf( params.v_vehicle_type );
-		var v_vehicle_number 	= gnrl._is_undf( params.v_vehicle_number );
-		var l_latitude 			= gnrl._is_undf( params.l_latitude );
-		var l_longitude 		= gnrl._is_undf( params.l_longitude );
-		var l_data 				= gnrl._is_undf( params.l_data, {} );
-		var v_otp 				= gnrl._get_otp();
-		var lang 	        	= gnrl._is_undf( params.lang );
+		var v_name = gnrl._is_undf( params.v_name );
+		var v_email = gnrl._is_undf( params.v_email );
+		var v_phone = gnrl._is_undf( params.v_phone );
+		var v_gender = gnrl._is_undf( params.v_gender, 'male' );
+		var v_password = gnrl._is_undf( params.v_password );
+		var v_device_token = gnrl._is_undf( params.v_device_token );
+		var v_imei_number = gnrl._is_undf( params.v_imei_number );
+		var i_city_id = gnrl._is_undf( params.i_city_id );
+		var v_vehicle_type = gnrl._is_undf( params.v_vehicle_type );
+		var v_vehicle_number = gnrl._is_undf( params.v_vehicle_number );
+		var l_latitude = gnrl._is_undf( params.l_latitude );
+		var l_longitude = gnrl._is_undf( params.l_longitude );
+		var l_data = gnrl._is_undf( params.l_data, {} );
+		var v_otp = gnrl._get_otp();
+		var lang = gnrl._is_undf( params.lang );
 		
 		if( !v_name.trim() ){ _status = 0; _message = 'err_req_name'; }
 		if( _status && !v_email.trim() ){ _status = 0; _message = 'err_req_email'; }
@@ -96,15 +83,11 @@ var currentApi = function( req, res, next ){
 		if( _status && !validator.isLength( v_password, { min : 6, max : 10 } ) ){ _status = 0; _message = 'err_validation_password'; }
 		if( _status && !v_device_token.trim() ){ _status = 0; _message = 'err_req_device_token'; }
 		if( _status && !v_imei_number.trim() ){ _status = 0; _message = 'err_req_imei_number'; }
-		
-		
+		if( _status && !i_city_id.trim() ){ _status = 0; _message = 'err_req_city'; }
 		if( _status && !l_latitude.trim() ){ _status = 0; _message = 'err_req_latitude'; }
 		if( _status && !l_longitude.trim() ){ _status = 0; _message = 'err_req_longitude'; }
-		
-		
 		if( _status && !v_vehicle_number.trim() ){ _status = 0; _message = 'err_req_vehicle_number'; }
 		if( _status && !v_vehicle_type.trim() ){ _status = 0; _message = 'err_req_vehicle_type'; }
-		
 		
 		if( _status && !fileArr['v_image'].name ){ _status = 0; _message = 'err_req_profile_image'; }
 		if( _status && !fileArr['v_image_rc_book'].name ){ _status = 0; _message = 'err_req_rc_book_image'; }
@@ -125,8 +108,6 @@ var currentApi = function( req, res, next ){
 			
 			if( _status ){
 				
-				var _setting = [];
-				var _email_template = [];
 				var _user_insert = [];
 				
 				async.series([
@@ -180,6 +161,7 @@ var currentApi = function( req, res, next ){
 							'v_device_token' 	: v_device_token,
 							'l_latitude' 		: l_latitude,
 							'l_longitude' 		: l_longitude,
+							'i_city_id' 		: i_city_id,
 							'l_data'            : gnrl._json_encode({
 								'rate'            : 0,
 								'rate_total'      : 0,
@@ -209,21 +191,17 @@ var currentApi = function( req, res, next ){
 									'v_image_adhar_card' 	: fileArr['v_image_adhar_card'].name,
 									'v_image_permit_copy' 	: fileArr['v_image_permit_copy'].name,
 									'v_image_police_copy' 	: fileArr['v_image_police_copy'].name,
-									
-									
-								}, function( vehicle_status, vehicle_data ){ 
+								}, 
+								function( vehicle_status, vehicle_data ){ 
 									if( vehicle_status ){
 										fs.rename( fileArr['v_image_rc_book'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_rc_book'].name, function(err){});
 										fs.rename( fileArr['v_image_puc'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_puc'].name, function(err){});
 										fs.rename( fileArr['v_image_insurance'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_insurance'].name, function(err){});
-										
 										fs.rename( fileArr['v_image_license'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_license'].name, function(err){});
 										fs.rename( fileArr['v_image_adhar_card'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_adhar_card'].name, function(err){});
 										fs.rename( fileArr['v_image_permit_copy'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_permit_copy'].name, function(err){});
 										fs.rename( fileArr['v_image_police_copy'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_police_copy'].name, function(err){});
-										
 										callback( null );
-										// gnrl._api_response( res, 1, 'succ_register_successfully', { 'id' : user_insert.id } );
 									}
 									else{
 										dclass._delete( 'tbl_user', " AND id = '"+data.id+"' ", function( status, data ){
@@ -241,10 +219,10 @@ var currentApi = function( req, res, next ){
 					// Send SMS
 					function( callback ){
 						var params = {
-							_to      	: v_phone,
-							_lang 		: _lang,
-							_key 		: 'driver_registration',
-							_keywords 	: {
+							_to : v_phone,
+							_lang : _lang,
+							_key : 'driver_registration',
+							_keywords : {
 								'[user_name]' : v_name,
 								'[otp]' : v_otp,
 							},
@@ -257,10 +235,10 @@ var currentApi = function( req, res, next ){
 					// Send Email
 					function( callback ){
 						var params = {
-							_to      	: v_email,
-							_lang 		: _lang,
-							_key 		: 'driver_registration',
-							_keywords 	: {
+							_to : v_email,
+							_lang : _lang,
+							_key : 'driver_registration',
+							_keywords : {
 								'[user_name]' : v_name,
 								'[otp]' : v_otp,
 							},
@@ -272,7 +250,10 @@ var currentApi = function( req, res, next ){
 					
 				], 
 				function( error, results ){
-					gnrl._api_response( res, 1, 'succ_register_successfully', { 'id' : _user_insert.id } );
+					gnrl._api_response( res, 1, 'succ_register_successfully', { 
+						'id' : _user_insert.id,
+						'v_phone' : v_phone
+					});
 				});
 
 			}

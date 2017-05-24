@@ -112,27 +112,23 @@ error_reporting( E_ERROR );
 			
 	}
 	
-	$not_get_url_files = array(
-		"admin" => array( 
-			"index.php", "adminActions.php"
-		)
-	);
-	if( !isset( $_SESSION["admin_after_login"] ) ){ $_SESSION["admin_after_login"] = ""; }
-	if( !in_array( BASE_FILE, $not_get_url_files["admin"] ) && strstr( $_SERVER['PHP_SELF'], "admin" ) ){
-		$_SESSION["admin_after_login"] = $gnrl->curr_url();
-	}
-	if( $_SESSION["admin_after_login"] == SITE_URL || $_SESSION["admin_after_login"] == "" ){
-		$_SESSION["admin_after_login"] = ADMIN_URL."sitesettings.php";
-	}
-	
 	## Set Admin Session Data
 	define( "AID", ( isset( $_SESSION['adminid'] ) && $_SESSION['adminid'] ) ? $_SESSION['adminid'] : 0 );
 	define( "ALVL",  ( isset( $_SESSION['adminlevel'] ) && $_SESSION['adminlevel'] ) ? $_SESSION['adminlevel'] : 0 );
 	define( "AUNAME", ( isset( $_SESSION['adminname'] ) && $_SESSION['adminname'] ) ? $_SESSION['adminname'] : "" );
 	
+	if( $_SESSION['adminid'] ){
+		$get_admin_login = $dclass->select( "*", 'tbl_admin', " AND id='".$_SESSION['adminid']."' ");
+		$_SESSION['page_access'] = json_decode( $get_admin_login[0]['l_data'], true );
+	}
+	
+	## Checking for Permissions
+	if( !$config_frontend ){
+		$gnrl->isAccess();
+	}
 	
 	
-	global $globalCharges, $globalTrip,$globEmailTypes,$globSmsTypes,$globalRideStatus,$globalShowEstimateCharge,$globalDriverSearchQuery,$globalUserAction,$globalAdminRole,$globNotificationTypes,$globalParentChild;
+	global $globalCharges, $globalTrip, $globEmailTypes,$globSmsTypes,$globalRideStatus,$globalShowEstimateCharge,$globalDriverSearchQuery,$globalUserAction,$globalAdminRole,$globNotificationTypes,$globalParentChild;
 
 	// {"day_km_end": "", "day_km_start": "", "night_km_end": "", "": "", "day_km_charges": "", "": "", "night_km_start": "", "": "", "": "", "night_km_charges": "", "": "", "": "", "day_km_after_charge": "", "night_km_after_charge": ""}
 	$globalParentChild=array(
@@ -270,68 +266,10 @@ error_reporting( E_ERROR );
 		$globLangArr[$rowTemp['v_key']] = $rowTemp['v_name'];
 	}
 	
-	/*
-	if( $_REQUEST['D'] == 1 ){
-		function _curl( $url, $fields = array(), $method = 'GET' ){ 
-			
-			if( $method == 'GET' ){
-				
-				if( count( $fields ) ){
-					$url = $url.'?'.http_build_query( $fields );
-				}
-				
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_URL, $url ); 
-				curl_setopt($ch, CURLOPT_ENCODING, '');
-				curl_setopt($ch, CURLOPT_POST, 0 ); 
-				curl_setopt($ch, CURLOPT_FAILONERROR, 1 ); 
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 ); 
-				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false );
-				curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
-				
-				if( strstr( $url, 'www.googleapis.com/customsearch' ) ){
-					curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-					curl_setopt($ch, CURLOPT_PROXYPORT, 3128);
-					curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-				}
-				
-				$retValue = curl_exec($ch);
-				curl_close($ch);
-			}
-			else{
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_URL, $url ); 
-				curl_setopt($ch, CURLOPT_POST, 1 );
-				curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query( $fields ) );
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false ); 
-				curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
-				$retValue = curl_exec($ch);
-				curl_close($ch);
-			}
-			return $retValue; 
-		}
-		$url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user=Goyo&pwd=goyo123&sender=GoYooo';
-		$url .= '&mt=2';
-		$url .= '&mobile=8866207256';
-		$url .= '&msg=LiveSmsTesting';
-		_p( $url );
-		
-		try{
-			_p( _curl( $url ) );
-		}
-		catch( Exception $e ){
-			_p($e);
-		}
-		exit;
-	}*/
-	
-	$_SESSION['DETECT_IP'] = '49.213.55.201'; $gnrl->getRealIpAddr();
+	$_SESSION['DETECT_IP'] = $gnrl->getRealIpAddr(); '49.213.55.201'; 
 	$_SESSION['DETECT_LOCATION'] = $gnrl->getLocationInfoByIp( DETECT_IP );
-	//_p( $_SESSION['DETECT_IP'] ); 
-	//_p( $_SESSION['DETECT_LOCATION'] ); 
-	//exit;
+	
+	
 	
 	
 ?>

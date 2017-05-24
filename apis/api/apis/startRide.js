@@ -50,14 +50,22 @@ var currentApi = function( req, res, next ){
 					else if( ride[0].i_driver_id != login_id ){
 						gnrl._api_response( res, 0, 'err_no_ride' );
 					}
-					else if( ride[0].v_pin != v_pin ){
-						gnrl._api_response( res, 0, 'err_invalid_pin' );
-					}
 					else{
 						_ride = ride[0];
 						callback( null );
 					}
 				});
+			},
+			
+			// Check PIN
+			function( callback ){
+				var last_digits = _ride.v_pin[4]+_ride.v_pin[5]+_ride.v_pin[6]+_ride.v_pin[7];
+				if( last_digits != v_pin ){
+					gnrl._api_response( res, 0, 'err_invalid_pin' );
+				}
+				else{
+					callback( null );
+				}
 			},
 			
 			
@@ -81,14 +89,16 @@ var currentApi = function( req, res, next ){
 			// Send Notification To User
 			function( callback ){
 				
-				dclass._select( '*', 'tbl_user', " AND v_role = 'user' AND id = '"+_ride.i_user_id+"' ", function( status, user ){ 
+				User.get( _ride.i_user_id, function( status, user ){
+					
 					_user = user[0];
-					_p( '_user', _user );
+					
 					if( _user.v_device_token ){
+						
 						var tokens = [];
 						tokens.push({
 							'id' : _user.id,
-							'lang' : _lang, // _user.l_data.lang ? _user.l_data.lang : 
+							'lang' : _user.l_data.lang,
 							'token' : _user.v_device_token,
 						});
 						var params = {
@@ -102,8 +112,6 @@ var currentApi = function( req, res, next ){
 							_need_log : 0,
 						};
 						Notification.send( params, function( err, response ){
-							_p( 'err', err );
-							_p( 'response', response );
 							callback( null );
 						});
 					}

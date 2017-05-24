@@ -1,10 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-// $gnrl->isPageAccess(BASE_FILE);
-// _P($_REQUEST);
-// exit;
-   
+
     extract( $_POST );
     $page_title = "Driver Log";
     $page = "driver_log";
@@ -73,7 +70,7 @@ $gnrl->check_login();
     //     if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
     //         $id = $_REQUEST['id'];
     //         if($_REQUEST['chkaction'] == 'delete') {
-    //             if($gnrl->checkAction('delete') == '1'){
+    //             if(1){
     //                 $dclass->delete( $table ," id = '".$id."'");
     //                 $gnrl->redirectTo($page.".php?succ=1&msg=del");
     //             }else{
@@ -82,7 +79,7 @@ $gnrl->check_login();
     //         }
     //         // make records active
     //         else if($_REQUEST['chkaction'] == 'active'){
-    //             if($gnrl->checkAction('edit') == '1'){
+    //             if(1){
     //                 $ins = array('e_status'=>'active');
     //                 $dclass->update( $table, $ins, " id = '".$id."'");
     //                 $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -92,7 +89,7 @@ $gnrl->check_login();
     //         }
     //         // make records inactive
     //         else if($_REQUEST['chkaction'] == 'inactive'){
-    //             if($gnrl->checkAction('edit') == '1'){
+    //             if(1){
     //                 $ins = array( 'e_status' => 'inactive' );
     //                 $dclass->update( $table, $ins, " id = '".$id."'");
     //                 $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");

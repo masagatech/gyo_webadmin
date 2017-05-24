@@ -389,6 +389,56 @@ $mail = new PHPMailer();
 		}
 		
 		
+		function renderTableHeader( $arr = array() ){
+			
+			if( !$arr ){
+				return '';
+			}
+			
+			$ascArr = array(
+				'ASC' => 'DESC',
+				'DESC' => 'ASC',
+			);
+			
+			$link = array();
+			foreach( $_GET as $k => $v ){
+				if( $k[0].$k[1].$k[2].$k[3].$k[4] == 'srch_' ){
+					$link[] = $k.'='.$v;
+				}
+				else if( $k == 'keyword' ){
+					$link[] = $k.'='.$v;
+				}
+			}
+			
+			$str = '<thead><tr>';
+				foreach( $arr as $k => $v ){
+					$str .= '<th>';
+						if( $v['order'] ){
+							
+							$url = implode( '&', $link );
+							$url = ( $url ? ( '?'.$url.'&' ) : '?' ).'sb='.$k.'&st='.( $_REQUEST['sb'] == $k ? $ascArr[$_REQUEST['st']] : 'ASC' );
+							
+							$str .= '<a class="'.( $_REQUEST['sb'] == $k ? 'active' : '' ).'" href="'.$url.'" >';
+						}
+						$str .= $v['title'];
+						if( $v['order'] ){
+							if( $_REQUEST['sb'] == $k ){
+								if( $_REQUEST['st'] == 'ASC' ){
+									$str .= '&nbsp; <i class="fa fa-long-arrow-up"></i>';
+								}
+								else{
+									$str .= '&nbsp; <i class="fa fa-long-arrow-down"></i>';
+								}
+							}
+							$str .= '</a>';
+						}
+					$str .= '</th>';
+				}
+			$str .= '</tr></thead>';
+			
+			return $str;
+		}
+		
 		
 		
 		## Added By D. 08-09-2014
@@ -413,8 +463,14 @@ $mail = new PHPMailer();
 			
 			$str = '';
 			foreach( $data as $k => $v ){
-				$str .= '<option value="'.$k.'" '.( $k == $sel ? "selected" : "" ).' >'.$v.'</option>';
+				$selected = "";
+				if( $sel != "" && $k == $sel ){
+					$selected= "selected";
+				}
+				$str .= '<option value="'.$k.'" '.$selected.' >'.$v.'</option>';
 			} 
+			// _P($str);
+			// exit;
 			return $str;
 		}
 		function price_format( $price ){
@@ -608,7 +664,7 @@ $mail = new PHPMailer();
 			$row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
 			$str = '';
 			foreach($row as $key => $val){
-				if($selval == $val['id']) { $sel = 'selected="selected"'; }
+				if($selval == $val['v_name']) { $sel = 'selected="selected"'; }
 				else { $sel = ''; }
 				$str .= '<option value="'.$val['id'].'" '.$sel.'>'.ucwords($val['v_name']).'</option>';
 			}
@@ -621,113 +677,96 @@ $mail = new PHPMailer();
 			 return $d_added;
 		}
 
-		// function getAdminPages(){
-		// 	global $dclass; 	 
-		//  	$get_Page_Access = $_SESSION['page_access']['pages'];
-		//  	// _P($get_Page_Access);
-
-		// 	foreach ($get_Page_Access as $p_key => $p_value) {
-		// 		$temp_arr= array();
-		// 		$temp_arr= $dclass->select('v_key,v_title,v_name','tbl_sections'," AND v_key = '".$p_key."'",'ORDER BY i_order');
-		// 		if( count($temp_arr) ){
-		// 			$admin_pages[] = $temp_arr[0];
-		// 		}
-
-		// 	}
-		// 	return $admin_pages;
-		// }
-
-		// function getAdminPagesArray(){
-
-		// 	$admin_page = $this->getAdminPages();
-		// 	// _P($admin_page);
-		// 	// exit;
-		// 	$admin_page_key=array();
-		// 	foreach ($admin_page as $m_key => $m_value) {
-		// 		$admin_page_key[]=$m_value['v_key'];
-		// 	}
-		// 	return $admin_page_key; 
-		// }
-		// function isPageAccess($file=""){
-		// 	$page_access = $this->getAdminPages();
-		// 	foreach ($page_access as $p_key => $p_value) {
-		// 	    if($file == $p_value['v_name']){
-		// 	        $is_access=1;
-		// 	        break;
-		// 	    }else{
-		// 	        $is_access=0;
-		// 	        continue;
-		// 	    }
-		// 	}
-		// 	if($is_access == '0'){
-		// 		$this->redirectTo($page_access[0]['v_name']);
-		// 	}
-			
-		// }
-
-		## FOR TESTING PURPOSE ( TEMPORARY FUNCTION )
-		function getAdminPages(){
-			global $dclass; 	 
-		 	$get_Page_Access = $_SESSION['page_access']['pages'];
-			foreach ($get_Page_Access as $p_key => $p_value) {
-				$temp_arr= array();
-				$temp_arr= $dclass->select('v_key,v_title,v_name','tbl_sections'," AND v_key = '".$p_key."'",'ORDER BY i_order');
-				
-				if( count($temp_arr) ){
-					$temp_arr =$temp_arr[0];
-					$temp_arr['allow_operation']=$p_value;
-				}
-				$admin_pages[] = $temp_arr;
-			}
-			return $admin_pages;
-		}
-
-		function getAdminPagesArray(){
-			$admin_page = $this->getAdminPages();
-			$admin_page_key=array();
-			foreach ($admin_page as $m_key => $m_value) {
-				$admin_page_key[]=$m_value['v_key'];
-			}
-			return $admin_page_key; 
-		}
-		function isPageAccess($file=""){
-			$page_access = $this->getAdminPages();
-			foreach ($page_access as $p_key => $p_value) {
-			    if($file == $p_value['v_name']){
-			    	$_SESSION['allow_operation']= $p_value['allow_operation'];
-			        $is_access=1;
-			        break;
-			    }else{
-			        $is_access=0;
-			        continue;
-			    }
-			}
-			if($is_access == '0'){
-				$this->redirectTo($page_access[0]['v_name']);
-			}
-		}
-
-		function checkAction($action=""){
-			if($action==''){
-				$action='list';
-			}
-			if($action){
-				if($action == 'edit'){
-					$action='update';
-				}
-				$page=$_SESSION['allow_operation'];
-				foreach ($page as $p_key => $p_value) {
-					if($action==$p_value){
-						$is_access=1;
-						break;
-					}else{
-						$is_access=0;
+		function getSections(){
+			global $dclass;
+			$return_data = array();
+			$data = $dclass->select( '*', 'tbl_sections', " ORDER BY i_parent_id ASC, i_order ASC " );
+			if( count( $data ) ){
+				foreach( $data as $row ){
+					if( $row['i_parent_id'] ){
+						$return_data[$row['i_parent_id']]['childs'][$row['id']] = $row;
+					}
+					else{
+						$return_data[$row['id']] = $row;
 					}
 				}
-				return $is_access;
 			}
+			
+			return $return_data;
 		}
 
+		
+		function isAllow( $action = '' ){
+			
+			$pageAccess = $_SESSION['page_access']['pages'];
+			
+			global $dclass;
+			$page = $dclass->select( '*', 'tbl_sections', " AND v_name = '".BASE_FILE."' " );
+			
+			if( count( $page ) ){
+				
+				$v_key = $page[0]['v_key'];
+				
+				if( $action == 'add' && in_array( 'add', $pageAccess[$v_key] ) ){
+					return 1;
+				}
+				else if( $action == 'edit' && in_array( 'update', $pageAccess[$v_key] ) ){
+					return 1;
+				}
+				else if( $action == 'view' && in_array( 'view', $pageAccess[$v_key] ) ){
+					return 1;
+				}
+				else if( $action == 'delete' && in_array( 'delete', $pageAccess[$v_key] ) ){
+					return 1;
+				}
+				else if( $action == '' && in_array( 'list', $pageAccess[$v_key] ) ){
+					return 1;
+				}
+			}
+			
+			return 0;
+		}
+		
+		function isAccess( $file = "" ){
+			
+			$pageAccess = $_SESSION['page_access']['pages'];
+			if( in_array( BASE_FILE, array(
+				'invalid-access.php',
+				'index.php',
+				'adminActions.php',
+				) ) ){
+				return '';
+			}
+			
+			global $dclass;
+			$page = $dclass->select( '*', 'tbl_sections', " AND v_name = '".BASE_FILE."' " );
+			if( count( $page ) ){
+				$v_key = $page[0]['v_key'];
+				if( !isset( $pageAccess[$v_key] ) ){
+					$this->redirectTo( 'invalid-access.php' );
+				}
+				else if( $_REQUEST['script'] == 'add' && !in_array( 'add', $pageAccess[$v_key] ) ){
+					$this->redirectTo( 'invalid-access.php' );
+				}
+				else if( (
+					$_REQUEST['script'] == 'edit'
+					|| $_REQUEST['chkaction'] == 'active'
+					|| $_REQUEST['chkaction'] == 'inactive'
+					) && !in_array( 'update', $pageAccess[$v_key] ) ){
+					$this->redirectTo( 'invalid-access.php' );
+				}
+				else if( $_REQUEST['script'] == 'view' && !in_array( 'view', $pageAccess[$v_key] ) ){
+					$this->redirectTo( 'invalid-access.php' );
+				}
+				else if( $_REQUEST['chkaction'] == 'delete' && !in_array( 'delete', $pageAccess[$v_key] ) ){
+					$this->redirectTo( 'invalid-access.php' );
+				}
+				else if( $_REQUEST['script'] == '' && !in_array( 'list', $pageAccess[$v_key] ) ){
+					$this->redirectTo( 'invalid-access.php' );
+				}
+			}
+		}
+		
 		function sendNotificationAndroid($deviceToken = NULL, $messageArr = array(),$authentication_key) {
             
 

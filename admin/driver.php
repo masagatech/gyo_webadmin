@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+// $gnrl->isPageAccess(BASE_FILE);
 // _P($_REQUEST);
 // exit;
 	extract( $_POST );
@@ -112,7 +112,7 @@ $gnrl->isPageAccess(BASE_FILE);
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
-                if($gnrl->checkAction('delete') == '1'){
+                if(1){
                     $dclass->delete( $table ," id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
@@ -121,7 +121,7 @@ $gnrl->isPageAccess(BASE_FILE);
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array('e_status'=>'active');
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -130,7 +130,7 @@ $gnrl->isPageAccess(BASE_FILE);
                 }
             }
 			else if($_REQUEST['chkaction'] == 'verifynactive'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
 					$ins = array();
 					$ins[] = " v_otp = '' ";
 					$ins[] = " e_status = 'active' ";
@@ -139,8 +139,6 @@ $gnrl->isPageAccess(BASE_FILE);
 					))."' ";
 					$dclass->updateJsonb( $table, $ins, " id = '".$id."' ");	
 					
-                    $ins = array('e_status'=>'active');
-                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -149,7 +147,7 @@ $gnrl->isPageAccess(BASE_FILE);
 			
             // make records inactive
             else if($_REQUEST['chkaction'] == 'inactive'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array( 'e_status' => 'inactive' );
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
@@ -270,9 +268,9 @@ $gnrl->isPageAccess(BASE_FILE);
                 $restepm = $dclass->query($ssql);
                 $row = $dclass->fetchResults($restepm);
                 $row = $row[0];
-                // if($_REQUEST['D']=='1'){
-                //     _P($row);
-                // }
+                if($_REQUEST['D']=='1'){
+                    _P($row);
+                }
                 extract( $row );
                 $l_data = json_decode($l_data,true);
 			}
@@ -302,9 +300,9 @@ $gnrl->isPageAccess(BASE_FILE);
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ).'s'; ?> 
+                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
                                 <?php if( !$script ){?>
-                                    <?php if( !$script && $gnrl->checkAction('add') == '1'){?>
+                                    <?php if( !$script && 1){?>
                                         <a href="<?php echo $page?>.php?script=add" class="fright">
                                             <button class="btn btn-primary" type="button">Add</button>
                                         </a>
@@ -313,11 +311,20 @@ $gnrl->isPageAccess(BASE_FILE);
                             </h3>
                         </div>
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && $gnrl->checkAction($script) == '1' ){?>
+                        if( ($script == 'add' || $script == 'edit') && 1 ){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="content">
+                                             <div class="form-group">
+                                                <label>Profile Image</label>
+                                                <input class="form-control" type="file" name="v_image" style="height:auto;"  >
+                                                <?php 
+                                                    if( $putFile = _is_file( $folder, $v_image ) ){ //echo $putFile; ?>
+                                                    <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
+                                                    <input type="hidden" name="oldname_vimage" value="<?php echo $v_image; ?>">
+                                                <?php } ?>
+                                            </div>
                                             <div class="form-group">
                                                 <label>Name</label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $driver_name; ?>" required />
@@ -341,17 +348,9 @@ $gnrl->isPageAccess(BASE_FILE);
                                             </div>
                                             <div class="form-group">
                                                 <label>IMEI Number</label>
-                                                <input type="text" class="form-control" id="v_imei_number" name="v_imei_number" value="<?php echo $v_imei_number; ?>" required />
+                                                <input type="text" class="form-control" id="v_imei_number" name="v_imei_number" value="<?php echo $v_imei_number; ?>" />
                                             </div>
-                                            <div class="form-group">
-                                                <label>Image</label>
-                                                <input class="form-control" type="file" name="v_image" style="height:auto;"  >
-                                                <?php 
-                                                    if( $putFile = _is_file( $folder, $v_image ) ){ //echo $putFile; ?>
-                                                    <img class="edit_img" src="<?php echo $putFile;?>" >
-                                                    <input type="hidden" name="oldname_vimage" value="<?php echo $v_image; ?>">
-                                                <?php } ?>
-                                            </div>
+                                           
                                              
                                             <div class="form-group">
                                                 <label>Vehicle Type</label>
@@ -373,7 +372,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <input class="form-control" type="file" id="v_image_license" name="v_image_license" style="height:auto;"  >
                                                         <?php 
                                                         if( $putFile = _is_file( $folder, $v_image_license ) ){ //echo $putFile; ?>
-                                                            <img class="edit_img" src="<?php echo $putFile;?>" >
+                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
                                                             <input type="hidden" name="oldname_license" value="<?php echo $v_image_license; ?>">
                                                         <?php } ?>
                                                     </div>
@@ -386,7 +385,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <input class="form-control" type="file" id="v_image_adhar_card" name="v_image_adhar_card" style="height:auto;"  >
                                                         <?php 
                                                         if( $putFile = _is_file( $folder, $v_image_adhar_card ) ){ //echo $putFile; ?>
-                                                            <img class="edit_img" src="<?php echo $putFile;?>" >
+                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
                                                             <input type="hidden" name="oldname_adhar_card" value="<?php echo $v_image_adhar_card; ?>">
                                                         <?php } ?>
                                                     </div>
@@ -399,7 +398,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <input class="form-control" type="file" id="v_image_permit_copy" name="v_image_permit_copy" style="height:auto;"  >
                                                         <?php 
                                                         if( $putFile = _is_file( $folder, $v_image_permit_copy ) ){ //echo $putFile; ?>
-                                                            <img class="edit_img" src="<?php echo $putFile;?>" >
+                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
                                                             <input type="hidden" name="oldname_permit_copy" value="<?php echo $v_image_permit_copy; ?>">
                                                         <?php } ?>
                                                     </div>
@@ -414,7 +413,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <input class="form-control" type="file" id="v_image_rc_book" name="v_image_rc_book" style="height:auto;"  >
                                                         <?php 
                                                         if( $putFile = _is_file( $folder, $v_image_rc_book ) ){ //echo $putFile; ?>
-                                                            <img class="edit_img" src="<?php echo $putFile;?>" >
+                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
                                                             <input type="hidden" name="oldname_rc_book" value="<?php echo $v_image_rc_book; ?>">
                                                         <?php } ?>
                                                     </div>
@@ -427,7 +426,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <input class="form-control" type="file" id="v_image_puc" name="v_image_puc" style="height:auto;"  >
                                                        <?php 
                                                         if( $putFile = _is_file( $folder, $v_image_puc ) ){ //echo $putFile; ?>
-                                                            <img class="edit_img" src="<?php echo $putFile;?>" >
+                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
                                                             <input type="hidden" name="oldname_puc" value="<?php echo $v_image_puc; ?>">
                                                         <?php } ?>
                                                     </div>
@@ -440,7 +439,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <input class="form-control" type="file" id="v_image_insurance" name="v_image_insurance" style="height:auto;"  >
                                                        <?php 
                                                         if( $putFile = _is_file( $folder, $v_image_insurance ) ){ //echo $putFile; ?>
-                                                            <img class="edit_img" src="<?php echo $putFile;?>" >
+                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
                                                             <input type="hidden" name="oldname_insurance" value="<?php echo $v_image_insurance; ?>">
                                                         <?php } ?>
                                                     </div>
@@ -455,7 +454,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                                             <input class="form-control" type="file" id="v_image_police_copy" name="v_image_police_copy" style="height:auto;"  >
                                                             <?php 
                                                             if( $putFile = _is_file( $folder, $v_image_police_copy ) ){ //echo $putFile; ?>
-                                                                <img class="edit_img" src="<?php echo $putFile;?>" >
+                                                                 <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
                                                                 <input type="hidden" name="oldname_police_copy" value="<?php echo $v_image_police_copy; ?>">
                                                             <?php } ?>
                                                         </div>
@@ -479,7 +478,8 @@ $gnrl->isPageAccess(BASE_FILE);
 							<?php 
                         }
                         else{
-						    if($gnrl->checkAction($script) == '1'){
+						    if(1){
+                               
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
                                 }
@@ -497,22 +497,40 @@ $gnrl->isPageAccess(BASE_FILE);
                                 }
                                 
                                 $wh = '';
-                                if( isset( $_REQUEST['filter'] ) && $_REQUEST['filter'] != '' ){
-                                    $keyword =  trim( $_REQUEST['filter'] );
-                                    $wh = " AND ( 
+                                if( isset( $_REQUEST['srch_filter'] ) && $_REQUEST['srch_filter'] != '' ){
+                                    $keyword =  trim( $_REQUEST['srch_filter'] );
+                                    $wh .= " AND ( 
                                        LOWER(u.e_status) like LOWER('".$keyword."') 
                                          
                                     )";
                                 }
-                                if( isset( $_REQUEST['otp_verified'] ) && $_REQUEST['otp_verified'] != '' ){
-                                    $keyword =  trim( $_REQUEST['otp_verified'] );
-                                    $wh = " AND ( 
+                                if( isset( $_REQUEST['srch_filter_city'] ) && $_REQUEST['srch_filter_city'] != '' ){
+                                    
+                                    $keyword =  trim( $_REQUEST['srch_filter_city'] );
+                                    $wh .= " AND u.i_city_id = '".$keyword."' ";
+                                   
+                                         
+                                }
+                                if( isset( $_REQUEST['srch_filter_type'] ) && $_REQUEST['srch_filter_type'] != ''){
+                                    
+                                        $keyword =  trim( $_REQUEST['srch_filter_type'] );
+                                        $wh .= " AND ( 
+                                           LOWER(v.v_type) like LOWER('".$keyword."') 
+                                             
+                                        )";
+                                   
+                                         
+                                }
+                                if( isset( $_REQUEST['srch_otp_verified'] ) && $_REQUEST['srch_otp_verified'] != '' ){
+                                    $keyword =  trim( $_REQUEST['srch_otp_verified'] );
+                                    $wh .= " AND ( 
                                       u.l_data->>'is_otp_verified' = '".$keyword."' 
                                     )";
                                 }
                                 if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
+                                 
                                     $keyword =  trim( $_REQUEST['keyword'] );
-                                    $wh = " AND ( 
+                                    $wh .= " AND ( 
                                         LOWER(u.v_name) like LOWER('%".$keyword."%')
                                         OR LOWER(u.v_email) like LOWER('%".$keyword."%')
                                         OR LOWER(u.v_phone) like LOWER('%".$keyword."%')
@@ -522,7 +540,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                     )";
                                 }
 
-                               $ssql = "SELECT u.*,
+                                $ssql = "SELECT u.*,
                                                 v.v_name AS vehicle_name,
                                                 v.v_type AS vehicle_type,
                                                 v.v_vehicle_number AS vehicle_number,
@@ -533,23 +551,26 @@ $gnrl->isPageAccess(BASE_FILE);
                                             as v ON u.id = v.i_driver_id
                                              WHERE true AND u.v_role='".$v_role."' ".$wh;
                                             
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'u.v_name';
+                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st'] != '') ? $_REQUEST['st'] : 'ASC';
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
                                 $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
-                                if($_REQUEST['J']=='1'){
-                                    _p($row_Data);
-                                    
-                                }
+                                // _P($row_Data);
+                                // exit;
                                 $otp_arr = array(
-                                    '0' => 'otp verified',
-                                    '1' =>'otp not verified'
+                                    '0' => 'OTP Verified',
+                                    '1' =>'OTP Not Verified'
                                 );
-                                
+
+                                $vehicle_row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
+                                $vehicle_arr=array();
+                                foreach($vehicle_row as $key => $val){
+                                    $vehicle_arr[$val['v_name']] =$val['v_name'];
+                                }
                                 ?>
                                 <div class="content">
                                     <form name="frm" action="" method="get" >
@@ -564,38 +585,72 @@ $gnrl->isPageAccess(BASE_FILE);
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
                                                             </label>
                                                         </div>
-                                                        <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['filter']) && $_REQUEST['filter'] != '' || isset($_REQUEST['otp_verified']) && $_REQUEST['otp_verified'] != ''  ){ ?>
-                                                                <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" > Clear Search </a>
-                                                        <?php } ?>
+                                                        <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_filter']) && $_REQUEST['srch_filter'] != '' || isset($_REQUEST['srch_otp_verified']) && $_REQUEST['srch_otp_verified'] != ''
+                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != ''   ){ ?>
+                                                                    <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
+                                                                    <h4> Clear Search </h4></a>
+                                                            <?php } ?>
                                                     </div>
                                                     <div class="pull-left">
                                                         <div id="datatable_length" class="dataTables_length">
                                                             <label><?php $pagen->writeLimitBox(); ?></label>
                                                         </div>
                                                     </div>
-                                                    <div class="pull-left" style="margin: 20px;">
-                                                        <div>
-                                                         <select class="select2" name="status_sel" id="status_sel" onChange="searchDriver('filter',this.options[this.selectedIndex].value)">
-                                                                 <?php $gnrl->getDropdownList(array('active','inactive'),$_GET['filter']); ?>
+
+                                                    <label style="margin-left:5px">Status wise 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                            <select class="select2" name="srch_filter" id="srch_filter" onChange="document.frm.submit();">
+                                                                    <option value="" >--Select--</option>
+                                                                     <?php $gnrl->getDropdownList(array('active','inactive'),$_GET['srch_filter']); ?>
                                                             </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="pull-left" style="margin: 20px;">
-                                                        <div>
-                                                         <select class="select2" name="otp_verified" id="otp_verified" onChange="searchDriver('otp_verified',this.options[this.selectedIndex].value)">
-                                                                 <?php echo $gnrl->get_keyval_drop($otp_arr,$_GET['otp_verified']); ?>
+                                                    </label>
+                                                    <label style="margin-left:5px">Verified wise 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                             <select class="select2" name="srch_otp_verified" id="srch_otp_verified" onChange="document.frm.submit();">
+                                                                    <option value="" >--Select--</option>
+                                                                     <?php echo $gnrl->get_keyval_drop($otp_arr,$_GET['srch_otp_verified']); ?>
+                                                                    </select>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                    <label style="margin-left:5px">City wise 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                             <select class="select2" name="srch_filter_city" id="srch_filter_city" onChange="document.frm.submit();">
+                                                                    <option value="">--Select--</option>
+                                                                     <?php echo $gnrl->getCityDropdownList($_GET['srch_filter_city']); ?>
+                                                                    </select>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                    <label style="margin-left:5px"> Vehicle Type 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                             <select class="select2" name="srch_filter_type" id="srch_filter_type" onChange="document.frm.submit();">
+                                                                <option value="">--Select--</option>
+                                                                 <?php echo $gnrl->get_keyval_drop($vehicle_arr,$_GET['srch_filter_type']); ?>
                                                             </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </label>
                                                     <div class="clearfix"></div>
                                                 </div>
                                             </div>
                                             
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
+                                               <!--  <thead>
                                                     <tr>
-                                                        <th width="15%">Name</th>
+                                                        <th>Profile Image</th>
+                                                        <th>Name</th>
                                                         <th>Email</th>
                                                         <th>Phone</th>
                                                         <th>Vehicle Type</th>
@@ -603,41 +658,69 @@ $gnrl->isPageAccess(BASE_FILE);
                                                         <th>Status<br>Location</th>
                                                         <th><span class="pull-right">Action</span></th>
                                                     </tr>
-                                                </thead>
+                                                </thead> -->
+                                                <?php
+                                                
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'v_image' => array( 'order' => 0, 'title' => 'Profile Image' ),
+                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    'v_email' => array( 'order' => 1, 'title' => 'Email' ),
+                                                    'v_phone' => array( 'order' => 1, 'title' => 'Phone' ),
+                                                    'vehicle_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+                                                    'vehicle_number' => array( 'order' => 1, 'title' => 'Vehicle No.' ),
+                                                    'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
                                                         foreach($row_Data as $row){
                                                             ?>
                                                             <tr>
-                                                                <td><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['v_name']; ?></a></td>
+                                                                <td>
+                                                            <?php 
+                                                                if( $putFile = _is_file( $folder, $row['v_image'] ) ){ //echo $putFile; ?>
+                                                                <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');" ><img class="edit_img" name="" id="v_image<?php echo $row['id']; ?>" src="<?php echo $putFile;?>" ></a>
+                                                            <?php }else{ ?>
+                                                                   <span class="text-danger">No Image.</span>
+                                                               <?php } ?>
+                                                                </td>
+                                                                <td><?php echo $row['v_name']; ?></td>
 
                                                                 <td><?php echo $row['v_email'];?></td>
                                                                 <td><?php echo $row['v_phone'];?></td>
                                                                 <td><?php echo $row['vehicle_type'];?></td>
                                                                 <td><?php echo $row['vehicle_number'];?></td>
                                                                   
-                                                                <td><?php echo $row['e_status'];?><br><a id="view_map"class="md-trigger " href="javascript:;" data-modal="form-primary" onclick="mapCall(<?php echo $row['lat'].",".$row['long'] ?> )">View</a></td>
+                                                                <td><?php echo $row['e_status'];?></td>
                                                                
                                                                 <td>
-                                                                    <?php if($gnrl->checkAction('edit')=='1'){?> 
-                                                                         <div class="btn-group">
-                                                                        <button class="btn btn-default btn-xs" type="button">Actions</button>
-                                                                        <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
-                                                                            <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
-                                                                        </button>
-                                                                        <ul role="menu" class="dropdown-menu pull-right">
-                                                                            <li><a href="javascript:;">View Log</a></li>
-                                                                            <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-																			<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=verifynactive&amp;id=<?php echo $row['id'];?>">Verify & Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-                                                                        </ul>
-                                                                    </div>
-                                                                    <?php } ?>
-                                                                   
-                                                                </td>
+                                                                <?php if(1){?> 
+                                                                <div class="btn-group">
+                                                                <button class="btn btn-default btn-xs" type="button">Actions</button>
+                                                                <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
+                                                                <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+                                                                </button>
+                                                                <ul role="menu" class="dropdown-menu pull-right">
+                                                                <li><a href="javascript:;">View Log</a></li>
+                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                <?php 
+                                                                    $l_data=json_decode($row['l_data'],true) ;
+                                                                    if(isset($l_data['is_otp_verified']) && $l_data['is_otp_verified'] =='0'){ ?>
+                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=verifynactive&amp;id=<?php echo $row['id'];?>">Verify & Active</a></li>
+                                                                    <?php }
+                                                                ?>
+                                    
+                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                    </ul>
+                                    </div>
+                                    <?php } ?>
+                                    <br>
+                                    <a id="view_map"class="md-trigger " href="javascript:;" data-modal="form-primary" onclick="mapCall(<?php echo $row['lat'].",".$row['long'] ?> )">View Location</a>
+                                    </td>
                                                             </tr><?php 
                                                         }
                                                     }
@@ -668,12 +751,7 @@ $gnrl->isPageAccess(BASE_FILE);
                                 </div> 
                             <?php
                             }else{ ?>
-                                    <h3>
-                                        <a href="<?php echo $page?>.php" class="fright">
-                                            <button class="btn btn-primary" type="button">Back</button>
-                                        </a>
-                                    </h3>
-                                    <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
+                                    
                             <?php 
                             }
                         }?>
@@ -684,6 +762,14 @@ $gnrl->isPageAccess(BASE_FILE);
         </div>
 	</div>
 </div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+  <span class="close">&times;</span>
+  <img class="modal-content" id="img01">
+  <div id="caption"></div>
+</div>
+
 <div class="md-modal colored-header  md-effect-9" id="form-primary" >
         <div class="md-content">
             <div class="modal-header">
@@ -698,6 +784,95 @@ $gnrl->isPageAccess(BASE_FILE);
             </div>
         </div>
 </div>
+<style>
+    #myImg {
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #myImg:hover {opacity: 0.7;}
+
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+    }
+
+    /* Modal Content (image) */
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        height: 80%;
+        max-width: 850px;
+        max-height: 850px;
+    }
+
+    /* Caption of Modal Image */
+    #caption {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+        text-align: center;
+        color: #ccc;
+        padding: 10px 0;
+        height: 150px;
+    }
+
+    /* Add Animation */
+    .modal-content, #caption {    
+        -webkit-animation-name: zoom;
+        -webkit-animation-duration: 0.6s;
+        animation-name: zoom;
+        animation-duration: 0.6s;
+    }
+
+    @-webkit-keyframes zoom {
+        from {-webkit-transform:scale(0)} 
+        to {-webkit-transform:scale(1)}
+    }
+
+    @keyframes zoom {
+        from {transform:scale(0)} 
+        to {transform:scale(1)}
+    }
+
+    /* The Close Button */
+    .close {
+        position: absolute;
+        top: 50px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #bbb;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* 100% Image Width on Smaller Screens */
+    @media only screen and (max-width: 700px){
+        .modal-content {
+            width: 100%;
+        }
+    }
+</style>
 <div class="md-overlay"></div>
 <style>
       /* Always set the map height explicitly to define the size of the div
@@ -742,6 +917,17 @@ $gnrl->isPageAccess(BASE_FILE);
 <script type="text/javascript">
     function searchDriver(slug,val){
         window.document.location.href=window.location.pathname+'?'+slug+'='+val;
+    }
+    function open_Image(path){
+        var modal = document.getElementById('myModal');
+        var img = document.getElementById('myImg');
+        var modalImg = document.getElementById("img01");
+        modal.style.display = "block";
+        modalImg.src = path;
+        var span = document.getElementsByClassName("close")[0];
+        span.onclick = function() { 
+            modal.style.display = "none";
+        }
     }
 </script>
 <?php include('_scripts.php');?>

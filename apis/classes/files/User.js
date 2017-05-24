@@ -37,7 +37,8 @@ var currClass = function( params ){
 		
 		getByUsername : function( param, cb ){
 			var _self = this;
-			dclass._select( '*', table, " AND ( v_email = '"+param+"' OR v_phone = '"+param+"' ) ", function( status, data ){
+			param = param.toLowerCase( param );
+			dclass._select( '*', table, " AND v_role = 'user' AND ( LOWER( v_email ) = '"+param+"' OR LOWER( v_phone ) = '"+param+"' ) ", function( status, data ){
 				data = _self.set_lang( status, data );
 				cb( status, data );
 			});

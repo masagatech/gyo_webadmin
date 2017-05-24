@@ -1,7 +1,7 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-$gnrl->isPageAccess(BASE_FILE);
+
 
 	extract( $_POST );
 	$page_title = "Manage Driver Trip";
@@ -62,7 +62,7 @@ $gnrl->isPageAccess(BASE_FILE);
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
-                if($gnrl->checkAction('delete') == '1'){
+                if(1){
                     $dclass->delete( $table ," id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
@@ -71,7 +71,7 @@ $gnrl->isPageAccess(BASE_FILE);
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array('e_status'=>'active');
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
@@ -81,7 +81,7 @@ $gnrl->isPageAccess(BASE_FILE);
             }
             // make records inactive
             else if($_REQUEST['chkaction'] == 'inactive'){
-                if($gnrl->checkAction('edit') == '1'){
+                if(1){
                     $ins = array( 'e_status' => 'inactive' );
                     $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
@@ -193,7 +193,7 @@ $gnrl->isPageAccess(BASE_FILE);
                             <h3>
                                 View Driver Trip
                                 <?php 
-                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['status_sel']) && $_REQUEST['status_sel'] != ''  || isset($_REQUEST['driver']) && $_REQUEST['driver'] != ''){ ?>
+                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''  || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != ''){ ?>
                                         <a href="<?php echo $page ?>.php" class="fright" >
                                             <button class="btn btn-primary" type="button">Clear Search</button>
                                         </a>
@@ -206,7 +206,7 @@ $gnrl->isPageAccess(BASE_FILE);
                         	}
                         </style> -->
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && $gnrl->checkAction($script) == '1' ){?>
+                        if( ($script == 'add' || $script == 'edit') && 1 ){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-10">
@@ -277,7 +277,7 @@ $gnrl->isPageAccess(BASE_FILE);
 							</form>
 							<?php 
                         }else{
-							if( $gnrl->checkAction($script) == '1' ){
+							if( 1 ){
 								if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
 	                            	$limit = $_REQUEST['pageno'];
 	                            }
@@ -297,7 +297,7 @@ $gnrl->isPageAccess(BASE_FILE);
 								$wh = '';
 	                            if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
 	                                $keyword =  trim( $_REQUEST['keyword'] );
-									$wh = " AND ( 
+									$wh .= " AND ( 
 	                                   LOWER(d.v_name) like LOWER('%".$keyword."%')  OR
 	                                   LOWER(u.v_name) like LOWER('%".$keyword."%')  OR
 	                                   LOWER(v.v_type) like LOWER('%".$keyword."%')  OR
@@ -306,21 +306,36 @@ $gnrl->isPageAccess(BASE_FILE);
 	                                     
 	                                )";
 	                            }
-	                            if( isset( $_REQUEST['status_sel'] ) && $_REQUEST['status_sel'] != '' ){
-	                                $keyword =  trim( $_REQUEST['status_sel'] );
-									$wh = " AND ( 
+	                            if( isset( $_REQUEST['srch_filter_status'] ) && $_REQUEST['srch_filter_status'] != '' ){
+	                                $keyword =  trim( $_REQUEST['srch_filter_status'] );
+									$wh .= " AND ( 
 	                                   LOWER(tbl_ride.e_status) like LOWER('%".$keyword."%') 
 	                                     
 	                                )";
 	                            }
-	                            if( isset( $_REQUEST['driver'] ) && $_REQUEST['driver'] != '' ){
-	                                $keyword =  trim( $_REQUEST['driver'] );
-									$wh = " AND tbl_ride.i_driver_id = '".$keyword."'";
+	                            if( isset( $_REQUEST['srch_driver'] ) && $_REQUEST['srch_driver'] != '' ){
+	                                $keyword =  trim( $_REQUEST['srch_driver'] );
+									$wh .= " AND tbl_ride.i_driver_id = '".$keyword."'";
 	                            }
+	                            if( isset( $_REQUEST['srch_filter_city'] ) && $_REQUEST['srch_filter_city'] != '' ){
+	                                $keyword =  trim( $_REQUEST['srch_filter_city'] );
+									$wh .= " AND u.i_city_id = '".$keyword."'";
+	                            }
+	                            if( isset( $_REQUEST['srch_filter_type'] ) && $_REQUEST['srch_filter_type'] != ''){
+                                    
+                                        $keyword =  trim( $_REQUEST['srch_filter_type'] );
+                                        $wh .= " AND ( 
+                                           LOWER(v.v_type) like LOWER('".$keyword."') 
+                                             
+                                        )";
+                                   
+                                         
+                                }
 	                            $ssql = "SELECT 
 	                            			".$table.".*,
 	                                        d.v_name AS d_name,
 	                                        u.v_name AS u_name,
+	                                        u.i_city_id AS u_city,
 	                                        v.v_type AS vehicle_type,
 	                                        v.v_vehicle_number AS vehicle_number
 	                                        FROM ".$table." 
@@ -330,13 +345,12 @@ $gnrl->isPageAccess(BASE_FILE);
 	                                         WHERE true ".$wh;
 	                           
 	                           // $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
-	                                        
-	                            $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-	                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+	                             $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'd.v_name';
+                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st'] != '') ? $_REQUEST['st'] : 'ASC';
 	                            
 	                            $nototal = $dclass->numRows($ssql);
 	                            $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
-	                            $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
+	                           	$sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
 	                            
@@ -348,6 +362,13 @@ $gnrl->isPageAccess(BASE_FILE);
 	                            foreach ($driver_Data as $d_key => $d_value) {
 	                            	$driver_name_arr[$d_value['id']]= $d_value['v_name'];
 	                            }
+
+	                            ## vehicle type dropdown array
+	                            $vehicle_row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
+                                $vehicle_arr=array();
+                                foreach($vehicle_row as $key => $val){
+                                    $vehicle_arr[$val['v_name']] =$val['v_name'];
+                                }
 	                           
 	                            ?>
 	                            <div class="content">
@@ -363,6 +384,11 @@ $gnrl->isPageAccess(BASE_FILE);
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
 	                                                        </label>
 	                                                    </div>
+	                                                    <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''
+                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != ''   ){ ?>
+                                                                    <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
+                                                                    <h4> Clear Search </h4></a>
+                                                            <?php } ?>
 	                                                </div>
 	                                                <div class="pull-left">
 	                                                    <div id="" class="dataTables_length">
@@ -373,9 +399,9 @@ $gnrl->isPageAccess(BASE_FILE);
 	                                                	 <div class="clearfix"></div>
 	                                                	<div class="pull-left" style="">
 	                                                    <div>
-		                                                 <select class="select2" name="driver_sel" id="driver_sel" onChange="searchDriverName(this.options[this.selectedIndex].value)">
+		                                                 <select class="select2" name="srch_driver" id="srch_driver" onChange="document.frm.submit();">
 		                                                 		<option value="">--Select--</option>
-		                                                   		 <?php echo $gnrl->get_keyval_drop($driver_name_arr,$_GET['driver']); ?>
+		                                                   		 <?php echo $gnrl->get_keyval_drop($driver_name_arr,$_GET['srch_driver']); ?>
 		                                               		</select>
 	                                                    </div>
 	                                                </div>
@@ -385,21 +411,42 @@ $gnrl->isPageAccess(BASE_FILE);
 	                                                	<div class="clearfix"></div>
 	                                                	<div class="pull-left" style="">
 	                                                    <div>
-		                                                 <select class="select2" name="status_sel" id="status_sel" onChange="searchDriver(this.options[this.selectedIndex].value)">
+		                                                 <select class="select2" name="srch_filter_status" id="srch_filter_status" onChange="document.frm.submit();">
 		                                                 <option value="">--Select--</option>
-		                                                   		 <?php $gnrl->getDropdownList($globalRideStatus,$_GET['status_sel']); ?>
+		                                                   		 <?php $gnrl->getDropdownList($globalRideStatus,$_GET['srch_filter_status']); ?>
 		                                               		</select>
 	                                                    </div>
 	                                                </div>
 	                                                </label>
-	                                                
+	                                                <label style="margin-left:5px">City wise 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                             <select class="select2" name="srch_filter_city" id="srch_filter_city" onChange="document.frm.submit();">
+                                                                    <option value="">--Select--</option>
+                                                                     <?php echo $gnrl->getCityDropdownList($_GET['srch_filter_city']); ?>
+                                                                    </select>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                    <label style="margin-left:5px"> Vehicle Type 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                             <select class="select2" name="srch_filter_type" id="srch_filter_type" onChange="document.frm.submit();">
+                                                                <option value="">--Select--</option>
+                                                                 <?php echo $gnrl->get_keyval_drop($vehicle_arr,$_GET['srch_filter_type']); ?>
+                                                            </select>
+                                                            </div>
+                                                        </div>
+                                                    </label>
 	                                                <div class="clearfix"></div>
 	                                            </div>
 	                                        </div>
 	                                        
 	                                        <!-- <?php chk_all('drop');?> -->
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
-	                                            <thead>
+	                                            <!-- <thead>
 	                                                <tr>
 														<th width="15%">Driver</th>
 	                                                    <th width="5%">User</th>
@@ -410,7 +457,20 @@ $gnrl->isPageAccess(BASE_FILE);
 	                                                    <th width="5%">Status/Track</th>
 	                                                    <th width="5%"><span class="pull-right">Action</span></th>
 	                                                </tr>
-	                                            </thead>
+	                                            </thead> -->
+	                                            <?php
+                                                
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'd_name' => array( 'order' => 1, 'title' => 'Driver' ),
+                                                    'u_name' => array( 'order' => 1, 'title' => 'User' ),
+                                                    'v_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+                                                    'vehicle_number' => array( 'order' => 1, 'title' => 'Vehicle No.' ),
+                                                    'i_round_id' => array( 'order' => 1, 'title' => 'Round Id' ),
+                                                    'd_start' => array( 'order' => 1, 'title' => 'Trip Date' ),
+                                                    'e_status' => array( 'order' => 1, 'title' => 'Status/Track' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
 	                                            <tbody>
 	                                                <?php 
 	                                                if( $nototal > 0 ){
@@ -478,12 +538,7 @@ $gnrl->isPageAccess(BASE_FILE);
 	                            </div>
 							<?php }
                             else{ ?>
-                                    <h3>
-                                        <a href="<?php echo $page?>.php" class="fright">
-                                            <button class="btn btn-primary" type="button">Back</button>
-                                        </a>
-                                    </h3>
-                                    <h2 class="text-danger">You Have Not Permission to Access this Section.</h2>
+                                    
                             <?php 
                             }
                         }?>

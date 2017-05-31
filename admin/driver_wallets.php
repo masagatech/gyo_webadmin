@@ -44,7 +44,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -279,6 +280,7 @@ $gnrl->check_login();
                                                         <label>
                                                             <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                             <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+
                                                         </label>
                                                     </div>
                                                 </div>
@@ -323,7 +325,7 @@ $gnrl->check_login();
                                                             <td><?php echo $row['f_payable'];?></td>
                                                             <td><?php echo $row['f_received'];?></td>
                                                             <td><?php echo $row['f_running_balance'];?></td>
-                                                             <td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
+                                                             <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                             
                                                             <td>
                                                                 <!-- <div class="btn-group">
@@ -410,6 +412,13 @@ $gnrl->check_login();
                                     $keyword =  trim( $_REQUEST['driver'] );
                                     $wh = " AND t1.i_user_id = '".$keyword."'";
                                 }
+                                if( isset( $_REQUEST['deleted'] ) ){
+                                    $keyword =  trim( $_REQUEST['keyword'] );
+                                    $wh .= " AND t1.i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND t1.i_delete='0'";
+                                }
                                 $ssql = "SELECT t1.*,
                                             t2.v_name as user_name
                                         FROM 
@@ -418,8 +427,8 @@ $gnrl->check_login();
      
                                          WHERE true AND t1.v_type='driver' ".$wh;
                                             
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+                                $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 't2.v_name' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
@@ -447,6 +456,11 @@ $gnrl->check_login();
                                                             <label>
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+                                                                <div class="clearfix"></div> 
+                                                                <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
                                                             </label>
                                                         </div>
                                                     </div>
@@ -481,14 +495,16 @@ $gnrl->check_login();
                                             
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
-                                                    <tr>
-                                                        <th width="45%">Name</th>
-                                                        <th width="10%">Type</th>
-                                                        <th width="5%">Amount</th>
-                                                        <th width="14%"><span class="pull-right">Action</span></th>
-                                                    </tr>
-                                                </thead>
+                                                <?php
+                                                
+                                                echo $gnrl->renderTableHeader(array(
+                                                    't2.v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    't1.v_type' => array( 'order' => 1, 'title' => 'Type' ),
+                                                    't1.f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
+                                                 
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
@@ -498,8 +514,9 @@ $gnrl->check_login();
                                                             ?>
                                                             <tr>
                                                                 
-                                                                <td><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['i_user_id'];?>"><?php echo $row['user_name']; ?></a></td>
-
+                                                                <td>
+                                                                    <?php echo $row['user_name']; ?>
+                                                                </td>
                                                                 <td><?php echo $row['v_type'];?></td>
                                                                 <td><?php echo $row['f_amount'];?></td>
                                                                 

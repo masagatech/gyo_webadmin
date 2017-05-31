@@ -2,7 +2,6 @@
 include('includes/configuration.php');
 $gnrl->check_login();
 
-	
 $page_title = "General Settings";
 $page = "sitesettings";
 $table = 'tbl_sitesetting';
@@ -117,7 +116,27 @@ else {
 								</div>
 							</div>
                         </div>
-                        <div class="block-flat">
+						
+                        
+						<div class="block-flat">
+                            <div class="header"><h3>Referral Program</h3></div>
+							<div class="row">
+								<div class="col-sm-6">
+									<div class="content">
+										<div class="form-group ">
+											<?php $key = 'REFER_AMOUNT'; ?>
+											<label>Refer Amount</label>
+											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required  >
+										</div>
+										<div class="form-group ">
+											<button class="btn btn-primary" type="submit" name="submit_btn" value="Update">Update</button>
+										</div>
+									</div>
+								</div>
+							</div>
+                        </div>
+						
+						<div class="block-flat">
                             <div class="header"><h3>Push Notification Settings</h3></div>
 							<div class="row">
 								<div class="col-sm-6">
@@ -142,10 +161,37 @@ else {
 									</div>
 								</div>
 							</div>
-
-							
-
                         </div>
+						
+						
+						<div class="block-flat">
+                            <div class="header"><h3>API Keys</h3></div>
+							<div class="row">
+								<div class="col-sm-6">
+									<div class="content">
+										<div class="form-group ">
+											<?php $key = 'GOOGLE_TRACK_RIDE_API_KEY'; ?>
+											<label>Google Track Ride API Key</label>
+											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required  >
+										</div>
+										<div class="form-group ">
+											<button class="btn btn-primary" type="submit" name="submit_btn" value="Update">Update</button>
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-6">
+									<div class="content">
+										<div class="form-group">
+											<?php $key = 'GOOGLE_DISTANCE_MATRIX_API_KEY'; ?>
+											<label>Google Distance Matrix API Key</label>
+											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required  >
+										</div>
+									</div>
+								</div>
+							</div>
+                        </div>
+						
+						
                     </div>
                     
                 </div>

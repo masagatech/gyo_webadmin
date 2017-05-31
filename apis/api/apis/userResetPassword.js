@@ -3,8 +3,6 @@ var validator 	= require('validator');
 var md5 		= require('md5');
 var async       = require('async');
 
-
-
 var currentApi = function( req, res, next ){
 	
 	var classes = req.app.get('classes');
@@ -18,20 +16,26 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var v_username 		= gnrl._is_undf( params.v_username ).trim();
-	var v_password 		= gnrl._is_undf( params.v_password ).trim();
-	var v_otp 			= gnrl._is_undf( params.v_otp ).trim();
+	var v_username = gnrl._is_undf( params.v_username ).trim();
+	var v_password = gnrl._is_undf( params.v_password ).trim();
+	var v_otp = gnrl._is_undf( params.v_otp ).trim();
 	
 	if( !v_username ){ _status = 0; _message = 'err_req_email_or_phone'; }
 	if( _status && !v_password.trim() ){ _status = 0; _message = 'err_req_password'; }
-	if( _status && !v_otp.trim() ){ _status = 0; _message = 'err_req_otp'; }
 	if( _status && !validator.isLength( v_password, { min : 6, max : 10 } ) ){ _status = 0; _message = 'err_validation_password'; }
+	if( _status && !v_otp.trim() ){ _status = 0; _message = 'err_req_otp'; }
 	
 	
-	if( _status ){
+	if( !_status ){
+		gnrl._api_response( res, 0, _message );
+	}
+	
+	else{
 		
-		var _user = [];
+		var _user = {};
+		
 		async.series([
+		
 			// Check otp is correct
 			function( callback ){
 				dclass._select( '*', 'tbl_user', " AND v_role = 'user' AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' )", function( status, user ){ 
@@ -39,7 +43,7 @@ var currentApi = function( req, res, next ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else{
-						var _user = user[0];
+						_user = user[0];
 						if( !validator.equals( v_otp, _user.v_otp ) ){
 							gnrl._api_response( res, 0, 'err_invalid_otp', {} );
 						}
@@ -49,15 +53,16 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
+			
 			// Update password
 			function( callback ){
 				var _ins = {
 					'v_otp' 		: '',
 					'v_password' 	: md5( v_password ),
 				};
-				dclass._update( 'tbl_user', _ins, " AND v_role = 'driver' AND id = '"+( _user.id )+"' ", function( status, data ){ 
+				dclass._update( 'tbl_user', _ins, " AND v_role = 'user' AND id = '"+_user.id+"' ", function( status, data ){ 
 					if( !status ){
-						gnrl._api_response( res, 0, _message );
+						gnrl._api_response( res, 0, _message, {} );
 					}
 					else{
 						callback( null );
@@ -100,9 +105,7 @@ var currentApi = function( req, res, next ){
 			gnrl._api_response( res, 1, 'succ_password_updated', {} );
 		});
 	}
-	else{
-		gnrl._api_response( res, 0, _message );
-	}
+	
 };
 
 module.exports = currentApi;

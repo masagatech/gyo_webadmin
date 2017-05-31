@@ -42,8 +42,35 @@ var currentApi = function( req, res, next ){
 					}
 					else{
 						_notification = data[0];
-						_notification.l_data.title = _notification.l_data.title[_lang];
-						_notification.l_data.content = _notification.l_data.content[_lang];
+						
+						if( _notification.l_data.title[_lang] ){
+							_notification.l_data.title = _notification.l_data.title[_lang];
+						}
+						else if( _notification.l_data.title ){
+							_notification.l_data.title = _notification.l_data.title;
+						}
+						else{
+							_notification.l_data.title = '';
+						}
+						if( typeof( _notification.l_data.title ) == 'object' ){
+							_notification.l_data.title = '';
+						}
+						
+						
+						if( _notification.l_data.content[_lang] ){
+							_notification.l_data.content = _notification.l_data.content[_lang];
+						}
+						else if( _notification.l_data.content ){
+							_notification.l_data.content = _notification.l_data.content;
+						}
+						else{
+							_notification.l_data.content = '';
+						}
+						if( typeof( _notification.l_data.content ) == 'object' ){
+							_notification.l_data.content = '';
+						}
+						
+						
 						callback( null );
 					}
 				});

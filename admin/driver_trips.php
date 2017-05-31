@@ -4,13 +4,43 @@ $gnrl->check_login();
 
 
 	extract( $_POST );
-	$page_title = "Manage Driver Trip";
+	$page_title = "Manage Rides";
 	$page = "driver_trips";
 	$page2 = "track";
 	$table = 'tbl_ride';
 	
-	$title2 = 'Driver Trip';
+	$title2 = 'Rides';
 	$folder = 'vehicle_type';
+	
+	if( $_REQUEST['show_log'] == 1 ){
+		// AND l_data->>'run_type' = 'ride'
+		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'i_ride_id' = '".$_REQUEST['id']."' ORDER BY id ASC" );
+		$totalLats = array();
+		$totalLongs = array();
+		$totalDistance = 0;
+		$totalDistanceArr = array();
+		if( $_REQUEST['D'] ){
+			
+			foreach( $rideTracking as $row ){
+				$xx = "'".$row['l_latitude']."'";
+				$yy = "'".$row['l_longitude']."'";
+				if( !in_array($xx, $totalLats) || !in_array($yy, $totalLongs) ){
+					$totalLats[] = $xx;
+					$totalLongs[] = $yy;
+					echo "'".$row['l_latitude'].",".$row['l_longitude']."',<br>";
+					$row['l_data'] = json_decode( $row['l_data'], true );
+					
+					if($row['l_data']['distance'] < 0.25) {
+						$totalDistance += $row['l_data']['distance'];
+						$totalDistanceArr[] = $row['l_data']['distance'];
+					}
+				}
+			}
+		}
+		_p( 'totalDistance : '.$totalDistance );
+		_p( $totalDistanceArr );
+		_p( $rideTracking ); exit;
+	}
 	
 	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'citywise' ) ) ? $_REQUEST['script'] : "";
 	## Insert Record in database starts
@@ -63,7 +93,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -143,23 +174,28 @@ $gnrl->check_login();
 				}
 				
 			}
-			else {
-				$ssql = "SELECT 
-                			".$table.".*,
-                            d.v_name AS d_name,
-                            u.v_name AS u_name,
-                            v.v_type AS vehicle_type,
-                            v.v_vehicle_number AS vehicle_number
-                            FROM ".$table." 
-                            LEFT JOIN tbl_user as d ON ".$table.".i_driver_id = d.id
-                            LEFT JOIN tbl_user as u ON ".$table.".i_user_id = u.id
-                            LEFT JOIN tbl_vehicle as v ON ".$table.".i_vehicle_id = v.id
-                             WHERE true AND ".$table.".id= '".$id."' ";
+			else{
 				
-                $restepm = $dclass->query($ssql);
+				$ssql = "SELECT 
+						a.*,
+						a.l_data->>'vehicle_type' as vehicle_type,
+						a.l_data->>'city' as auto_city_name,
+						a.l_data->>'v_gender' as ride_gender,
+						c.v_name AS city_name,
+						
+						d.v_name AS d_name,
+						u.v_name AS u_name,
+						v.v_vehicle_number AS vehicle_number
+					FROM ".$table." a
+					
+					LEFT JOIN tbl_user as d ON a.i_driver_id = d.id
+					LEFT JOIN tbl_city as c ON c.id = COALESCE( a.l_data->>'i_city_id', '0' )::bigint
+					LEFT JOIN tbl_user as u ON a.i_user_id = u.id
+					LEFT JOIN tbl_vehicle as v ON a.i_vehicle_id = v.id
+					WHERE true AND a.id= '".$id."' ";
+				
+				$restepm = $dclass->query($ssql);
                 $row = $dclass->fetchResults($restepm);
-                // _P($row);
-                // exit;
                 $row = $row[0];
                	extract( $row );
                	$l_data = json_decode( $l_data, true );
@@ -191,7 +227,7 @@ $gnrl->check_login();
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                View Driver Trip
+                                View <?php echo $title2;?>
                                 <?php 
                                     if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''  || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != ''){ ?>
                                         <a href="<?php echo $page ?>.php" class="fright" >
@@ -209,66 +245,49 @@ $gnrl->check_login();
                         if( ($script == 'add' || $script == 'edit') && 1 ){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
-                                    <div class="col-md-10">
+                                    <div class="col-md-12">
 		                                <table class="table table-bordered viewtable" id="datatable" style="width:100%;" >
                                             <thead>
                                                 <tr>
-													<th width="40%"><strong>Fields</strong></th>
-                                                    <th width="60%"><strong> Data </strong></th>
+													<th width="20%"><strong>Field</strong></th>
+                                                    <th width="80%"><strong>Data</strong></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
-													<td>Driver Name</td>
-													<td><?php echo $d_name; ?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>User Name</td>
-													<td><?php echo $u_name; ?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>Vehicle Type</td>
-													<td><?php echo $vehicle_type; ?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>Vehicle No.</td>
-													<td><?php echo $vehicle_number; ?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>Starting Time</td>
-													<td><?php echo $d_start; ?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>Ending Time</td>
-													<td><?php echo $d_end; ?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>Other Info</td>
-													<td>
-														<?php 
-															foreach ($l_data as $key => $value) {
-																echo ucwords(str_replace('_',' ', $key.' :- '.$value."</br>"));
-																
-															 }
-														?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>Date</td>
-													<td><?php echo $row['d_time']; ?>
-													</td>
-                                                </tr>
-                                                <tr>
-													<td>Status</td>
-													<td><?php echo $row['e_status']; ?>
-													</td>
-                                                </tr>
+                                                <tr><td>Driver Name</td><td><?php echo $d_name;?></td></tr>
+												<tr><td>User Name</td><td><?php echo $u_name;?></td></tr><tr><td>Vehicle Type</td><td><?php echo $vehicle_type;?></td></tr>
+												<tr><td>Vehicle Number</td><td><?php echo $vehicle_number;?></td></tr>
+												<tr><td>Status</td><td><?php echo $globalRideStatus[$row['e_status']];?></td></tr>
+												<tr><td>Date</td><td><?php echo $gnrl->displaySiteDate($d_time);?></td></tr>
+												<tr><td>Start Time</td><td><?php echo $gnrl->displaySiteDate($d_start);?></td></tr>
+												<tr><td>End Time</td><td><?php echo $gnrl->displaySiteDate($d_end);?></td></tr>
+												<tr><td>Paid</td><td><?php echo $i_paid ? 'Yes' : 'No';?></td></tr>
+												<tr><td>Pin</td><td><?php echo $v_pin;?></td></tr>
+												<tr><td>Track Code</td><td><?php echo $v_ride_code.'-'.$id;?></td></tr>
+												<tr><td>Track Link</td><td><a target="_blank" href="<?php echo str_replace( '_track_code_', $v_ride_code.'-'.$id, RIDE_TRACK_URL );?>">Track</a></td></tr>
+												
+												<tr><td colspan="2" align="center" ><strong>Other Info</strong></td></tr>
+												<?php 
+												foreach( $l_data as $key => $value ){ 
+													if( $key == 'charges' ){
+														continue;
+													} ?>
+													<tr>
+														<td><?php echo ucwords( str_replace( '_', ' ', $key ) );?></td>
+														<td><?php if( is_array($value ) ) _p( $value) ; else echo $value;?></td>
+													</tr> <?php 
+												}
+												?>
+												<tr><td colspan="2" align="center" ><strong>Charges Data</strong></td></tr>
+												<?php 
+												foreach( $l_data['charges'] as $key => $value ){ 
+													?>
+													<tr>
+														<td><?php echo ucwords( str_replace( '_', ' ', $key ) );?></td>
+														<td><?php echo $value;?></td>
+													</tr> <?php 
+												} ?>
+												
                                             </tbody>
                                 		</table>
                                 		<a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
@@ -302,54 +321,78 @@ $gnrl->check_login();
 	                                   LOWER(u.v_name) like LOWER('%".$keyword."%')  OR
 	                                   LOWER(v.v_type) like LOWER('%".$keyword."%')  OR
 	                                   LOWER(v.v_vehicle_number) like LOWER('%".$keyword."%')  OR
-	                                   LOWER(tbl_ride.e_status) like LOWER('%".$keyword."%') 
+	                                   LOWER(a.e_status) like LOWER('%".$keyword."%') 
 	                                     
 	                                )";
 	                            }
+
+
+	                            if( isset( $_REQUEST['d_start_date'] ) && $_REQUEST['d_start_date'] != ''){
+	                            	if(isset($_REQUEST['d_end_date']) && $_REQUEST['d_end_date']){
+	                            		$end= $_REQUEST['d_end_date'];
+	                            	}else{
+	                            		$end=date('Y-m-d H:i:s');
+	                            	}
+									$start =  trim( $_REQUEST['d_start_date'] );
+									$wh .= " AND  a.d_time BETWEEN  '".$start."' AND  '".$end."' ";
+                                }
+
+                                
 	                            if( isset( $_REQUEST['srch_filter_status'] ) && $_REQUEST['srch_filter_status'] != '' ){
 	                                $keyword =  trim( $_REQUEST['srch_filter_status'] );
 									$wh .= " AND ( 
-	                                   LOWER(tbl_ride.e_status) like LOWER('%".$keyword."%') 
-	                                     
+	                                   LOWER(a.e_status) like LOWER('%".$keyword."%') 
 	                                )";
 	                            }
 	                            if( isset( $_REQUEST['srch_driver'] ) && $_REQUEST['srch_driver'] != '' ){
 	                                $keyword =  trim( $_REQUEST['srch_driver'] );
-									$wh .= " AND tbl_ride.i_driver_id = '".$keyword."'";
+									$wh .= " AND a.i_driver_id = '".$keyword."'";
 	                            }
 	                            if( isset( $_REQUEST['srch_filter_city'] ) && $_REQUEST['srch_filter_city'] != '' ){
 	                                $keyword =  trim( $_REQUEST['srch_filter_city'] );
-									$wh .= " AND u.i_city_id = '".$keyword."'";
+									$wh .= " AND ( a.l_data->>'i_city_id' = '".$keyword."' ) ";
 	                            }
 	                            if( isset( $_REQUEST['srch_filter_type'] ) && $_REQUEST['srch_filter_type'] != ''){
-                                    
-                                        $keyword =  trim( $_REQUEST['srch_filter_type'] );
-                                        $wh .= " AND ( 
-                                           LOWER(v.v_type) like LOWER('".$keyword."') 
-                                             
-                                        )";
-                                   
-                                         
+									$keyword =  trim( $_REQUEST['srch_filter_type'] );
+									$wh .= " AND ( a.l_data->>'vehicle_type' = '".$keyword."' )";
                                 }
+								if( isset( $_REQUEST['srch_gender'] ) && $_REQUEST['srch_gender'] != ''){
+									$keyword =  trim( $_REQUEST['srch_gender'] );
+									$wh .= " AND ( a.l_data->>'v_gender' = '".$keyword."' )";
+                                }
+
+								if( isset( $_REQUEST['deleted'] ) ){
+                                    $keyword =  trim( $_REQUEST['keyword'] );
+                                    $wh .= " AND a.i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND a.i_delete='0'";
+                                }
+								
+								
 	                            $ssql = "SELECT 
-	                            			".$table.".*,
-	                                        d.v_name AS d_name,
-	                                        u.v_name AS u_name,
-	                                        u.i_city_id AS u_city,
-	                                        v.v_type AS vehicle_type,
-	                                        v.v_vehicle_number AS vehicle_number
-	                                        FROM ".$table." 
-	                                        LEFT JOIN tbl_user as d ON ".$table.".i_driver_id = d.id
-	                                        LEFT JOIN tbl_user as u ON ".$table.".i_user_id = u.id
-	                                        LEFT JOIN tbl_vehicle as v ON ".$table.".i_vehicle_id = v.id
-	                                         WHERE true ".$wh;
-	                           
-	                           // $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
-	                             $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'd.v_name';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st'] != '') ? $_REQUEST['st'] : 'ASC';
+									a.*,
+									a.l_data->>'vehicle_type' as vehicle_type,
+									a.l_data->>'city' as auto_city_name,
+									a.l_data->>'v_gender' as ride_gender,
+									c.v_name AS city_name,
+									
+									d.v_name AS d_name,
+									u.v_name AS u_name,
+									v.v_vehicle_number AS vehicle_number
+								FROM ".$table." a
+								
+								LEFT JOIN tbl_user as d ON a.i_driver_id = d.id
+								LEFT JOIN tbl_city as c ON c.id = COALESCE( a.l_data->>'i_city_id', '0' )::bigint
+								LEFT JOIN tbl_user as u ON a.i_user_id = u.id
+								LEFT JOIN tbl_vehicle as v ON a.i_vehicle_id = v.id
+								WHERE true ".$wh;
+								
+	                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'a.d_time' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );
 	                            
-	                            $nototal = $dclass->numRows($ssql);
-	                            $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
+	                            $nototal = $dclass->numRows( $ssql );
+	                            $pagen = new vmPageNav( $nototal, $limitstart, $limit, $form ,"black" );
 	                           	$sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
@@ -367,7 +410,7 @@ $gnrl->check_login();
 	                            $vehicle_row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
                                 $vehicle_arr=array();
                                 foreach($vehicle_row as $key => $val){
-                                    $vehicle_arr[$val['v_name']] =$val['v_name'];
+                                    $vehicle_arr[$val['v_type']] =$val['v_name'];
                                 }
 	                           
 	                            ?>
@@ -377,97 +420,115 @@ $gnrl->check_login();
 	                                    
 	                                        <div class="row">
 	                                            <div class="col-sm-12">
+
 	                                                <div class="pull-right">
 	                                                    <div class="dataTables_filter" id="datatable_filter">
-	                                                        <label>
+	                                                        <label style="margin-top: 20px;">
+
 	                                                            <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+	                                                            <div class="clearfix"></div> 
+	                                                           	<div class="pull-right" style="">
+		                                                            <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+		                                                            Show Deleted Data
+		                                                        </div>
 	                                                        </label>
+
 	                                                    </div>
 	                                                    <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''
-                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != ''   ){ ?>
+                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != '' || isset($_REQUEST['d_start_date']) && $_REQUEST['d_start_date'] != ''  ){ ?>
                                                                     <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
                                                                     <h4> Clear Search </h4></a>
                                                             <?php } ?>
 	                                                </div>
+													
 	                                                <div class="pull-left">
 	                                                    <div id="" class="dataTables_length">
 	                                                        <label><?php $pagen->writeLimitBox(); ?></label>
 	                                                    </div>
 	                                                </div>
-	                                                <label style="margin-left:15px">Driver wise : 
-	                                                	 <div class="clearfix"></div>
-	                                                	<div class="pull-left" style="">
-	                                                    <div>
-		                                                 <select class="select2" name="srch_driver" id="srch_driver" onChange="document.frm.submit();">
-		                                                 		<option value="">--Select--</option>
-		                                                   		 <?php echo $gnrl->get_keyval_drop($driver_name_arr,$_GET['srch_driver']); ?>
-		                                               		</select>
-	                                                    </div>
-	                                                </div>
-	                                                </label>
-	                                                
-	                                                <label style="margin-left:15px">Status wise : 
-	                                                	<div class="clearfix"></div>
-	                                                	<div class="pull-left" style="">
-	                                                    <div>
-		                                                 <select class="select2" name="srch_filter_status" id="srch_filter_status" onChange="document.frm.submit();">
-		                                                 <option value="">--Select--</option>
-		                                                   		 <?php $gnrl->getDropdownList($globalRideStatus,$_GET['srch_filter_status']); ?>
-		                                               		</select>
-	                                                    </div>
-	                                                </div>
-	                                                </label>
-	                                                <label style="margin-left:5px">City wise 
-                                                         <div class="clearfix"></div>
-                                                            <div class="pull-left" style="">
-                                                            <div>
-                                                             <select class="select2" name="srch_filter_city" id="srch_filter_city" onChange="document.frm.submit();">
-                                                                    <option value="">--Select--</option>
-                                                                     <?php echo $gnrl->getCityDropdownList($_GET['srch_filter_city']); ?>
-                                                                    </select>
-                                                            </div>
+	                                                <label style="margin-left:15px">
+														Start Date
+														<div class="clearfix"></div> 
+														<div class="pull-left" style="">
+															 <input class="form-control datetime"  type="date" id="d_start_date" name="d_start_date" value="<?php echo $_REQUEST['d_start_date']; ?>" data-date-format="yyyy-mm-dd" readonly="" onChange="document.frm.submit();" placeholder="select" />
                                                         </div>
                                                     </label>
-                                                    <label style="margin-left:5px"> Vehicle Type 
-                                                         <div class="clearfix"></div>
-                                                            <div class="pull-left" style="">
-                                                            <div>
-                                                             <select class="select2" name="srch_filter_type" id="srch_filter_type" onChange="document.frm.submit();">
-                                                                <option value="">--Select--</option>
-                                                                 <?php echo $gnrl->get_keyval_drop($vehicle_arr,$_GET['srch_filter_type']); ?>
-                                                            </select>
-                                                            </div>
+                                                   
+                                                    <label style="margin-left:15px">
+														End Date
+														<div class="clearfix"></div> 
+														<div class="pull-left" style="">
+															<input class="form-control datetime"  type="date" id="d_end_date" name="d_end_date"  value="<?php echo $_REQUEST['d_end_date']; ?>" data-date-format="yyyy-mm-dd" readonly="" onclick="datetimepicker()" onChange="document.frm.submit();" placeholder="select" />
                                                         </div>
                                                     </label>
 	                                                <div class="clearfix"></div>
 	                                            </div>
+	                                            <div class="col-sm-12">
+                                                	<label>
+														Vehicle Type
+														<div class="clearfix"></div>
+														<div class="pull-left" style="">
+                                                             <select class="select2" name="srch_filter_type" id="srch_filter_type" onChange="document.frm.submit();">
+                                                                <option value="">--Select--</option>
+                                                                 <?php echo $gnrl->get_keyval_drop($vehicle_arr,$_GET['srch_filter_type']); ?>
+                                                            </select>
+                                                        </div>
+                                                    </label>
+                                                    <label style="margin-left:15px">
+														City 
+														<div class="clearfix"></div> 
+														<div class="pull-left" style="">
+															<select class="select2" name="srch_filter_city" id="srch_filter_city" onChange="document.frm.submit();">
+																<option value="">--Select--</option>
+																<?php echo $gnrl->getCityDropdownList($_GET['srch_filter_city']); ?>
+															</select>
+                                                        </div>
+                                                    </label>
+	                                                <label style="margin-left:15px">
+														Driver
+														<div class="clearfix"></div>
+	                                                	<div class="pull-left" style="">
+															<select class="select2" name="srch_driver" id="srch_driver" onChange="document.frm.submit();">
+		                                                 		<option value="">--Select--</option>
+		                                                   		 <?php echo $gnrl->get_keyval_drop($driver_name_arr,$_GET['srch_driver']); ?>
+		                                               		</select>
+	                                                    </div>
+	                                                </label>
+													<label style="margin-left:15px"> 
+														Gender
+														<div class="clearfix"></div>
+														<div class="pull-left" style="">
+															<select class="select2" name="srch_gender" id="srch_gender" onChange="document.frm.submit();">
+																<option value="">--Select--</option>
+                                                                <?php echo $gnrl->get_keyval_drop(array('male'=>'Male','female'=>'Female'),$_GET['srch_gender']); ?>
+                                                            </select>
+                                                        </div>
+                                                    </label>
+	                                                <label style="margin-left:15px">
+														Status
+	                                                	<div class="clearfix"></div>
+														<div class="pull-left" style="">
+															<select class="select2" name="srch_filter_status" id="srch_filter_status" onChange="document.frm.submit();">
+																<option value="">--Select--</option>
+																<?php $gnrl->getDropdownList($globalRideStatus,$_GET['srch_filter_status']); ?>
+															</select>
+														</div>
+	                                                </label>
+	                                            </div>
+	                                            
 	                                        </div>
 	                                        
-	                                        <!-- <?php chk_all('drop');?> -->
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
-	                                            <!-- <thead>
-	                                                <tr>
-														<th width="15%">Driver</th>
-	                                                    <th width="5%">User</th>
-	                                                    <th width="5%">Vehicle Type</th>
-	                                                    <th width="5%">Vehicle No.</th>
-	                                                    <th width="5%">Round Id</th>
-	                                                    <th width="5%">Trip Date</th>
-	                                                    <th width="5%">Status/Track</th>
-	                                                    <th width="5%"><span class="pull-right">Action</span></th>
-	                                                </tr>
-	                                            </thead> -->
-	                                            <?php
-                                                
+												
+	                                            <?php 
                                                 echo $gnrl->renderTableHeader(array(
+													'c.v_name' => array( 'order' => 1, 'title' => 'City' ),
                                                     'd_name' => array( 'order' => 1, 'title' => 'Driver' ),
-                                                    'u_name' => array( 'order' => 1, 'title' => 'User' ),
-                                                    'v_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
-                                                    'vehicle_number' => array( 'order' => 1, 'title' => 'Vehicle No.' ),
-                                                    'i_round_id' => array( 'order' => 1, 'title' => 'Round Id' ),
-                                                    'd_start' => array( 'order' => 1, 'title' => 'Trip Date' ),
-                                                    'e_status' => array( 'order' => 1, 'title' => 'Status/Track' ),
+                                                    'u_name' => array( 'order' => 1, 'title' => 'User / Gender' ),
+                                                    'v_type' => array( 'order' => 1, 'title' => 'Vehicle Type', 'title2' => ' / Vehicle No' ),
+                                                    'a.d_time' => array( 'order' => 1, 'title' => 'Trip Date', 'title2' => ' / Start Time / End Time' ),
+                                                    'e_status' => array( 'order' => 1, 'title' => 'Status', 'title2' => ' / Track' ),
                                                     'action' => array( 'order' => 0, 'title' => 'Action' ),
                                                 ));
                                                 ?>
@@ -479,20 +540,26 @@ $gnrl->check_login();
 	                                                    	$i++;
 	                                                    	?>
 	                                                        <tr>
-																<td><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['d_name']; ?></a>
-																</td>
-																<td><?php echo $row['u_name']; ?>
-																</td>
-																<td><?php echo $row['vehicle_type']; ?>
-																<td><?php echo $row['vehicle_number']; ?>
-																</td>
-																<td><?php echo $row['i_round_id']; ?>
-																</td>
-																<td><?php echo $gnrl->removeTimezone($row['d_time']) ; ?></td>
+																<td><?php echo $row['city_name'] ? $row['city_name'] : $row['auto_city_name'];?></td>
+																<td><?php echo $row['d_name'] ? $row['d_name'] : '-';?></td>
 																<td>
-																	<?php echo $row['e_status'];?>
+																	<?php echo $row['u_name'] ? $row['u_name'] : '-';?>
+																	<br>(<?php echo ucfirst( $row['ride_gender'] ? $row['ride_gender'] : '-' );?>)
+																</td>
+																<td>
+																	<?php echo ucfirst( $row['vehicle_type'] ); ?> 
+																	(<?php echo $row['vehicle_number'] ? $row['vehicle_number'] : '-'; ?>)
+																</td>
+																<td>
+																	<?php echo $gnrl->displaySiteDate($row['d_time']);?>
+																	<br>Start Time <?php echo $gnrl->displaySiteDate($row['d_start']);?>
+																	<br>End Time <?php echo $gnrl->displaySiteDate($row['d_end']);?>
+																</td>
+																<td>
+																	<?php echo $globalRideStatus[ $row['e_status'] ];?>
 																	<br>
-																	<a href="<?php echo $page2?>.php?ride_id=<?php echo $row['id'];?>">Track</a></td>
+																	<a target="_blank" href="<?php echo str_replace( '_track_code_', $row['v_ride_code'].'-'.$row['id'], RIDE_TRACK_URL );?>">Track</a>
+																</td>
 	                                                            <td class="text-right" >
 	                                                                <div class="btn-group">
 	                                                                    <button class="btn btn-default btn-xs" type="button">Actions</button>
@@ -504,7 +571,6 @@ $gnrl->check_login();
 	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
 	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
 	                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-	                                    									
 	                                                                    </ul>
 	                                                                </div>
 	                                                            </td>
@@ -572,6 +638,18 @@ $gnrl->check_login();
 	}
 </script>
 <?php include('_scripts.php');?>
+<script>
+
+// START DATE END DATE VALIDATION
+function datetimepicker(){
+
+    var startdate = $('#d_start_date').val();
+    var enddate = $('#d_end_date').val();
+    $("#d_start_date").datetimepicker('setEndDate', enddate);
+    $("#d_end_date").datetimepicker('setStartDate', startdate);
+
+}
+</script>
 <?php include('jsfunctions/jsfunctions.php');?>
 
 </body>

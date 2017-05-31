@@ -16,16 +16,16 @@ var currClass = function( params ){
 			var _self = this;
 			return {
 				'payu' : 'PayUmoney',
-				
 			};
 		},
 		
 		getPaymentModeName : function( type ){
 			var types = {
-				'payu' : 'PayUmoney',
-				'ride_cancel' : 'Ride Cancel',
-				'ride_dry_run' : 'Ride Dry Run',
-				'ride' : 'Ride',
+				'payu' 			: 'PayUmoney',
+				'ride_cancel' 	: 'Ride Cancel',
+				'ride_dry_run' 	: 'Ride Dry Run',
+				'ride' 			: 'Ride',
+				'referral' 		: 'Referral',
 			};
 			return types[type];
 		},
@@ -133,25 +133,49 @@ var currClass = function( params ){
 				if( status ){
 					
 					for( var k in data ){
+						
 						data[k].from = data[k].v_type;
 						data[k].d_date = gnrl._timestamp( data[k].d_added );
-						
 						data[k].reason = _self.getPaymentModeName( data[k].v_type );
 						
+						
+						var msg = 'msg_wallet_'+params.role+'_'+data[k].v_type;
 						
 						if( params.role == 'user' ){
 							data[k].amount = data[k].f_amount;
 							if( data[k].l_data.transaction_id ){
 								data[k].l_data.transaction_id = Crypt.decrypt( data[k].l_data.transaction_id );
 							}
+							var s = gnrl._lbl( msg );
+							s = s.split('[amount]').join( data[k].amount > 0 ? data[k].amount : ( data[k].amount * -1 ) );
+							if( data[k].l_data.ride_code ){
+								s = s.split('[ride_code]').join( data[k].l_data.ride_code );
+							}
+							
+							data[k].message = s;
+							
 						}
 						else{
 							data[k].f_amount = data[k].f_received;
 							data[k].amount = data[k].f_amount;
+								
+							var s = gnrl._lbl( msg );
+							
+							s = s.split('[receivable_amount]').join( data[k].f_receivable > 0 ? data[k].f_receivable : ( data[k].f_receivable * -1 ) );
+							s = s.split('[payable_amount]').join( data[k].f_payable > 0 ? data[k].f_payable : ( data[k].f_payable * -1 ) );
+							s = s.split('[received_amount]').join( data[k].f_received > 0 ? data[k].f_received : ( data[k].f_received * -1 ) );
+							s = s.split('[amount]').join( data[k].amount > 0 ? data[k].amount : ( data[k].amount * -1 ) );
+							if( data[k].l_data.ride_code ){
+								s = s.split('[ride_code]').join( data[k].l_data.ride_code );
+							}
+							
+							data[k].message = s;
+							
 						}
 						
-						data[k].message = gnrl._lbl( data[k].amount > 0 ? 'msg_wallet_credit' : 'msg_wallet_debit' );
-						data[k].message = data[k].message.split('[amount]').join( data[k].amount > 0 ? data[k].amount : ( data[k].amount * -1 ) );
+						data[k].msg = msg;
+						data[k].from = data[k].reason;
+						
 						
 					}
 					

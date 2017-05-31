@@ -112,12 +112,9 @@ $gnrl->check_login();
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
-                if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
-                    $gnrl->redirectTo($page.".php?succ=1&msg=del");
-                }else{
-                    $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
-                }
+				$ins = array('i_delete'=>'1');
+				$dclass->update( $table, $ins, " id = '".$id."'");
+				$gnrl->redirectTo($page.".php?succ=1&msg=del");
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
@@ -168,54 +165,63 @@ $gnrl->check_login();
 	## Edit Process
 	if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
-           // _P($_REQUEST);
-           // _P($_FILES);
-           // exit;
-			$id = $_REQUEST['id'];
+           $id = $_REQUEST['id'];
 			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
-
-                $email_exit = $dclass->select('*',$table," AND id != ".$id." AND v_email = '".$v_email."'");
-               
-                if(count($email_exit) && !empty($email_exit)){
-                     $gnrl->redirectTo($page.'.php?succ=0&msg=email_exit&a=2&script=edit&id='.$_REQUEST['id']);
-                }else{
-                    $ins = array();
-                        if(!empty($v_password)){
-                            #FOR CHECK PASSWORD
-                         $check_pass = $dclass->select('*',$table," AND id = ".$id."");
-                         if(count($check_pass)){
-                            if(md5($v_password) == $check_pass[0]['v_password']){
-                            }else{
-                                $ins['v_password']= md5($v_password);
-                            }
-                         }
-                     }
-                    $ins['v_name'] = $v_name;
-                    $ins['v_email'] = $v_email;
-                    $ins['v_phone'] = $v_phone;
-                    $ins['e_status'] = $e_status;
-                    $ins['l_data'] = json_encode($l_data);
-                    $ins['d_modified'] = date('Y-m-d H:i:s');
-                    
-                    $keyVal = array();
-                    ## for profile image
-                    if( isset( $_FILES['v_image']['name'] ) && $_FILES['v_image']['name'] != "" ) {
+				
+				
+				$email_exit = $dclass->select( '*', $table, " AND id != '".$id."' AND v_email = '".$v_email."' " );
+				//print_r( $email_exit ); exit;
+				$phone_exit = $dclass->select('*',$table," AND id != '".$id."' AND v_phone = '".$v_phone."'");
+                if( 0 && count( $email_exit ) ){
+					$gnrl->redirectTo($page.'.php?succ=0&msg=emailexists&a=2&script=edit&id='.$_REQUEST['id']);
+                }
+				else if( 0 &&count( $phone_exit ) ){
+					$gnrl->redirectTo($page.'.php?succ=0&msg=phoneexists&a=2&script=edit&id='.$_REQUEST['id']);
+                }
+				else{
+					
+					######### Update Driver
+                    $ins = array(
+						'v_name' => $v_name,
+						'v_email' => $v_email,
+						'v_phone' => $v_phone,
+						'e_status' => $e_status,
+						'l_latitude' => $l_latitude,
+						'l_longitude' => $l_longitude,
+						'is_premium' => $is_premium,
+						'v_token' => $v_token,
+						'd_modified' => date('Y-m-d H:i:s'),
+					);
+					if( $v_password ){
+						$ins['v_password']= md5( $v_password );
+					}
+                   
+                    ## Profile Image
+                    if( isset( $_FILES['v_image']['name'] ) && $_FILES['v_image']['name'] != "" ){
                         $dest = UPLOAD_PATH.$folder."/";
                         $file_name = $gnrl->removeChars( time().'-'.$_FILES['v_image']['name'] ); 
                         if( move_uploaded_file( $_FILES['v_image']['tmp_name'], $dest.$file_name ) ){
-                            $keyVal['v_image'] = $file_name;
-                             @unlink( $dest.$oldname_vimage );
+                            $ins['v_image'] = $file_name;
+							@unlink( $dest.$old_files['v_image'] );
                         }
                     }
-                    if( count( $keyVal ) ){
-                        $ins['v_image'] = $file_name;
-                    }
                     $dclass->update( $table, $ins, " id = '".$id."' ");
-                    ## FOR ALL PROOF
-                    $upd_vehicle=array(
-                        'v_type' =>$v_type,
-                        'v_vehicle_number' =>$v_vehicle_number,
-                        'v_name' =>$vehicle_name,
+					
+					## Update l_data
+					$ins = array(
+						" l_data = COALESCE( NULLIF( l_data::text, null )::jsonb, ('{\"a\":1}'::jsonb) ) || '".json_encode(array(
+							'bank_info' => $l_data['bank_info']
+						))."'"
+					);
+					$dclass->updateJsonb( $table, $ins, " id = '".$id."' ");
+					
+					
+					
+					######### Update Vehicle
+                    $ins = array(
+                        'v_type' 			=>	$v_type,
+                        'v_name' 			=> $vehicle_name,
+						'v_vehicle_number' 	=> $v_vehicle_number,
                     );
                     $keyVal = array();
                     foreach( $filesArray as $imgKey ){
@@ -223,56 +229,36 @@ $gnrl->check_login();
                             $dest = UPLOAD_PATH.$folder."/";
                             $file_name = $gnrl->removeChars( time().'-'.$_FILES[$imgKey]['name'] ); 
                             if( move_uploaded_file( $_FILES[$imgKey]['tmp_name'], $dest.$file_name ) ){
-                                $keyVal[$imgKey] = $file_name;
-                                if($imgKey=='v_image_rc_book'){
-                                    $OLDNAME= $oldname_rc_book;
-                                }
-                                if($imgKey=='v_image_puc'){
-                                    $OLDNAME= $oldname_puc;
-                                }
-                                if($imgKey=='v_image_insurance'){
-                                    $OLDNAME= $oldname_insurance;
-                                }
-                                if($imgKey=='v_image_license'){
-                                    $OLDNAME= $oldname_license;
-                                }
-                                if($imgKey=='v_image_adhar_card'){
-                                    $OLDNAME= $oldname_adhar_card;
-                                }
-                                if($imgKey=='v_image_permit_copy'){
-                                    $OLDNAME= $oldname_permit_copy;
-                                }
-                                if($imgKey=='v_image_police_copy'){
-                                    $OLDNAME= $oldname_police_copy;
-                                }
-                                @unlink( $dest.$OLDNAME );
+                                $ins[$imgKey] = $file_name;
+                                @unlink( $dest.$old_files[$imgKey] );
                             }
                         }
                     }
-                    $upd_vehicle=array_merge($upd_vehicle,$keyVal);
-                    
-                    $dclass->update( $table2, $upd_vehicle, " i_driver_id = '".$id."' ");
+                    $dclass->update( $table2, $ins, " i_driver_id = '".$id."' ");
+					
+					
                     $gnrl->redirectTo($page.'.php?succ=1&msg=edit&a=2&script=edit&id='.$_REQUEST['id']);
                 }
 			}
 			else {
-				 $ssql = "SELECT ".$table.".*,
-                            u.*,
-                            ".$table.".v_name AS driver_name,
-                            u.v_name AS vehicle_name
-                            
-                          FROM ".$table." 
-                         LEFT JOIN ".$table2." 
-                        as u ON ".$table.".id = u.i_driver_id
-                         WHERE true AND ".$table.".id=".$id." ";
-                $restepm = $dclass->query($ssql);
-                $row = $dclass->fetchResults($restepm);
-                $row = $row[0];
-                if($_REQUEST['D']=='1'){
-                    _P($row);
-                }
-                extract( $row );
-                $l_data = json_decode($l_data,true);
+				
+				$row = $dclass->select( '*', $table , " AND id = '".$id."' ");
+				$row = $row[0];
+				extract( $row );
+				$l_data = json_decode( $l_data, true );
+				
+				$row2 = $dclass->select( '*', $table2, " AND i_driver_id = '".$id."' ");
+				$row2 = $row2[0];
+				$row2['vehicle_name'] = $row2['v_name'];
+				unset( $row2['id'] );
+				unset( $row2['i_driver_id'] );
+				unset( $row2['d_added'] );
+				unset( $row2['d_modified'] );
+				unset( $row2['e_status'] );
+				unset( $row2['v_name'] );
+				unset( $row2['l_data'] );
+				extract( $row2 );
+				
 			}
 		}
 	}
@@ -297,465 +283,495 @@ $gnrl->check_login();
         	<?php include('all_alert_msg.php'); ?>
             <div class="row">
                 <div class="col-md-12">
-                    <div class="block-flat">
-                        <div class="header">
-                            <h3>
-                                <?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
-                                <?php if( !$script ){?>
-                                    <?php if( !$script && 1){?>
-                                        <a href="<?php echo $page?>.php?script=add" class="fright">
-                                            <button class="btn btn-primary" type="button">Add</button>
-                                        </a>
-                                    <?php } ?>
-								<?php } ?>
-                            </h3>
-                        </div>
-                        <?php 
-                        if( ($script == 'add' || $script == 'edit') && 1 ){?>
-                        	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="content">
-                                             <div class="form-group">
-                                                <label>Profile Image</label>
-                                                <input class="form-control" type="file" name="v_image" style="height:auto;"  >
-                                                <?php 
-                                                    if( $putFile = _is_file( $folder, $v_image ) ){ //echo $putFile; ?>
-                                                    <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                    <input type="hidden" name="oldname_vimage" value="<?php echo $v_image; ?>">
-                                                <?php } ?>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Name</label>
-                                                <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $driver_name; ?>" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Email</label>
-                                                <input type="email" class="form-control" id="v_email" name="v_email" value="<?php echo $v_email; ?>" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Password</label>
-                                                <?php 
-                                                $required="";
-                                                if($script=='add'){
-                                                    $required='required';
-                                                } ?>
-                                                <input type="password" class="form-control" id="v_password" name="v_password" value="" <?php echo $required ?> />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Phone</label>
-                                                <input type="text" class="form-control" id="v_phone" name="v_phone" value="<?php echo $v_phone; ?>" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>IMEI Number</label>
-                                                <input type="text" class="form-control" id="v_imei_number" name="v_imei_number" value="<?php echo $v_imei_number; ?>" />
-                                            </div>
-                                           
-                                             
-                                            <div class="form-group">
-                                                <label>Vehicle Type</label>
-                                                <input type="text" class="form-control" id="v_type" name="v_type" value="<?php echo $v_type; ?>" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Vehicle Number</label>
-                                                <input type="text" class="form-control" id="v_vehicle_number" name="v_vehicle_number" value="<?php echo $v_vehicle_number; ?>" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Vehicle Name</label>
-                                                <input type="text" class="form-control" id="vehicle_name" name="vehicle_name" value="<?php echo $vehicle_name; ?>" required />
-                                            </div>
-                                            <div class="row">
-                                            <div class="col-sm-4 col-md-4">
-                                                <div class="content">
-                                                    <div class="form-group"> 
-                                                        <label>Driving license</label>
-                                                        <input class="form-control" type="file" id="v_image_license" name="v_image_license" style="height:auto;"  >
-                                                        <?php 
-                                                        if( $putFile = _is_file( $folder, $v_image_license ) ){ //echo $putFile; ?>
-                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                            <input type="hidden" name="oldname_license" value="<?php echo $v_image_license; ?>">
-                                                        <?php } ?>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 col-md-4">
-                                                <div class="content">
-                                                    <div class="form-group"> 
-                                                        <label>Aadhar card</label>
-                                                        <input class="form-control" type="file" id="v_image_adhar_card" name="v_image_adhar_card" style="height:auto;"  >
-                                                        <?php 
-                                                        if( $putFile = _is_file( $folder, $v_image_adhar_card ) ){ //echo $putFile; ?>
-                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                            <input type="hidden" name="oldname_adhar_card" value="<?php echo $v_image_adhar_card; ?>">
-                                                        <?php } ?>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 col-md-4">
-                                                <div class="content">
-                                                    <div class="form-group"> 
-                                                       <label>Permit Copy</label>
-                                                        <input class="form-control" type="file" id="v_image_permit_copy" name="v_image_permit_copy" style="height:auto;"  >
-                                                        <?php 
-                                                        if( $putFile = _is_file( $folder, $v_image_permit_copy ) ){ //echo $putFile; ?>
-                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                            <input type="hidden" name="oldname_permit_copy" value="<?php echo $v_image_permit_copy; ?>">
-                                                        <?php } ?>
-                                                    </div>
-                                                </div>
-                                             </div>
-                                            </div>
-                                            <div class="row">
-                                            <div class="col-sm-4 col-md-4">
-                                                <div class="content">
-                                                    <div class="form-group"> 
-                                                        <label>RC Book Image</label>
-                                                        <input class="form-control" type="file" id="v_image_rc_book" name="v_image_rc_book" style="height:auto;"  >
-                                                        <?php 
-                                                        if( $putFile = _is_file( $folder, $v_image_rc_book ) ){ //echo $putFile; ?>
-                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                            <input type="hidden" name="oldname_rc_book" value="<?php echo $v_image_rc_book; ?>">
-                                                        <?php } ?>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 col-md-4">
-                                                <div class="content">
-                                                    <div class="form-group"> 
-                                                        <label>PUC Image</label>
-                                                        <input class="form-control" type="file" id="v_image_puc" name="v_image_puc" style="height:auto;"  >
-                                                       <?php 
-                                                        if( $putFile = _is_file( $folder, $v_image_puc ) ){ //echo $putFile; ?>
-                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                            <input type="hidden" name="oldname_puc" value="<?php echo $v_image_puc; ?>">
-                                                        <?php } ?>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 col-md-4">
-                                                <div class="content">
-                                                    <div class="form-group"> 
-                                                       <label>Insurance Image</label>
-                                                        <input class="form-control" type="file" id="v_image_insurance" name="v_image_insurance" style="height:auto;"  >
-                                                       <?php 
-                                                        if( $putFile = _is_file( $folder, $v_image_insurance ) ){ //echo $putFile; ?>
-                                                             <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                            <input type="hidden" name="oldname_insurance" value="<?php echo $v_image_insurance; ?>">
-                                                        <?php } ?>
-                                                    </div>
-                                                </div>
-                                             </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-sm-4 col-md-4">
-                                                    <div class="content">
-                                                        <div class="form-group"> 
-                                                            <label>Police verification</label>
-                                                            <input class="form-control" type="file" id="v_image_police_copy" name="v_image_police_copy" style="height:auto;"  >
-                                                            <?php 
-                                                            if( $putFile = _is_file( $folder, $v_image_police_copy ) ){ //echo $putFile; ?>
-                                                                 <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
-                                                                <input type="hidden" name="oldname_police_copy" value="<?php echo $v_image_police_copy; ?>">
-                                                            <?php } ?>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Status</label>
-                                                <select class="select2" name="e_status" id="e_status">
-                                                    <?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <button class="btn btn-primary" type="submit" name="submit_btn" value="<?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?>"><?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?></button>
-                                                <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-							</form>
-							<?php 
-                        }
-                        else{
-						    if(1){
-                               
-                                if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
-                                    $limit = $_REQUEST['pageno'];
-                                }
-                                else{
-                                    $limit = $gnrl->getSettings('RECORD_PER_PAGE');
-                                }
+                    
                         
-                                $form = 'frm';
-                                
-                                if ( isset($_REQUEST['limitstart']) && $_REQUEST['limitstart'] != '' ){
-                                    $limitstart = $_REQUEST['limitstart'];
-                                }
-                                else{
-                                    $limitstart = 0;
-                                }
-                                
-                                $wh = '';
-                                if( isset( $_REQUEST['srch_filter'] ) && $_REQUEST['srch_filter'] != '' ){
-                                    $keyword =  trim( $_REQUEST['srch_filter'] );
-                                    $wh .= " AND ( 
-                                       LOWER(u.e_status) like LOWER('".$keyword."') 
-                                         
-                                    )";
-                                }
-                                if( isset( $_REQUEST['srch_filter_city'] ) && $_REQUEST['srch_filter_city'] != '' ){
-                                    
-                                    $keyword =  trim( $_REQUEST['srch_filter_city'] );
-                                    $wh .= " AND u.i_city_id = '".$keyword."' ";
-                                   
-                                         
-                                }
-                                if( isset( $_REQUEST['srch_filter_type'] ) && $_REQUEST['srch_filter_type'] != ''){
-                                    
-                                        $keyword =  trim( $_REQUEST['srch_filter_type'] );
-                                        $wh .= " AND ( 
-                                           LOWER(v.v_type) like LOWER('".$keyword."') 
-                                             
-                                        )";
-                                   
-                                         
-                                }
-                                if( isset( $_REQUEST['srch_otp_verified'] ) && $_REQUEST['srch_otp_verified'] != '' ){
-                                    $keyword =  trim( $_REQUEST['srch_otp_verified'] );
-                                    $wh .= " AND ( 
-                                      u.l_data->>'is_otp_verified' = '".$keyword."' 
-                                    )";
-                                }
-                                if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
-                                 
-                                    $keyword =  trim( $_REQUEST['keyword'] );
-                                    $wh .= " AND ( 
-                                        LOWER(u.v_name) like LOWER('%".$keyword."%')
-                                        OR LOWER(u.v_email) like LOWER('%".$keyword."%')
-                                        OR LOWER(u.v_phone) like LOWER('%".$keyword."%')
-                                        OR LOWER(v.v_type) like LOWER('%".$keyword."%')
-                                        OR LOWER(v.v_vehicle_number) like LOWER('%".$keyword."%')
-                                        OR LOWER(u.e_status) like LOWER('%".$keyword."%')
-                                    )";
-                                }
+					<?php 
+					if( ($script == 'add' || $script == 'edit') && 1 ){?>
+						<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
+						
+							<div class="block-flat">
+								<div class="header">
+									<h3>
+										<?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
+										<?php if( !$script ){?>
+											<?php if( !$script && 1){?>
+												<a href="<?php echo $page?>.php?script=add" class="fright">
+													<button class="btn btn-primary" type="button">Add</button>
+												</a>
+											<?php } ?>
+										<?php } ?>
+									</h3>
+								</div>
+								<div class="content">
+									<div class="row" >
+										<div class="col-md-12">
+											<div class="form-group">
+												<label>Profile Image</label>
+												<input class="form-control" type="file" name="v_image" style="height:auto;"  >
+												<?php 
+													if( $putFile = _is_file( $folder, $v_image ) ){ //echo $putFile; ?>
+													<a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
+													<input type="hidden" name="old_files[v_image]" value="<?php echo $v_image; ?>">
+												<?php } ?>
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Name</label>
+												<input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name;?>" required />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Email</label>
+												<input type="email" class="form-control" id="v_email" name="v_email" value="<?php echo $v_email; ?>" required />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Phone</label>
+												<input type="text" class="form-control" id="v_phone" name="v_phone" value="<?php echo $v_phone; ?>" required />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>IMEI Number</label>
+												<input type="text" class="form-control" id="v_imei_number" name="v_imei_number" value="<?php echo $v_imei_number; ?>" />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Password</label>
+												<?php 
+												$required="";
+												if($script=='add'){
+													$required='required';
+												} ?>
+												<input type="password" class="form-control" id="v_password" name="v_password" value="" <?php echo $required ?> />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Premium</label>
+												<select class="select2" name="is_premium" id="is_premium">
+													<?php echo $gnrl->get_keyval_drop( array(
+														'1' => 'Yes',
+														'0' => 'No',
+													), $is_premium ); ?>
+												</select> 
+											</div>
+										</div>
+										
+										
+									</div>
+								</div>
+							</div>
+							
+							
+							<div class="block-flat">
+								<div class="header"><h3>Vehicle Info</h3></div>
+								<div class="content">
+									<div class="row">
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Vehicle Type</label>
+												<select class="select2" name="v_type" id="v_type">
+												 <?php $gnrl->getVehicleTypeDropdownList( $v_type, 'v_type' ); ?>
+												</select> 
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Vehicle Number</label>
+												<input type="text" class="form-control" id="v_vehicle_number" name="v_vehicle_number" value="<?php echo $v_vehicle_number; ?>" required />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Vehicle Name</label>
+												<input type="text" class="form-control" id="vehicle_name" name="vehicle_name" value="<?php echo $vehicle_name; ?>" required />
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<?php
+										$vehicleImages = array(
+											'v_image_license' => 'Driving license',
+											'v_image_adhar_card' => 'Adhar Card',
+											'v_image_permit_copy' => 'Permit Copy',
+											'v_image_rc_book' => 'RC Book',
+											'v_image_puc' => 'PUC Image',
+											'v_image_insurance' => 'Insurance Image',
+											'v_image_police_copy' => 'Police Verification',
+										);
+										$i = 0;
+										foreach( $vehicleImages as $kk => $vv ){
+											?>
+											<div class="col-sm-3 col-md-3">
+												<div class="form-group"> 
+													<label><?php echo $vv;?></label>
+													<input class="form-control" type="file" id="<?php echo $kk;?>" name="<?php echo $kk;?>" style="height:auto;"  >
+													<?php 
+													if( $putFile = _is_file( $folder, $$kk ) ){ //echo $putFile; ?>
+														 <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');"><img class="edit_img" src="<?php echo $putFile;?>" ></a>
+														<input type="hidden" name="old_files[<?php echo $kk;?>]" value="<?php echo $$kk; ?>">
+													<?php } ?>
+												</div>
+											</div>
+											<?php
+											$i++;
+											if( $i == '4' ){
+												$i = 0;
+												echo '</div><div class="row">';
+											}
+										}
+										?>
+									</div>
+								</div>
+							</div>
+							
+							<div class="block-flat">
+								<div class="header"><h3>Bank Account Information</h3></div>
+								<div class="content">
+									<div class="row" style="margin-top:0" >
+										<div class="col-md-12">
+											<div class="form-group">
+												<textarea type="text" class="form-control" name="l_data[bank_info]" style="min-height:200px;" /><?php echo $l_data['bank_info'];?></textarea>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<div class="block-flat">
+								<div class="header"><h3>Other Info</h3></div>
+								<div class="content">
+									<div class="row">
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Login Token</label>
+												<input type="text" class="form-control" id="v_token" name="v_token" value="<?php echo $v_token;?>" />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Latitude</label>
+												<input type="text" class="form-control" id="l_latitude" name="l_latitude" value="<?php echo $l_latitude;?>" required />
+											</div>
+										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+												<label>Longitude</label>
+												<input type="text" class="form-control" id="l_longitude" name="l_longitude" value="<?php echo $l_longitude;?>" required />
+											</div>
+										</div>
+									</div>
+									
+									<div class="form-group">
+										<label>Status</label>
+										<select class="select2" name="e_status" id="e_status">
+											<?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
+										</select>
+									</div>
+									<div class="form-group">
+										<button class="btn btn-primary" type="submit" name="submit_btn" value="<?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?>"><?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?></button>
+										<a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
+									</div>
+									
+								</div>
+							</div>
+							
+						</form> <?php 
+					}
+					else{
+					   
+						   
+						if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
+							$limit = $_REQUEST['pageno'];
+						}
+						else{
+							$limit = $gnrl->getSettings('RECORD_PER_PAGE');
+						}
+				
+						$form = 'frm';
+						
+						if ( isset($_REQUEST['limitstart']) && $_REQUEST['limitstart'] != '' ){
+							$limitstart = $_REQUEST['limitstart'];
+						}
+						else{
+							$limitstart = 0;
+						}
+						
+						$wh = '';
+						if( isset( $_REQUEST['srch_filter'] ) && $_REQUEST['srch_filter'] != '' ){
+							$keyword =  trim( $_REQUEST['srch_filter'] );
+							$wh .= " AND ( 
+							   LOWER(u.e_status) like LOWER('".$keyword."') 
+								 
+							)";
+						}
+						if( isset( $_REQUEST['srch_filter_city'] ) && $_REQUEST['srch_filter_city'] != '' ){
+							
+							$keyword =  trim( $_REQUEST['srch_filter_city'] );
+							$wh .= " AND u.i_city_id = '".$keyword."' ";
+						   
+								 
+						}
+						if( isset( $_REQUEST['srch_filter_type'] ) && $_REQUEST['srch_filter_type'] != ''){
+							
+								$keyword =  trim( $_REQUEST['srch_filter_type'] );
+								$wh .= " AND ( 
+								   LOWER(v.v_type) like LOWER('".$keyword."') 
+									 
+								)";
+						   
+								 
+						}
+						if( isset( $_REQUEST['srch_otp_verified'] ) && $_REQUEST['srch_otp_verified'] != '' ){
+							$keyword =  trim( $_REQUEST['srch_otp_verified'] );
+							$wh .= " AND ( 
+							  u.l_data->>'is_otp_verified' = '".$keyword."' 
+							)";
+						}
+						if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
+						 
+							$keyword =  trim( $_REQUEST['keyword'] );
+							$wh .= " AND ( 
+								LOWER(u.v_name) like LOWER('%".$keyword."%')
+								OR LOWER(u.v_email) like LOWER('%".$keyword."%')
+								OR LOWER(u.v_phone) like LOWER('%".$keyword."%')
+								OR LOWER(v.v_type) like LOWER('%".$keyword."%')
+								OR LOWER(v.v_vehicle_number) like LOWER('%".$keyword."%')
+								OR LOWER(u.e_status) like LOWER('%".$keyword."%')
+							)";
+						}
+						if( isset( $_REQUEST['deleted'] ) ){
+							$keyword =  trim( $_REQUEST['keyword'] );
+							//$wh .= " AND u.i_delete='1'";
+							$checked="checked";
+						}else{
+							//$wh .= " AND u.i_delete='0'";
+						}
+						$ssql = 
+						"SELECT u.*,
+							v.v_name AS vehicle_name,
+							v.v_type AS vehicle_type,
+							v.v_vehicle_number AS vehicle_number,
+							u.l_latitude AS lat,
+							u.l_longitude AS long
+							FROM ".$table." as u
+								LEFT JOIN tbl_vehicle 
+								as v ON u.id = v.i_driver_id
+							WHERE true AND u.v_role='".$v_role."' ".$wh;
 
-                                $ssql = "SELECT u.*,
-                                                v.v_name AS vehicle_name,
-                                                v.v_type AS vehicle_type,
-                                                v.v_vehicle_number AS vehicle_number,
-                                                u.l_latitude AS lat,
-                                                u.l_longitude AS long
-                                              FROM ".$table." as u
-                                             LEFT JOIN tbl_vehicle 
-                                            as v ON u.id = v.i_driver_id
-                                             WHERE true AND u.v_role='".$v_role."' ".$wh;
-                                            
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'u.v_name';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st'] != '') ? $_REQUEST['st'] : 'ASC';
-                                
-                                $nototal = $dclass->numRows($ssql);
-                                $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
-                                $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
-                                $restepm = $dclass->query($sqltepm);
-                                $row_Data = $dclass->fetchResults($restepm);
-                                // _P($row_Data);
-                                // exit;
-                                $otp_arr = array(
-                                    '0' => 'OTP Verified',
-                                    '1' =>'OTP Not Verified'
-                                );
+						$sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'u.v_name' );
+						$sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
+						
+						$nototal = $dclass->numRows($ssql);
+						$pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
+					   $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
+						$restepm = $dclass->query($sqltepm);
+						$row_Data = $dclass->fetchResults($restepm);
+						
+						$otp_arr = array(
+							'0' => 'OTP Verified',
+							'1' =>'OTP Not Verified'
+						);
 
-                                $vehicle_row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
-                                $vehicle_arr=array();
-                                foreach($vehicle_row as $key => $val){
-                                    $vehicle_arr[$val['v_name']] =$val['v_name'];
-                                }
-                                ?>
-                                <div class="content">
-                                    <form name="frm" action="" method="get" >
-                                        <div class="table-responsive">
-                                        
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <div class="pull-right">
-                                                        <div class="dataTables_filter" id="datatable_filter">
-                                                            <label>
-                                                                <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
-                                                                <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
-                                                            </label>
-                                                        </div>
-                                                        <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_filter']) && $_REQUEST['srch_filter'] != '' || isset($_REQUEST['srch_otp_verified']) && $_REQUEST['srch_otp_verified'] != ''
-                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != ''   ){ ?>
-                                                                    <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
-                                                                    <h4> Clear Search </h4></a>
-                                                            <?php } ?>
-                                                    </div>
-                                                    <div class="pull-left">
-                                                        <div id="datatable_length" class="dataTables_length">
-                                                            <label><?php $pagen->writeLimitBox(); ?></label>
-                                                        </div>
-                                                    </div>
+						$vehicle_row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
+						$vehicle_arr=array();
+						foreach($vehicle_row as $key => $val){
+							$vehicle_arr[$val['v_name']] =$val['v_name'];
+						}
+						?>
+						<div class="block-flat">
+							<div class="header">
+								<h3>
+									<?php echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 ); ?> 
+									
+									<a href="warroom.php?srch_filter_city=<?php echo $_GET['srch_filter_city'];?>
+										&srch_filter_type=<?php echo $_GET['srch_filter_type'];?>
+										" target="_blank" class="fright" >
+										<button class="btn btn-primary" type="button">Show Warrrom</button>
+									</a>
+									
+									<?php if( !$script ){?>
+										<?php if( !$script && 1){?>
+											<a href="<?php echo $page?>.php?script=add" class="fright">
+												<button class="btn btn-primary" type="button">Add</button>
+											</a>
+										<?php } ?>
+									<?php } ?>
+								</h3>
+							</div>
+							<div class="content">
+								<form name="frm" action="" method="get" >
+									<div class="table-responsive">
+										<div class="row">
+											<div class="col-sm-12">
+												<div class="pull-right">
+													<div class="dataTables_filter" id="datatable_filter">
+														<label>
+															<input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
+															<button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+															<div class="clearfix"></div> 
+															<div class="pull-right" style="">
+																<input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+																Show Deleted Data
+															</div>
+														</label>
+													</div>
+													<?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_filter']) && $_REQUEST['srch_filter'] != '' || isset($_REQUEST['srch_otp_verified']) && $_REQUEST['srch_otp_verified'] != ''
+													   || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != ''   ){ ?>
+																<a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
+																<h4> Clear Search </h4></a>
+														<?php } ?>
+												</div>
+												<div class="pull-left">
+													<div id="datatable_length" class="dataTables_length">
+														<label><?php $pagen->writeLimitBox(); ?></label>
+													</div>
+												</div>
 
-                                                    <label style="margin-left:5px">Status wise 
-                                                         <div class="clearfix"></div>
-                                                            <div class="pull-left" style="">
-                                                            <div>
-                                                            <select class="select2" name="srch_filter" id="srch_filter" onChange="document.frm.submit();">
-                                                                    <option value="" >--Select--</option>
-                                                                     <?php $gnrl->getDropdownList(array('active','inactive'),$_GET['srch_filter']); ?>
-                                                            </select>
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                    <label style="margin-left:5px">Verified wise 
-                                                         <div class="clearfix"></div>
-                                                            <div class="pull-left" style="">
-                                                            <div>
-                                                             <select class="select2" name="srch_otp_verified" id="srch_otp_verified" onChange="document.frm.submit();">
-                                                                    <option value="" >--Select--</option>
-                                                                     <?php echo $gnrl->get_keyval_drop($otp_arr,$_GET['srch_otp_verified']); ?>
-                                                                    </select>
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                    <label style="margin-left:5px">City wise 
-                                                         <div class="clearfix"></div>
-                                                            <div class="pull-left" style="">
-                                                            <div>
-                                                             <select class="select2" name="srch_filter_city" id="srch_filter_city" onChange="document.frm.submit();">
-                                                                    <option value="">--Select--</option>
-                                                                     <?php echo $gnrl->getCityDropdownList($_GET['srch_filter_city']); ?>
-                                                                    </select>
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                    <label style="margin-left:5px"> Vehicle Type 
-                                                         <div class="clearfix"></div>
-                                                            <div class="pull-left" style="">
-                                                            <div>
-                                                             <select class="select2" name="srch_filter_type" id="srch_filter_type" onChange="document.frm.submit();">
-                                                                <option value="">--Select--</option>
-                                                                 <?php echo $gnrl->get_keyval_drop($vehicle_arr,$_GET['srch_filter_type']); ?>
-                                                            </select>
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                    <div class="clearfix"></div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- <?php chk_all('drop');?> -->
-                                            <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                               <!--  <thead>
-                                                    <tr>
-                                                        <th>Profile Image</th>
-                                                        <th>Name</th>
-                                                        <th>Email</th>
-                                                        <th>Phone</th>
-                                                        <th>Vehicle Type</th>
-                                                        <th>Vehicle No.</th>
-                                                        <th>Status<br>Location</th>
-                                                        <th><span class="pull-right">Action</span></th>
-                                                    </tr>
-                                                </thead> -->
-                                                <?php
-                                                
-                                                echo $gnrl->renderTableHeader(array(
-                                                    'v_image' => array( 'order' => 0, 'title' => 'Profile Image' ),
-                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
-                                                    'v_email' => array( 'order' => 1, 'title' => 'Email' ),
-                                                    'v_phone' => array( 'order' => 1, 'title' => 'Phone' ),
-                                                    'vehicle_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
-                                                    'vehicle_number' => array( 'order' => 1, 'title' => 'Vehicle No.' ),
-                                                    'e_status' => array( 'order' => 1, 'title' => 'Status' ),
-                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
-                                                ));
-                                                ?>
-                                                <tbody>
-                                                    <?php 
-                                                    if($nototal > 0){
-                                                        foreach($row_Data as $row){
-                                                            ?>
-                                                            <tr>
-                                                                <td>
-                                                            <?php 
-                                                                if( $putFile = _is_file( $folder, $row['v_image'] ) ){ //echo $putFile; ?>
-                                                                <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');" ><img class="edit_img" name="" id="v_image<?php echo $row['id']; ?>" src="<?php echo $putFile;?>" ></a>
-                                                            <?php }else{ ?>
-                                                                   <span class="text-danger">No Image.</span>
-                                                               <?php } ?>
-                                                                </td>
-                                                                <td><?php echo $row['v_name']; ?></td>
-
-                                                                <td><?php echo $row['v_email'];?></td>
-                                                                <td><?php echo $row['v_phone'];?></td>
-                                                                <td><?php echo $row['vehicle_type'];?></td>
-                                                                <td><?php echo $row['vehicle_number'];?></td>
-                                                                  
-                                                                <td><?php echo $row['e_status'];?></td>
-                                                               
-                                                                <td>
-                                                                <?php if(1){?> 
-                                                                <div class="btn-group">
-                                                                <button class="btn btn-default btn-xs" type="button">Actions</button>
-                                                                <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
-                                                                <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
-                                                                </button>
-                                                                <ul role="menu" class="dropdown-menu pull-right">
-                                                                <li><a href="javascript:;">View Log</a></li>
-                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                <?php 
-                                                                    $l_data=json_decode($row['l_data'],true) ;
-                                                                    if(isset($l_data['is_otp_verified']) && $l_data['is_otp_verified'] =='0'){ ?>
-                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=verifynactive&amp;id=<?php echo $row['id'];?>">Verify & Active</a></li>
-                                                                    <?php }
-                                                                ?>
-                                    
-                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-                                    </ul>
-                                    </div>
-                                    <?php } ?>
-                                    <br>
-                                    <a id="view_map"class="md-trigger " href="javascript:;" data-modal="form-primary" onclick="mapCall(<?php echo $row['lat'].",".$row['long'] ?> )">View Location</a>
-                                    </td>
-                                                            </tr><?php 
-                                                        }
-                                                    }
-                                                    else{?>
-                                                        <tr><td colspan="8">No Record found.</td></tr><?php 
-                                                    }?>
-                                                </tbody>
-                                            </table>
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <div class="pull-left"> <?php echo $pagen->getPagesCounter();?> </div>
-                                                    <div class="pull-right">
-                                                        <div class="dataTables_paginate paging_bs_normal">
-                                                            <ul class="pagination">
-                                                                <?php $pagen->writePagesLinks(); ?>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="clearfix"></div>
-                                                </div>
-                                            </div>
-                                            <input type="hidden" name="a" value="<?php echo @$_REQUEST['a'];?>" />
-                                            <input type="hidden" name="st" value="<?php echo @$_REQUEST['st'];?>" />
-                                            <input type="hidden" name="sb" value="<?php echo @$_REQUEST['sb'];?>" />
-                                            <input type="hidden" name="np" value="<?php //echo @$_SERVER['HTTP_REFERER'];?>" />
-                                        </div>
-                                    </form>
-                                </div> 
-                            <?php
-                            }else{ ?>
-                                    
-                            <?php 
-                            }
-                        }?>
-                    </div>
+												<label style="margin-left:5px">Status wise 
+													 <div class="clearfix"></div>
+														<div class="pull-left" style="">
+														<div>
+														<select class="select2" name="srch_filter" id="srch_filter" onChange="document.frm.submit();">
+																<option value="" >--Select--</option>
+																 <?php $gnrl->getDropdownList(array('active','inactive'),$_GET['srch_filter']); ?>
+														</select>
+														</div>
+													</div>
+												</label>
+												<label style="margin-left:5px">Verified wise 
+													 <div class="clearfix"></div>
+														<div class="pull-left" style="">
+														<div>
+														 <select class="select2" name="srch_otp_verified" id="srch_otp_verified" onChange="document.frm.submit();">
+																<option value="" >--Select--</option>
+																 <?php echo $gnrl->get_keyval_drop($otp_arr,$_GET['srch_otp_verified']); ?>
+																</select>
+														</div>
+													</div>
+												</label>
+												<label style="margin-left:5px">City wise 
+													 <div class="clearfix"></div>
+														<div class="pull-left" style="">
+														<div>
+														 <select class="select2" name="srch_filter_city" id="srch_filter_city" onChange="document.frm.submit();">
+																<option value="">--Select--</option>
+																 <?php echo $gnrl->getCityDropdownList($_GET['srch_filter_city']); ?>
+																</select>
+														</div>
+													</div>
+												</label>
+												<label style="margin-left:5px"> Vehicle Type 
+													 <div class="clearfix"></div>
+														<div class="pull-left" style="">
+														<div>
+														 <select class="select2" name="srch_filter_type" id="srch_filter_type" onChange="document.frm.submit();">
+															<option value="">--Select--</option>
+															 <?php echo $gnrl->get_keyval_drop($vehicle_arr,$_GET['srch_filter_type']); ?>
+														</select>
+														</div>
+													</div>
+												</label>
+												<div class="clearfix"></div>
+											</div>
+										</div>
+										
+										<!-- <?php chk_all('drop');?> -->
+										<table class="table table-bordered" id="datatable" style="width:100%;" >
+											<?php
+											echo $gnrl->renderTableHeader(array(
+												'v_image' => array( 'order' => 0, 'title' => 'Profile Image' ),
+												'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+												'vehicle_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+												'vehicle_number' => array( 'order' => 1, 'title' => 'Vehicle No.' ),
+												'e_status' => array( 'order' => 1, 'title' => 'Status', 'title2' => ' / Online / Available / On Ride' ),
+												'action' => array( 'order' => 0, 'title' => 'Action' ),
+											));
+											?>
+											<tbody>
+												<?php 
+												if( $nototal > 0 ){
+													foreach( $row_Data as $row ){
+														$l_data = json_decode( $row['l_data'], true ); ?>
+														<tr>
+															<td>
+																<?php 
+																if( $putFile = _is_file( $folder, $row['v_image'] ) ){ //echo $putFile; ?>
+																	<a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');" ><img class="edit_img" name="" id="v_image<?php echo $row['id']; ?>" src="<?php echo $putFile;?>" ></a>
+																<?php }else{ ?>
+																	<span class="text-danger">No Image.</span>
+																<?php } ?>
+															</td>
+															<td><?php echo $row['v_name']; ?></td>
+															<td><?php echo $row['vehicle_type'];?></td>
+															<td><?php echo $row['vehicle_number'];?></td>
+															<td>
+																<?php echo $row['e_status'];?>
+																<br>Online : <?php echo $row['v_token'] ? 'Yes' : 'No';?>
+																<br>Available : <?php echo $row['is_onduty'] ? 'Yes' : 'No';?>
+																<br>On Ride : <?php echo $row['is_onride'] ? 'Yes' : 'No';?>
+															</td>
+															<td>
+																<div class="btn-group">
+																	<button class="btn btn-default btn-xs" type="button">Actions</button>
+																	<button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
+																		<span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+																	</button>
+																	<ul role="menu" class="dropdown-menu pull-right">
+																		<li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"> Login Log</a></li>
+																		<li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"> Available Log</a></li>
+																		<li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"> Edit</a></li>
+																		<?php 
+																		if( !$l_data['is_otp_verified'] ){ ?>
+																		<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=verifynactive&amp;id=<?php echo $row['id'];?>">Verify & Active</a></li>
+																		<?php } ?>
+																		<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+																		<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+																		<li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+																	</ul>
+																</div> 
+																<br>
+																<a href="warroom.php?id=<?php echo $row['id'];?>" target="_blank" >View Location</a>
+															</td>
+														</tr><?php 
+													}
+												}
+												else{ ?>
+													<tr><td colspan="8">No Record found.</td></tr><?php 
+												}?>
+											</tbody>
+										</table>
+										<div class="row">
+											<div class="col-sm-12">
+												<div class="pull-left"> <?php echo $pagen->getPagesCounter();?> </div>
+												<div class="pull-right">
+													<div class="dataTables_paginate paging_bs_normal">
+														<ul class="pagination">
+															<?php $pagen->writePagesLinks(); ?>
+														</ul>
+													</div>
+												</div>
+												<div class="clearfix"></div>
+											</div>
+										</div>
+										<input type="hidden" name="a" value="<?php echo @$_REQUEST['a'];?>" />
+										<input type="hidden" name="st" value="<?php echo @$_REQUEST['st'];?>" />
+										<input type="hidden" name="sb" value="<?php echo @$_REQUEST['sb'];?>" />
+										<input type="hidden" name="np" value="<?php //echo @$_SERVER['HTTP_REFERER'];?>" />
+									</div>
+								</form>
+							</div>
+						</div> <?php
+				   
+					}?>
+				
                     
                 </div>
             </div>
@@ -944,6 +960,11 @@ $gnrl->check_login();
         var geocoder = new google.maps.Geocoder;
         var infowindow = new google.maps.InfoWindow;
         geocodeLatLng(geocoder, map, infowindow,lat1,lng1);
+		
+		geocodeLatLng(geocoder, map, infowindow,lat1,lng1);
+		geocodeLatLng(geocoder, map, infowindow,23.048637,72.5125527);
+		geocodeLatLng(geocoder, map, infowindow,23.0626746,72.5192664);
+		
       }
       function geocodeLatLng(geocoder, map, infowindow,lat1,lng1) {
         var latlng = {lat: lat1, lng: lng1};
@@ -956,6 +977,7 @@ $gnrl->check_login();
                 map: map
               });
               infowindow.setContent(results[1].formatted_address);
+			  
               infowindow.open(map, marker);
             } else {
               window.alert('No results found');

@@ -42,8 +42,32 @@ var currentApi = function( req, res, next ){
 			}
 			else{
 				for( var i = 0; i < data.length; i++ ){
-					data[i].l_data.title = data[i].l_data.title[_lang];
-					data[i].l_data.content = data[i].l_data.content[_lang];
+					if( data[i].l_data.title[_lang] ){
+						data[i].l_data.title = data[i].l_data.title[_lang];
+					}
+					else if( data[i].l_data.title ){
+						data[i].l_data.title = data[i].l_data.title;
+					}
+					else{
+						data[i].l_data.title = '';
+					}
+					
+					if( typeof( data[i].l_data.title ) == 'object' ){
+						data[i].l_data.title = '';
+					}
+					
+					if( data[i].l_data.content[_lang] ){
+						data[i].l_data.content = data[i].l_data.content[_lang];
+					}
+					else if( data[i].l_data.content ){
+						data[i].l_data.content = data[i].l_data.content;
+					}
+					else{
+						data[i].l_data.content = '';
+					}
+					if( typeof( data[i].l_data.content ) == 'object' ){
+						data[i].l_data.content = '';
+					}
 				}
 				gnrl._api_response( res, 1, '', data );
 			}

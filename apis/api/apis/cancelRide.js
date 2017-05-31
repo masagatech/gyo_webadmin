@@ -181,7 +181,8 @@ var currentApi = function( req, res, next ){
 			// Free Driver
 			function( callback ){
 				var _ins = {
-					'is_idle' : 1
+					'is_onride' : 0,
+					'is_buzzed' : 0,
 				};
 				dclass._update( 'tbl_user', _ins, " AND id = '"+_data.driver.id+"' ", function( status, data ){ 
 					callback( null );

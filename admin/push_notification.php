@@ -1,7 +1,6 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-
     
 	extract( $_POST );
 	$page_title = "Manage Push Notification";
@@ -87,7 +86,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -308,6 +308,7 @@ $gnrl->check_login();
                                                         <label><?php $pagen->writeLimitBox(); ?></label>
                                                     </div>
                                                 </div>
+
                                                 <div class="clearfix"></div>
                                             </div>
                                         </div>
@@ -331,7 +332,7 @@ $gnrl->check_login();
                                                         <td ><a href="javascript:;"><?php echo $row['u_name']; ?></a></td>
 
                                                         <td><?php echo $row['j_title'];?></td>
-                                                        <td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
+                                                        <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                         <td>
                                                             <div class="btn-group pull-right">
                                                                 <button class="btn btn-default btn-xs" type="button">Actions</button>
@@ -471,10 +472,18 @@ $gnrl->check_login();
                                        LOWER(v_name) like LOWER('%".$keyword."%')
                                     )";
                                 }
+                                $checked="";
+                                if( isset( $_REQUEST['deleted'] ) ){
+                                    $keyword =  trim( $_REQUEST['keyword'] );
+                                    $wh .= " AND i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND i_delete='0'";
+                                }
                                 $ssql = "SELECT * FROM ".$table." WHERE true".$wh;
                                 
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+                                $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'v_name' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
@@ -495,6 +504,11 @@ $gnrl->check_login();
                                                             <label>
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+                                                                <div class="clearfix"></div>
+                                                                 <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
                                                             </label>
                                                         </div>
                                                     </div>
@@ -503,19 +517,19 @@ $gnrl->check_login();
                                                             <label><?php $pagen->writeLimitBox(); ?></label>
                                                         </div>
                                                     </div>
+                                                   
                                                     <div class="clearfix"></div>
                                                 </div>
                                             </div>
-                                            
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
-                                                    <tr>
-                                                        <th width="30%">Name</th>
-                                                        <th width="5%">Added Date</th>
-                                                        <th width="5%"><span class="pull-right">Action</span></th>
-                                                    </tr>
-                                                </thead>
+                                                <?php
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?> 
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
@@ -523,10 +537,9 @@ $gnrl->check_login();
                                                             ?>
                                                             <tr>
                                                                 <td>
-                                                                    <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['v_name']; ?></a>
+                                                                    <?php echo $row['v_name']; ?>
                                                                 </td>
-                                                               
-                                                               <td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
+                                                               <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                                 <td>
                                                                     <div class="btn-group pull-right">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>

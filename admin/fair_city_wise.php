@@ -68,7 +68,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
 				if(1){
-					$dclass->delete( $table ," id = '".$id."'");
+					$ins = array('i_delete'=>'1');
+            		$dclass->update( $table, $ins, " id = '".$id."'");
 					$gnrl->redirectTo($page.".php?succ=1&msg=del");
 				}else{
 					$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -320,6 +321,13 @@ $gnrl->check_login();
 									   OR LOWER(a.l_data->'geo'->>'area_name') like LOWER('%".$keyword."%') 
 	                                )";
 	                            }
+	                            if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND a.i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND a.i_delete='0'";
+                                }
+
 	                           	$ssql = 
 							   	"SELECT
 									a.*,
@@ -330,17 +338,15 @@ $gnrl->check_login();
 									tbl_city as e ON a.i_city_id = e.id 
 									
 								WHERE true ".$wh;
-	                                        
-	                            $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-	                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
-	                            
+
+	                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'city_name' );
+                            	$sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
+
 	                            $nototal = $dclass->numRows($ssql);
 	                            $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
-	                           $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
+	                            $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
-	                            // _P($row_Data);
-	                            // exit;
 	                            
 	                            ?>
 	                            <div class="content">
@@ -354,6 +360,11 @@ $gnrl->check_login();
 	                                                        <label>
 	                                                            <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+	                                                            <div class="clearfix"></div> 
+                                                                <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
 	                                                        </label>
 	                                                    </div>
 	                                                    <?php 
@@ -372,15 +383,16 @@ $gnrl->check_login();
 	                                        
 	                                        <!-- <?php chk_all('drop');?> -->
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
-	                                            <thead>
-	                                                <tr>
-														<th>City </th>
-														<th>Vehicle Type </th>
-														<th>Status</th>
-														<th>Added Date</th>
-														<th>Action</th>
-	                                                </tr>
-	                                            </thead>
+	                                        	<?php
+				                                    echo $gnrl->renderTableHeader(array(
+				                                        'city_name' => array( 'order' => 1, 'title' => 'City' ),
+				                                        'v_vehicle_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+				                                        'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+				                                        'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+				                                        'action' => array( 'order' => 0, 'title' => 'Action' ),
+				                                    ));
+				                                ?>
+	                                            
 	                                            <tbody>
 	                                                <?php 
 	                                                if( $nototal > 0 ){
@@ -390,7 +402,9 @@ $gnrl->check_login();
 															// geo
 	                                                    	?>
 	                                                        <tr>
-																<td><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['city_name'];?></a></td>
+																<td>
+																	<?php echo $row['city_name'];?>
+																</td>
 																<td><?php echo ucfirst( $row['v_vehicle_type'] );?></td>
 																<td><?php echo ucfirst( $row['e_status'] );?></td>
 																<td><?php echo ucfirst( $row['d_added'] );?></td>
@@ -406,12 +420,9 @@ $gnrl->check_login();
 	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
 	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
 	                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-	                                    									<!--  <li><a href="<?php echo $page;?>.php?a=4&script=citywise&id=<?php echo $row['id'];?>">Manage City Wise</a></li> -->
 	                                                                    </ul>
 	                                                                </div>
 																	<?php } ?>
-																	
-	                                                               
 	                                                            </td>
 	                                                        </tr><?php 
 	                                                    }

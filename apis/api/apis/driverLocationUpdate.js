@@ -23,7 +23,8 @@ var currentApi = function( req, res, next ){
 	var l_longitude = gnrl._is_undf( params.l_longitude, 0 ).trim();
 	var i_ride_id = gnrl._is_undf( params.i_ride_id, 0 );
 	var distance = gnrl._is_undf( params.distance, '' );
-	var run_type = gnrl._is_undf( params.distance, '' );
+	var run_type = gnrl._is_undf( params.run_type, '' );
+	var speed = gnrl._is_undf( params.speed, '0.0 m/s' );
 	
 	if( !i_vehicle_id ){ _status = 0; _message = 'err_req_vehicle_id'; }
 	if( _status && !l_latitude ){ _status = 0; _message = 'err_req_latitude'; }
@@ -34,11 +35,18 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 		
+		var original_distance = distance;
+		var original_speed = speed;
+		
+		if( speed ){
+			speed = speed.split(' ');
+		}
+		
 		if( distance ){
 			var temp = distance.split(' ');
 			temp[1] = temp[1].toLowerCase();
 			distance = parseFloat( temp[0] );
-			if( temp[1] = 'm' ){
+			if( temp[1] == 'm' ){
 				distance = parseFloat( temp[0] / 1000 );
 			}
 		}
@@ -59,21 +67,33 @@ var currentApi = function( req, res, next ){
 			
 			// Take Entry in Track Table
 			function( callback ){
-				var _ins = {
-					'i_driver_id' 	: login_id,
-					'i_vehicle_id' 	: i_vehicle_id,
-					'd_time' 		: gnrl._db_datetime(),
-					'l_latitude' 	: l_latitude,
-					'l_longitude'   : l_longitude,
-					'l_data'        : gnrl._json_encode({
-						'i_ride_id' : i_ride_id,
-						'distance' 	: distance,
-						'run_type' 	: run_type,
-					}),
-				};
-				dclass._insert( 'tbl_track_vehicle_location', _ins, function( status, data ){
+				if( i_ride_id == 0 ){
 					callback( null );
-				});
+				}
+				else if( distance < 0.25 ){
+					var _ins = {
+						'i_driver_id' 	: login_id,
+						'i_vehicle_id' 	: i_vehicle_id,
+						'd_time' 		: gnrl._db_datetime(),
+						'l_latitude' 	: l_latitude,
+						'l_longitude'   : l_longitude,
+						'l_data'        : gnrl._json_encode({
+							'i_ride_id' : i_ride_id,
+							'distance' 	: distance,
+							'run_type' 	: run_type,
+							'original_distance' : original_distance,
+							'original_speed' : original_speed,
+							'speed' : speed[0],
+							'speed_type' : speed[1],
+						}),
+					};
+					dclass._insert( 'tbl_track_vehicle_location', _ins, function( status, data ){
+						callback( null );
+					});
+				}
+				else {
+					callback( null );
+				}
 			},
 			
 		], function( error, results ){

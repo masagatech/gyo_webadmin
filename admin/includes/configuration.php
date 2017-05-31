@@ -1,11 +1,12 @@
 <?php 
 session_start();
+date_default_timezone_set('Asia/Kolkata');
+
 ini_set('display_errors',1);
 ob_start("ob_gzhandler");
 @ob_gzhandler();
 error_reporting( E_ERROR );
 
-	
 	## Define BASE FILE
 	global $basefile;
 	$basefile = basename( $_SERVER['PHP_SELF'] );
@@ -31,12 +32,11 @@ error_reporting( E_ERROR );
 		else{
 			$uploads 			= "../apis/public/uploads/";
 		}
-		
 		require_once( $glob_cls_path.'paging.class.php' );
 	}
 	else{
 		$config_frontend 	= 1;
-		$glob_cls_path	 	= "./".PATH_CLASSES;
+		$glob_cls_path	 	= "../".ADMIN_BASE."/".PATH_CLASSES;
 		$uploads 			= "uploads/";
 	}
 	
@@ -85,6 +85,7 @@ error_reporting( E_ERROR );
 		}
 		return 0;
 	}
+	
 	 
 	function chk_all( $type = '' ){
 		if( $type == 'drop' ){
@@ -128,9 +129,13 @@ error_reporting( E_ERROR );
 	}
 	
 	
-	global $globalCharges, $globalTrip, $globEmailTypes,$globSmsTypes,$globalRideStatus,$globalShowEstimateCharge,$globalDriverSearchQuery,$globalUserAction,$globalAdminRole,$globNotificationTypes,$globalParentChild;
+	global $globalCharges, $globalTrip, $globEmailTypes,$globSmsTypes,$globalRideStatus,$globalShowEstimateCharge,$globalDriverSearchQuery,$globalUserAction,$globalAdminRole,$globNotificationTypes,$globalParentChild,$globalPromotionType;
 
 	// {"day_km_end": "", "day_km_start": "", "night_km_end": "", "": "", "day_km_charges": "", "": "", "night_km_start": "", "": "", "": "", "night_km_charges": "", "": "", "": "", "day_km_after_charge": "", "night_km_after_charge": ""}
+	$globalPromotionType=array(
+		'ride' =>'Ride', 
+		'add_wallet' =>'Add Wallet',
+	);
 	$globalParentChild=array(
 		'0' => 'Child',
 		'1' => 'Parent',
@@ -226,6 +231,8 @@ error_reporting( E_ERROR );
 		'resend_otp' 	=> 'Resend OTP',
 		
 	); 
+	
+	
 
 	$globNotificationTypes = array(
 		
@@ -266,8 +273,9 @@ error_reporting( E_ERROR );
 		$globLangArr[$rowTemp['v_key']] = $rowTemp['v_name'];
 	}
 	
-	$_SESSION['DETECT_IP'] = $gnrl->getRealIpAddr(); '49.213.55.201'; 
-	$_SESSION['DETECT_LOCATION'] = $gnrl->getLocationInfoByIp( DETECT_IP );
+	
+	//$_SESSION['DETECT_IP'] = $gnrl->getRealIpAddr(); '49.213.55.201'; 
+	//$_SESSION['DETECT_LOCATION'] = $gnrl->getLocationInfoByIp( DETECT_IP );
 	
 	
 	

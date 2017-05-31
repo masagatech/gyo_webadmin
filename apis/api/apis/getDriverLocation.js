@@ -14,17 +14,17 @@ var currentApi = function( req, res, next ){
 	var params = gnrl._frm_data( req );
 	var _lang = gnrl._getLang( params );
 	
-	var _status   = 1;
-	var _message  = '';
+	var _status = 1;
+	var _message = '';
 	var _response = {};
 	
 	var i_driver_id = gnrl._is_undf( params.i_driver_id ).trim();
-	
 	if( !i_driver_id ){ _status = 0; _message = 'err_req_driver_id'; }
 	
 	if( _status ){
 		
-		var _driver = [];
+		var _driver = {};
+		
 		async.series([
 		
 			function( callback ){

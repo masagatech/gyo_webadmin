@@ -32,7 +32,8 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 
-		var _user = [];
+		var _user = {};
+		
 		async.series([
 			// Check otp is correct
 			function( callback ){
@@ -41,7 +42,7 @@ var currentApi = function( req, res, next ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else{
-						var _user = user[0];
+						_user = user[0];
 						if( !validator.equals( v_otp, _user.v_otp ) ){
 							gnrl._api_response( res, 0, 'err_invalid_otp', {} );
 						}

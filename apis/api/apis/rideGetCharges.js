@@ -33,6 +33,7 @@ var currentApi = function( req, res, next ){
 			else{
 				for( var i = 0; i < data.length; i++ ){
 					data[i].display_charge_type = Ride.getAllChargeTypes( data[i]['v_charge_type'] );
+					// display_charge_type
 				}
 				gnrl._api_response( res, 1, '', data );
 			}

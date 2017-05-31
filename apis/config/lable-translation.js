@@ -273,7 +273,6 @@ var lables = {
 		'err_req_destination_address' 	: 'Destination address is required.',
 		'err_req_destination_latitude' 	: 'Destination latitude is required.',
 		'err_req_destination_longitude' : 'Destination longitude is required.',
-		'err_req_estimate_amount' 		: 'Estimate amount is required.',
 		'err_req_estimate_km' 		    : 'Estimate KM is required.',
 		'err_req_estimate_time' 		: 'Estimate Time is required.',
 		'err_req_sort_by' 		        : 'Sort by is required.',
@@ -326,8 +325,10 @@ var lables = {
 		'err_invalid_role' 				: 'Incorrect Role.',
 		'err_invalid_key' 				: 'Incorrect Key.',
 		'err_invalid_lang' 				: 'Incorrect Language.',
+		'err_invalid_referral_code' 	: 'Incorrect Referral Code.',
 
 		'err_invalid_promotion_code'    : 'Incorrect promotion code.',
+		'err_promotion_code_redeemed' 	: 'Promotion code is already used.',
 		'err_promotion_code_closed'     : 'Promotion code is closed.',
 		'err_promotion_code_not_in_city': 'Promotion code is not available in your city.',
 		'err_promotion_code_expired'    : 'Promotion code is expired.',
@@ -344,12 +345,15 @@ var lables = {
 		'err_msg_exists_phone' 			: 'Phone already exists.',
 		'err_msg_ride_alreay_accepted' 	: 'Ride already accepted.',
 		'err_msg_ride_alreay_completed' : 'Ride already completed.',
+		'err_msg_ride_alreay_confirmed' : 'Ride already confirmed.',
 		
 		'err_msg_email_not_sent' 		: 'Email can not sent.',
 		'err_msg_sms_not_sent' 			: 'SMS can not sent.',
 		
 		'err_msg_no_email_template' 	: 'No email template found.',
 		'err_msg_no_sms_template' 		: 'No sms template found.',
+		
+		'err_msg_already_login' 		: 'User already login in another device.',
 		
 		
 		'err_msg_no_notification_template' 	: 'No notification template found.',
@@ -382,14 +386,34 @@ var lables = {
 		'succ_ride_accepted' 			: 'Ride accepted successfully.',
 		'succ_ride_charge_added' 		: 'Ride charged added successfully.',
 		'succ_ride_completed' 			: 'Ride completed successfully.',
-		'succ_promotion_code_avail'  	: 'Promotion code is availble for use.',		
+		'succ_promotion_code_avail'  	: 'Promotion code is applied successfully.',
+		'succ_promotion_code_removed'  	: 'Promotion code is removed successfully.',
 		'succ_money_added'  	        : 'Money added successfully.',		
 		'succ_ride_payment'             : 'Payment received successfully.',		
 		'succ_sos_send'                 : 'SOS send successfully.',
 		'succ_account_verified'         : 'Account is verified successfully.',
 		
-		'msg_wallet_credit'         	: 'INR [amount], credited to your wallet.',
-		'msg_wallet_debit'         		: 'INR [amount], debited from your wallet.',
+		'msg_wallet_credit'         	: '₹[amount], credited to your wallet.',
+		'msg_wallet_debit'         		: '₹[amount], debited from your wallet.',
+		
+		'msg_wallet_user_payu'         	: '₹[amount], creadit to your wallet from PayUmoney.',
+		'msg_wallet_user_ride_cancel'   : '₹[amount], debited from your wallet becaues of cancel ride ([ride_code]).',
+		'msg_wallet_user_ride_dry_run'  : '',
+		'msg_wallet_user_ride'         	: '₹[amount], debited from your wallet for ride ([ride_code]).',
+		'msg_wallet_user_referral'      : '₹[amount], credit to your wallet for Referral.',
+		
+		'msg_wallet_driver_payu'        	: '',
+		'msg_wallet_driver_ride_cancel'     : '₹[amount], debited from your wallet becaues of cancel ride ([ride_code]).',
+		'msg_wallet_driver_ride_dry_run'    : '₹[amount] (Dry Run), credited to your wallet for ride ([ride_code]).',
+		'msg_wallet_driver_ride'         	: 'For Ride ([ride_code]), \nYour ride receivable amount ₹[receivable_amount], \nYou need to pay ₹[payable_amount] to Company. \nYou received ₹[received_amount].',
+		
+		
+		'msg_driver_ride_payment_str'   : '',
+		
+		'msg_refer_code' : 'No code available',
+		'msg_refer_code_string_on' : 'Share your referral code and get ₹[amount]. So share your code and get money.',
+		'msg_refer_code_string_off' : 'Currently no referral program available.',
+		
 		
 	},
 	

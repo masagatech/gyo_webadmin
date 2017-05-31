@@ -401,11 +401,21 @@ $mail = new PHPMailer();
 			);
 			
 			$link = array();
+			$key_array = array(
+				'keyword',
+				'script',
+				'id',
+				'a',
+				'pageno',
+				'limitstart',
+				'np',
+				);
 			foreach( $_GET as $k => $v ){
+
 				if( $k[0].$k[1].$k[2].$k[3].$k[4] == 'srch_' ){
 					$link[] = $k.'='.$v;
 				}
-				else if( $k == 'keyword' ){
+				else if( in_array( $k, $key_array ) ){
 					$link[] = $k.'='.$v;
 				}
 			}
@@ -421,6 +431,7 @@ $mail = new PHPMailer();
 							$str .= '<a class="'.( $_REQUEST['sb'] == $k ? 'active' : '' ).'" href="'.$url.'" >';
 						}
 						$str .= $v['title'];
+						
 						if( $v['order'] ){
 							if( $_REQUEST['sb'] == $k ){
 								if( $_REQUEST['st'] == 'ASC' ){
@@ -432,6 +443,9 @@ $mail = new PHPMailer();
 							}
 							$str .= '</a>';
 						}
+						
+						$str .= $v['title2'];
+						
 					$str .= '</th>';
 				}
 			$str .= '</tr></thead>';
@@ -659,28 +673,34 @@ $mail = new PHPMailer();
 			echo $str;
 		}
 		
-		function getVehicleTypeDropdownList($selval=""){
+		function getVehicleTypeDropdownList($selval="", $value = 'id'){
 			global $dclass; 	 
 			$row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
 			$str = '';
 			foreach($row as $key => $val){
-				if($selval == $val['v_name']) { $sel = 'selected="selected"'; }
+				if($selval == $val[ $value ] ) { $sel = 'selected="selected"'; }
 				else { $sel = ''; }
-				$str .= '<option value="'.$val['id'].'" '.$sel.'>'.ucwords($val['v_name']).'</option>';
+				$str .= '<option value="'.$val[ $value ].'" '.$sel.'>'.ucwords($val['v_name']).'</option>';
 			}
 			echo $str;
 			
 		}
 
-		function removeTimezone($d_added=""){
-			 $d_added = substr($d_added, 0, strpos($d_added, "+"));
-			 return $d_added;
+		function displaySiteDate( $d_added = "" ){
+			if( !$d_added ) return '-';
+			$d_added = date('Y-m-d h:i:s A', strtotime($d_added));
+			return $d_added;
 		}
 
-		function getSections(){
+		function getSections($checked){
+			if($checked=='checked'){
+				$checked='1';
+			}else{
+				$checked='0';
+			}
 			global $dclass;
 			$return_data = array();
-			$data = $dclass->select( '*', 'tbl_sections', " ORDER BY i_parent_id ASC, i_order ASC " );
+			$data = $dclass->select( '*', 'tbl_sections',"AND i_delete='".$checked."' ", " ORDER BY i_parent_id ASC, i_order ASC " );
 			if( count( $data ) ){
 				foreach( $data as $row ){
 					if( $row['i_parent_id'] ){
@@ -734,6 +754,7 @@ $mail = new PHPMailer();
 				'invalid-access.php',
 				'index.php',
 				'adminActions.php',
+				'warroom.php',
 				) ) ){
 				return '';
 			}

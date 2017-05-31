@@ -28,6 +28,16 @@ var gnrl = {
 		}
 	},
 	
+	// Check in Array
+	_inArray : function( val, arr ){ 
+		if( arr.indexOf( val ) >= 0 ){
+			return 1;
+		}
+		else{
+			return 0;
+		}
+	},
+	
 	// DB Schema
 	_db_schema : function( param ){
 		return 'public.'+param;
@@ -51,9 +61,9 @@ var gnrl = {
 	},
 	
 	// Replace undefined variables
-	_is_undf : function( data, deafaultVal = null ){
+	_is_undf : function( data, deafaultVal = '' ){
 		if( data != undefined ){
-			return data ? data : ( deafaultVal != undefined ? deafaultVal : '' );
+			return ( data ? data : ( deafaultVal != undefined ? deafaultVal : '' ) );
 		}
 		else{
 			return ( deafaultVal != undefined ? deafaultVal : '' );
@@ -129,10 +139,7 @@ var gnrl = {
 	
 	// Check if data is NULL
 	_isNull : function( data ){
-		//gnrl._p( data );
-		//gnrl._p( ' C :  '+ data.constructor );
-		//gnrl._p( ' T :  '+ typeof( data ) );
-		//gnrl._p( ' A :  '+ Array.isArray( data ) );
+		
 		if( data == undefined ){ return 1; }
 		else if( data == null ){ return 1; }
 		else if( typeof( data ) == 'object' ){ for( var k in data ){ return 0; } return 1; }
@@ -211,17 +218,19 @@ var gnrl = {
 	// Get Datetime, Y-m-d H:i:s
 	_db_period_time : function( period = 'daily' ){
 		var dates = {};
-		if( period == 'daily' ){
+		if( period == 'today' ){
+			dates.start = gnrl._db_ymd('Y-m-d')+' 00:00:00';
+			dates.end = gnrl._db_ymd('Y-m-d H:i:s');
+		}
+		else if( period == 'daily' ){
 			dates.start = gnrl._db_ymd('Y-m-d')+' 00:00:00';
 			dates.end = gnrl._db_ymd('Y-m-d H:i:s');
 		}
 		else if( period == 'weekly' ){
-			var curr = new Date; // get current date
-			var first = curr.getDate() - curr.getDay() + 1; // First day is the day of the month - the day of the week
-			var last = first + 6; // last day is the first day + 6
-			dates.start = gnrl._db_ymd('Y-m-d', new Date(curr.setDate(first)) )+' 00:00:00';
+			var days = 6;
+			var last = new Date( new Date().getTime() - ( days * 24 * 60 * 60 * 1000 ) );
+			dates.start = gnrl._db_ymd('Y-m-d', last )+' 00:00:00';
 			dates.end = gnrl._db_ymd('Y-m-d H:i:s');
-			// dates.end = gnrl._db_ymd('Y-m-d H:i:s', new Date(curr.setDate(last)));
 		}
 		else if( period == 'monthly' ){
 			var date = new Date();
@@ -331,6 +340,8 @@ var gnrl = {
 	_timestamp : function( datestr ){
 		if( datestr == undefined ){ datestr = ''; }
 		else if( datestr == null ){ datestr = ''; }
+		else if( datestr == '' ){ datestr = ''; }
+		
 		datestr = datestr ? datestr.toString() : '';
 		return gnrl._isNull( datestr ) ? '' : new Date( datestr ).getTime();
 	},

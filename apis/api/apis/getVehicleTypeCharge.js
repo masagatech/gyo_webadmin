@@ -18,20 +18,20 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	
 	var city = gnrl._is_undf( params.city ).trim();
-	var latitude = gnrl._is_undf( params.latitude ).trim();
-	var longitude = gnrl._is_undf( params.longitude ).trim();
-	var vehicle_type = gnrl._is_undf( params.vehicle_type ).trim();
+	var latitude = gnrl._is_undf( params.latitude, 0 );
+	var longitude = gnrl._is_undf( params.longitude, 0 );
+	var vehicle_type = gnrl._is_undf( params.vehicle_type );
+	
+	latitude = parseFloat( latitude );
+	longitude = parseFloat( longitude );
 	
 	if( !city.trim() ){ _status = 0; _message = 'err_req_city'; }
 	if( _status && !vehicle_type.trim() ){ _status = 0; _message = 'err_req_vehicle_type'; }
-	
-	if( _status && !latitude ){ _status = 0; _message = 'err_req_latitude'; }
-	if( _status && !longitude ){ _status = 0; _message = 'err_req_longitude'; }
+	if( _status && latitude <= 0 ){ _status = 0; _message = 'err_req_latitude'; }
+	if( _status && longitude <= 0 ){ _status = 0; _message = 'err_req_longitude'; }
 	
 	var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-	
 	
 	var newData = {};
 	
@@ -45,14 +45,18 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 		
+		/*
+			>> Get Vehicle Types
+			>> Get City Wise Prices
+			>> Get Area Wise Prices
+		*/
+		
+		
 		async.series([
 			
 			// Get Vehicle Types
 			function( callback ){
 				dclass._select( '*', 'tbl_vehicle_type', " AND v_type = '"+vehicle_type+"' AND e_status = 'active' ", function( status, data ){ 
-					
-					
-					
 					if( !status ){
 						gnrl._api_response( res, 0, '', {} );
 					}
@@ -68,9 +72,19 @@ var currentApi = function( req, res, next ){
 						if( temp.l_data.plotting_icon ){ temp.l_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.plotting_icon ); }
 						newData = temp;
 						
+						// Based Selection
 						newData.l_data.charges.city_wise_id = 0;
 						newData.l_data.charges.area_wise_id = 0;
 						newData.l_data.charges.vehicle_wise_id = 0;
+						
+						// Coupon Code
+						newData.l_data.charges.promocode_id = 0;
+						newData.l_data.charges.promocode_code = 0;
+						newData.l_data.charges.promocode_code_discount = 0;
+						newData.l_data.charges.promocode_code_discount_amount = 0;
+						newData.l_data.charges.promocode_code_discount_upto = 0;
+						
+						
 						newData.subCharges = [];
 						callback( null );
 					}
@@ -88,8 +102,6 @@ var currentApi = function( req, res, next ){
 					_q += " SELECT c.id FROM tbl_city c WHERE lower( v_name ) = '"+( city.toLowerCase() )+"' LIMIT 1 ";
 				_q += "  ) ";
 				_q += "  AND v_type = 'city_wise' ";
-				
-				// newData._q = _q;
 				
 				dclass._query( _q, function( status, data ){
 					if( !status ){
@@ -146,6 +158,7 @@ var currentApi = function( req, res, next ){
 					else{
 						
 						for( var k in data ){
+							
 							var temp = data[k];
 							var isPush = 1;
 							temp.start_hour = gnrl._timestamp( currDate+' '+temp.start_hour );
@@ -179,10 +192,7 @@ var currentApi = function( req, res, next ){
 			
 			
 		], function( error, results ){
-			//newData.currTimeStamp = currTimeStamp;
-			//newData.currDate = currDate;
-			//newData.currDay = currDay;
-			//newData.currHour = currHour;
+			
 			gnrl._api_response( res, 1, '', newData );
 			
 		});

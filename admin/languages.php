@@ -30,7 +30,8 @@ $gnrl->check_login();
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
-				$dclass->delete( $table ," id = '".$id."'");
+				$ins = array('i_delete'=>'1');
+                $dclass->update( $table, $ins, " id = '".$id."'");
 				$gnrl->redirectTo($page.".php?succ=1&msg=del");
 			}
 			// make records active
@@ -165,8 +166,8 @@ $gnrl->check_login();
                                 
                                 $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
                                             
-                               $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'v_name';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st'] != '') ? $_REQUEST['st'] : 'ASC';
+                                $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'v_name' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
@@ -201,16 +202,8 @@ $gnrl->check_login();
                                                 </div>
                                             </div>
                                             
-                                            <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <!-- <thead>
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        <th>Key</th>
-                                                        <th>Status</th>
-                                                        <th width="20%"><span class="pull-right"> Action</span></th>
-                                                    </tr>
-                                                </thead> -->
+                                                
                                                 <?php
                                                 
                                                 echo $gnrl->renderTableHeader(array(

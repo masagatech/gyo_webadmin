@@ -23,27 +23,27 @@ var currentApi = function( req, res, next ){
 	if( _status ){
 		
 		var dates = gnrl._db_period_time( period );
-		var whPeriod = " AND ( d_time >= '"+( dates.start )+"' AND d_time <= '"+( dates.end )+"' ) ";
 		
-		var _q = "";
-		_q += "SELECT ";
-		_q += " a.*, ";
-		_q += " ( SELECT COUNT(*) FROM tbl_ride WHERE i_driver_id = '"+login_id+"' "+whPeriod+" ) AS my_trips, ";
-		_q += " ( SELECT COALESCE( SUM( (l_data->>'earning')::double precision ), 0) FROM tbl_ride WHERE true AND e_status = 'complete' AND i_driver_id = '"+login_id+"' "+whPeriod+" ) AS my_earning ";
-		_q += " FROM tbl_user a ";
-		_q += " WHERE true AND v_role = 'driver' AND id = '"+login_id+"' ";
+		var _q = " SELECT ";
+		_q += " COUNT(*) as my_trips ";
+		_q += " , COALESCE( SUM( ( l_data->>'ride_driver_receivable' )::double precision ), 0 ) as ride_driver_receivable ";
+		_q += " , COALESCE( SUM( ( l_data->>'ride_driver_payable' )::double precision ), 0 ) as ride_driver_payable ";
+		
+		_q += " FROM tbl_ride ";
+		_q += " WHERE true  ";
+		_q += " AND i_driver_id = '"+login_id+"' ";
+		_q += " AND ( d_time >= '"+dates.start+"' AND d_time <= '"+dates.end+"' ) ";
+		_q += " GROUP BY i_driver_id ";
 		
 		dclass._query( _q, function( status, data ){
-			
-			
 			if( !status ){
-				gnrl._api_response( res, 0, '', {} );
+				gnrl._api_response( res, 0, '', {});
 			}
 			else{
 				gnrl._api_response( res, 1, '', {
-					//'_q' : _q,
-					'my_trips' : gnrl._isNull( data[0].my_trips, 0 ),
-					'my_earning' : gnrl._isNull( data[0].my_earning, 0 )
+					'my_trips' : data.length ? data[0].my_trips : 0,
+					'my_earning' : data.length ? data[0].ride_driver_receivable : 0,
+					'ride_driver_payable' : data.length ? data[0].ride_driver_payable : 0,
 				});
 			}
 		});

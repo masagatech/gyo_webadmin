@@ -22,64 +22,106 @@ var currentApi = function( req, res, next ){
 	var i_ride_id = gnrl._is_undf( params.i_ride_id );
 	var l_latitude = gnrl._is_undf( params.l_latitude, 0 );
 	var l_longitude = gnrl._is_undf( params.l_longitude, 0 );
+	var city = gnrl._is_undf( params.city, '' );
 	
 	if( !i_ride_id.trim() ){ _status = 0; _message = 'err_req_ride_id'; }
-
+	// if( _status && !city.trim() ){ _status = 0; _message = 'err_req_city'; }
+	
 	if( _status ){
 
 		var _admin = [];
-		var _ride  = [];
+		var _ride = {};
+		var _user = {};
+		var _driver = {};
+		
+		var l_data = {
+			city_id : 0,
+			city_name : city,
+			ride_code : '',
+			phone_sos : '',
+			phone_user : '',
+			phone_driver : '',
+		};
+		
 		async.series([
-
-			// Get Admin
+		
+			// Get City
 			function( callback ){
-				dclass._select( '*', 'tbl_admin', " AND v_role = 'superadmin' AND e_status = 'active' LIMIT 1 ", function( status, admin ){
-					if( !status ){
-						gnrl._api_response( res, 0, 'error', {} );
+				City.getByName( city, function( status, data ){
+					if( status && data.length ){
+						l_data.city_id = data[0].id;
+						callback( null );
 					}
-					else if( !admin.length ){
-						gnrl._api_response( res, 0, 'error', {} );	
-					}
-					else if( admin.length ){
-						_admin = admin[0];
+					else{
 						callback( null );
 					}
 				});
 			},
-
-			// Get Ride Details
+			
+			// Get SOS Number
 			function( callback ){
-				var _q = "SELECT * ";
-				_q += " ,(SELECT v_name FROM tbl_user WHERE id = t1.i_driver_id) as driver_v_name ";
-				_q += " ,(SELECT v_name FROM tbl_user WHERE id = t1.i_user_id) as user_v_name ";
-				_q += " FROM tbl_ride t1";
-				_q += " WHERE id = '"+i_ride_id+"'";
-				_q += " LIMIT 1";
-				
-				dclass._query( _q, function( status, ride ){
-					
-					if( !status ){
-						gnrl._api_response( res, 0, 'error', {} );
+				SOS.getByCityID( l_data.city_id, function( status, data ){
+					if( status && data.length ){
+						l_data.phone_sos = data[0].v_phone;
+						callback( null );
 					}
-					else if( !ride.length ){
-						gnrl._api_response( res, 0, 'error', {} );	
-					}
-					else if( ride.length ){
-						_ride = ride[0];
+					else{
 						callback( null );
 					}
 				});
 			},
-
-			//Add in sos table
+			
+			// Get Ride
+			function( callback ){
+				Ride.get( i_ride_id, function( status, data ){
+					if( status && data.length ){
+						_ride = data[0];
+						l_data.ride_code = _ride.v_ride_code;
+						callback( null );
+					}
+					else{
+						callback( null );
+					}
+				});
+			},
+			
+			// Get User
+			function( callback ){
+				User.get( _ride.i_user_id, function( status, data ){
+					if( status && data.length ){
+						_user = data[0];
+						l_data.phone_user = _user.v_phone;
+						callback( null );
+					}
+					else{
+						callback( null );
+					}
+				});
+			},
+			
+			// Get Driver
+			function( callback ){
+				User.get( _ride.i_driver_id, function( status, data ){
+					if( status && data.length ){
+						_driver = data[0];
+						l_data.phone_driver = _driver.v_phone;
+						callback( null );
+					}
+					else{
+						callback( null );
+					}
+				});
+			},
+			
+			// ADD in SOS table
 			function( callback ){
 				var _ins = {
 					'i_ride_id'   : i_ride_id,
 					'l_latitude'  : l_latitude,
 					'l_longitude' : l_longitude,
 					'd_added'     : gnrl._db_datetime(),
+					'l_data'      : gnrl._json_encode( l_data ),
 				};
-
 				dclass._insert( 'tbl_ride_sos', _ins, function( status, sos_insert ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
@@ -90,19 +132,17 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
-			
-
 			// Send SMS
 			function( callback ){
 				var params = {
-					_to      	: _admin.v_phone,
+					_to      	: l_data.phone_sos,
 					_lang 		: _lang,
 					_key 		: 'ride_alert_sos',
 					_keywords 	: {
-						'[user_name]' : _admin.v_name,
-						'[i_ride_id]' : i_ride_id,
-						'[user_name_id]' : _ride.user_v_name+'('+_ride.i_user_id+')',
-						'[driver_name_id]' : _ride.driver_v_name+'('+_ride.i_driver_id+')',
+						'[city]' : city,
+						'[i_ride_id]' : _ride.v_ride_code+' ('+i_ride_id+')',
+						'[user_name_id]' : _user.v_name+' ('+_user.v_phone+')',
+						'[driver_name_id]' : _driver.v_name+' ('+_driver.v_phone+')',
 					},
 				};
 				SMS.send( params, function( error_mail, error_info ){
@@ -110,6 +150,7 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
+			/*
 			// Send Email
 			function( callback ){
 				var params = {
@@ -126,12 +167,14 @@ var currentApi = function( req, res, next ){
 				Email.send( params, function( error_mail, error_info ){
 					callback( null );
 				});
-			},
+			},*/
 			
 
 		], 
 		function( error, results ){
-			gnrl._api_response( res, 1, 'succ_sos_send', {} );
+			gnrl._api_response( res, 1, 'succ_sos_send', {
+				'phone_sos' : l_data.phone_sos
+			});
 		});
 	}
 	else{

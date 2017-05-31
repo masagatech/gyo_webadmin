@@ -47,7 +47,6 @@ var currentApi = function( req, res, next ){
 					}
 					else{
 						_vehicle_type = data[0];
-						
 						callback( null );
 					}
 				});
@@ -71,22 +70,27 @@ var currentApi = function( req, res, next ){
 					_q += " LEFT JOIN tbl_user b ON b.id = a.i_driver_id ";
 					_q += " WHERE true ";
 					_q += " AND a.v_type = '"+v_type+"' ";
-					_q += " AND b.v_role = 'driver' AND b.e_status = 'active' AND b.is_idle = '1' AND b.is_onduty = '1' ";
+					_q += " AND b.v_role = 'driver' ";
+					_q += " AND b.e_status = 'active' ";
+					_q += " AND b.is_onduty = '1' ";
+					_q += " AND b.is_onride = '0' ";
+					_q += " AND b.is_buzzed = '0' ";
+					
 				_q += " ) AS sub ";
 				_q += " WHERE true ";
 				_q += " AND distance <= "+radius+" ";
-				_q += " AND i_driver_id IN ( SELECT id FROM tbl_user WHERE v_role = 'driver' AND e_status = 'active' AND is_idle = '1' AND is_onduty = '1' ) ";
 				_q += " ORDER BY ";
 				_q += " distance ASC ";
 				
 				_response._q = _q;
 				
+				
 				dclass._query( _q, function( status, data ){
 					if( !status ){
-						gnrl._api_response( res, 0, '', {} );
+						gnrl._api_response( res, 0, '', [] );
 					}
 					else if( !data.length ){
-						gnrl._api_response( res, 0, 'err_no_vehicles', {} );
+						gnrl._api_response( res, 0, 'err_no_vehicles', [] );
 					}
 					else{
 						_vehicle_list = data;
@@ -99,8 +103,6 @@ var currentApi = function( req, res, next ){
 			
 		], 
 		function( error, results ){
-			// _response._vehicle_type = _vehicle_type;
-			// _response._vehicle_list = _vehicle_list;
 			
 			gnrl._api_response( res, 1, '', _vehicle_list );
 			

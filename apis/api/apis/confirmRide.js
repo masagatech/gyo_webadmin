@@ -61,6 +61,7 @@ var currentApi = function( req, res, next ){
 		var _query_type = '';
 		var pickup_lat = '';
 		var pickup_lng = '';
+		var acceptedRide = {};
 				
 		var mainData = {
 			'isAccepted' : 0,
@@ -83,6 +84,7 @@ var currentApi = function( req, res, next ){
 				
 				for( var i = 0; i < roundCount; i++ ){
 					
+					
 					// >>> Get Ride
 					processArr.push( function( callback ){
 						if( !mainData.isProcess ){
@@ -102,12 +104,10 @@ var currentApi = function( req, res, next ){
 									pickup_lng = _ride.l_data.pickup_longitude;
 									mainData._ride = _ride;
 								}
-								
 								callback( null );
 							});
 						}
 					});
-					
 					
 					// >>> Update Payment Mode To Ride
 					processArr.push( function( callback ){
@@ -168,7 +168,6 @@ var currentApi = function( req, res, next ){
 						
 					});
 					
-					
 					// >>> Update Round ID to Ride
 					processArr.push( function( callback ){
 						var _ins = [
@@ -187,8 +186,6 @@ var currentApi = function( req, res, next ){
 							}
 						});
 					});
-					
-					
 					
 					// >>> Get Query Type
 					processArr.push( function( callback ){
@@ -211,7 +208,6 @@ var currentApi = function( req, res, next ){
 						}
 					});
 					
-					
 					// >>> Find Drivers Make Query
 					processArr.push( function( callback ){
 						
@@ -230,7 +226,6 @@ var currentApi = function( req, res, next ){
 							_q += " , b.trip_count ";
 							_q += " , b.buzz_count ";
 							_q += " , b.same_ride_buzz_count ";
-							
 							_q += " FROM tbl_user a ";
 							_q += " LEFT JOIN ( ";
 								_q += " SELECT ";
@@ -242,40 +237,50 @@ var currentApi = function( req, res, next ){
 								_q += " FROM tbl_vehicle inb ";
 								_q += " LEFT JOIN tbl_user U ON U.id = inb.i_driver_id ";
 								_q += " WHERE true ";
-								_q += " AND U.v_role = 'driver' AND U.e_status = 'active' AND U.is_onduty = '1' AND U.is_idle = '1' ";
+								_q += " AND inb.v_type = '"+_ride.l_data.vehicle_type+"' ";
+								_q += " AND U.v_role = 'driver' ";
+								_q += " AND U.e_status = 'active' ";
+								_q += " AND U.is_onduty = '1' ";
+								_q += " AND U.is_onride = '0' ";
+								_q += " AND U.is_buzzed = '0' ";
+								_q += " AND U.v_token != '' ";
 							_q += " ) b ON a.id = b.i_driver_id ";
 							_q += " WHERE true ";
-							_q += " AND a.v_role = 'driver' AND a.e_status = 'active' AND a.is_onduty = '1' AND a.is_idle = '1' ";
-							_q += " AND a.v_token != '' ";
-							_q += " AND b.v_type = '"+( _ride.l_data.vehicle_type )+"' ";
 							_q += " AND b.same_ride_buzz_count <= '0' ";
-							_q += " ORDER BY  ";
-							_q += " b.distance ASC ";
-							_q += " , a.l_data->>'rate' DESC ";
 							
 							
-							if( _query_type == 'simple' ){
-								_q += " LIMIT "+( _round.l_data.buzz_count ? _round.l_data.buzz_count : 10 );
-							}
-							else{
-								mainData.isDirectAssign = 0;
+							
+							mainData.isDirectAssign = 0;
+							
+							if( _query_type != 'simple' ){
 								if( _entity.premium_driver.check && _entity.premium_driver.value == 1 ){
 									mainData.isDirectAssign = 1;
 									_q += " AND a.is_premium = '1' ";
 								}
-								if( _entity.lowest_trip.check ){ _q += " AND b.trip_count <= '"+( _entity.lowest_trip.value )+"' "; }	
-								if( _entity.max_dry_run.check ){ _q += " AND b.distance <= '"+( _entity.max_dry_run.value )+"' "; }
-								if( _entity.rating.check ){ _q += " AND a.l_data->>'rate' != '' AND a.l_data->>'rate' >= '"+( _entity.rating.value )+"' "; }
-								if( _entity.already_offered.check ){ _q += " AND b.buzz_count <= '"+( _entity.already_offered.value )+"' "; }
-								if( mainData.isDirectAssign ){ _q += " LIMIT 1 "; } 
-								else { _q += " LIMIT "+( _round.l_data.buzz_count ? _round.l_data.buzz_count : 10 ); }	
+								if( _entity.lowest_trip.check ){ _q += " AND b.trip_count <= '"+_entity.lowest_trip.value+"' "; }	
+								if( _entity.max_dry_run.check ){ _q += " AND b.distance <= '"+_entity.max_dry_run.value+"' "; }
+								if( _entity.rating.check ){ _q += " AND a.l_data->>'rate' != '' AND a.l_data->>'rate' >= '"+_entity.rating.value+"' "; }
+								if( _entity.already_offered.check ){ _q += " AND b.buzz_count <= '"+_entity.already_offered.value+"' "; }
 							}
 							
+							_q += " ORDER BY b.distance ASC , a.l_data->>'rate' DESC ";
+							
+							if( mainData.isDirectAssign ){ 
+								_q += " LIMIT 1 "; 
+							} 
+							else { 
+								_q += " LIMIT "+( _round.l_data.buzz_count ? _round.l_data.buzz_count : 10 ); 
+							}	
+							
+							
+							_p( 'Round', _round.id );
+							_p( '_q', _q );
+							
 							mainData.findDriverQuery = _q;
+							
 							callback( null );
 						}
 					});
-					
 					
 					// >>> Find Drivers Fire Query
 					processArr.push( function( callback ){
@@ -343,9 +348,9 @@ var currentApi = function( req, res, next ){
 									
 									
 									var _q = " INSERT INTO tbl_buzz ";
-									_q += " ( i_ride_id, i_driver_id, i_vehicle_id, i_round_id, d_time, i_status, is_alive, l_data ) ";
+									_q += " ( i_ride_id, i_driver_id, i_vehicle_id, i_round_id, d_time, i_status, l_data ) ";
 									_q += " VALUES ";
-									_q += " ( "+i_ride_id+", "+singleDriver.id+", "+singleDriver.vehicle_id+", "+_round.id+", '"+gnrl._db_datetime()+"', 0, 1, '{}'); ";
+									_q += " ( "+i_ride_id+", "+singleDriver.id+", "+singleDriver.vehicle_id+", "+_round.id+", '"+gnrl._db_datetime()+"', 0, '{}'); ";
 									multiBuzzQuery.push( _q );
 									
 									// For Direct Assign
@@ -356,7 +361,6 @@ var currentApi = function( req, res, next ){
 										'i_round_id' : _round.id,
 										'd_time' : gnrl._db_datetime(),
 										'i_status' : 1,
-										'is_alive' : 0,
 										'l_data' : '{}',
 									});
 									
@@ -376,10 +380,6 @@ var currentApi = function( req, res, next ){
 							callback( null );
 						}
 					});
-					
-					
-					
-					
 					
 					// >>> Direct Assign [PREMIUM MEMBERS]
 					processArr.push( function( callback ){
@@ -463,26 +463,23 @@ var currentApi = function( req, res, next ){
 											
 											var _q_Arr = [];
 											_q_Arr.push( "UPDATE tbl_ride SET i_driver_id = '"+buzzIns.i_driver_id+"', i_vehicle_id = '"+buzzIns.i_vehicle_id+"', e_status = 'confirm' WHERE id = '"+_ride.id+"'; ");
-											_q_Arr.push( "UPDATE tbl_user SET is_idle = '0' WHERE id = '"+buzzIns.i_driver_id+"'; ");
-											_q_Arr.push( "UPDATE tbl_buzz SET i_status = '1', is_alive = '0' WHERE id = '"+i_buzz_id+"'; ");
+											_q_Arr.push( "UPDATE tbl_user SET is_onride = '1', is_buzzed = '1' WHERE id = '"+buzzIns.i_driver_id+"'; ");
+											_q_Arr.push( "UPDATE tbl_buzz SET i_status = '1' WHERE id = '"+i_buzz_id+"'; ");
 											_q_Arr = _q_Arr.join('');
 											dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){
-												
 												mainData.isAccepted = 1;
 												mainData.isProcess = 0;
-												
 												Ride.overWriteChargeVehicleWise( { 'i_ride_id' : i_ride_id }, function( status, data ){
 													callback( null );
 												});
-												
 											});
 											
 										}
 										else{
 											
 											var _q_Arr = [];
-											_q_Arr.push( "UPDATE tbl_user SET is_idle = '1' WHERE id = '"+buzzIns.i_driver_id+"'; ");
-											_q_Arr.push( "UPDATE tbl_buzz SET i_status = '-4', is_alive = '0' WHERE id = '"+i_buzz_id+"'; ");
+											_q_Arr.push( "UPDATE tbl_user SET is_onride = '0', is_buzzed = '0' WHERE id = '"+buzzIns.i_driver_id+"'; ");
+											_q_Arr.push( "UPDATE tbl_buzz SET i_status = '-4' WHERE id = '"+i_buzz_id+"'; ");
 											_q_Arr = _q_Arr.join('');
 											dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){
 												callback( null );
@@ -498,7 +495,6 @@ var currentApi = function( req, res, next ){
 							
 						}
 					});
-					
 					
 					// >>> Send Buzz [NON PREMIUM MEMBERS]
 					processArr.push( function( callback ){
@@ -573,7 +569,7 @@ var currentApi = function( req, res, next ){
 									}
 									else {
 										var _q_Arr = [];
-										_q_Arr.push( "UPDATE tbl_user SET is_idle = '0' WHERE id IN ("+buzzSentDriverIDs['succ'].join(',')+"); ");
+										_q_Arr.push( "UPDATE tbl_user SET is_buzzed = '1' WHERE id IN ("+buzzSentDriverIDs['succ'].join(',')+"); ");
 										_q_Arr = _q_Arr.join('');
 										dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){
 											callback( null );
@@ -588,8 +584,8 @@ var currentApi = function( req, res, next ){
 									}
 									else{
 										var _q_Arr = [];
-										_q_Arr.push( "UPDATE tbl_user SET is_idle = '1' WHERE id IN ("+buzzSentDriverIDs['fail'].join(',')+"); ");
-										_q_Arr.push( "UPDATE tbl_buzz SET i_status = '-4', is_alive = '0' WHERE i_ride_id = '"+_ride.id+"' AND i_round_id = '"+_round.id+"' i_driver_id IN ("+buzzSentDriverIDs['fail'].join(',')+"); ");
+										_q_Arr.push( "UPDATE tbl_user SET is_buzzed = '0' WHERE id IN ("+buzzSentDriverIDs['fail'].join(',')+"); ");
+										_q_Arr.push( "UPDATE tbl_buzz SET i_status = '-4' WHERE i_ride_id = '"+_ride.id+"' AND i_round_id = '"+_round.id+"' i_driver_id IN ("+buzzSentDriverIDs['fail'].join(',')+"); ");
 										_q_Arr = _q_Arr.join('');
 										dclass._query( _q_Arr, function( _q_Arr_status, _q_Arr_data ){
 											callback( null );
@@ -624,41 +620,30 @@ var currentApi = function( req, res, next ){
 							var totalTimeLoop = parseInt( mainData.buzzTime ) / 2;
 							
 							while( totalTimeLoop ){
-								
 								buzzAcceptArray.push( function( bzCheckCallback ){
-									
-									mainData.totalTimeLoop = totalTimeLoop;
-									
 									if( mainData.isAccepted ){
-										bzCheckCallback( null, mainData );
+										bzCheckCallback( null );
 									}
 									else{
-										
-										
-										setTimeout(function() {
-											
-											_p( 'sleep' );
-											
+										setTimeout( function(){
+											_p( 'Sleep' );
 											dclass._select( '*', 'tbl_ride', " AND id = '"+i_ride_id+"' AND e_status = 'confirm' ", function( is_confirm_status, is_confirm_data ){
 												if( !is_confirm_status ){
-													bzCheckCallback( null, mainData );
+													bzCheckCallback( null );
 												}
 												else if( !is_confirm_data.length ){
-													bzCheckCallback( null, mainData );
+													bzCheckCallback( null );
 												}
 												else{
 													mainData.isAccepted = 1;
-													bzCheckCallback( null, mainData );
+													acceptedRide = is_confirm_data[0];
+													bzCheckCallback( null );
 												}
 											});
-											
 										}, 2000 );
-										
 									}
 								});
-								
 								totalTimeLoop--;
-								
 							}
 							
 							async.series( buzzAcceptArray, function( error_1, results_1 ){
@@ -669,13 +654,22 @@ var currentApi = function( req, res, next ){
 					});
 					
 					
+					// >>> Make Other Idle
+					processArr.push( function( callback ){
+						if( mainData.isAccepted ){
+							callback( null );
+						}
+						else{
+							callback( null );
+						}
+					});
+					
 				}
 				
 				async.series( processArr , function( error, results ){
 					
-					// gnrl._api_response( res, 1, 'D', mainData );
-					
 					_response.confirm = mainData.isAccepted ? mainData.isAccepted : 0;
+					
 					if( _response.confirm ){
 						gnrl._api_response( res, _response.confirm, _message, _response );
 					}

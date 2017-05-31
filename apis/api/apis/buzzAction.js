@@ -91,7 +91,6 @@ var currentApi = function( req, res, next ){
 				function( callback ){
 					var _insBuzz = {
 						'i_status' : 1,
-						'is_alive' : 0,
 						'd_modified' : gnrl._db_datetime(),
 						'i_round_id' : i_round_id,
 					};
@@ -112,25 +111,42 @@ var currentApi = function( req, res, next ){
 				},
 				
 				
-				// Update Ride Table
+				// Perform Some Action
 				function( callback ){
-					var _insRide = {
-						'i_driver_id' : login_id,
-						'i_vehicle_id' : i_vehicle_id,
-						'i_round_id' : i_round_id,
-						'e_status' : 'confirm',
-					};
-					dclass._update( 'tbl_ride', _insRide, " AND id = '"+i_ride_id+"' " , function( status, data ){ 
-						if( !status ){
-							gnrl._api_response( res, 0, 'error', {} );
-						}
-						else{
-							callback( null );
-						}
+					
+					var _q = [];
+					
+					// Update Driver On Ride
+					_q.push( "UPDATE tbl_user SET is_onride = 1, is_buzzed = 0 WHERE true AND id = '"+login_id+"'; " );
+					
+					// Update Other Driver On Ride
+					_q.push( 
+						" UPDATE tbl_user SET " 
+						+" is_buzzed = 0 "
+						+" WHERE true AND id IN ( "
+							+" SELECT i_driver_id FROM tbl_buzz WHERE i_ride_id = '"+i_ride_id+"' AND i_driver_id != '"+login_id+"' " // AND i_round_id = '"+i_round_id+"'
+						+" ); "
+					);
+					
+					// Update Ride Table
+					_q.push( 
+						" UPDATE tbl_ride SET " 
+						+" e_status = 'confirm', i_driver_id = '"+login_id+"', i_vehicle_id = '"+i_vehicle_id+"', i_round_id = '"+i_round_id+"' "
+						+" WHERE true AND id = '"+i_ride_id+"'; "
+					);
+					
+					// Update Buzz [accepted by other]
+					_q.push( 
+						" UPDATE tbl_buzz SET " 
+						+" i_status = '-3', d_modified = '"+gnrl._db_datetime()+"', i_round_id = '"+i_round_id+"' "
+						+" WHERE true AND i_ride_id = '"+i_ride_id+"' AND i_driver_id != '"+login_id+"' AND i_status = '0'; " // AND i_round_id = '"+i_round_id+"' 
+					);
+					
+					dclass._query( _q.join(';'), function( status, data ){ 
+						callback( null );
 					});
+					
 				},
-				
-				
 				
 				// Over Ride Driver Charges
 				function( callback ){
@@ -139,25 +155,6 @@ var currentApi = function( req, res, next ){
 					});
 				},
 				
-				// Disabled Other Buzz
-				function( callback ){
-					
-					var _insBuzz = {
-						'i_status' : -3,
-						'is_alive' : 0,
-						'd_modified' : gnrl._db_datetime(),'i_round_id' : i_round_id,
-					};
-					
-					var wh = " AND i_ride_id = '"+i_ride_id+"' ";
-					wh += " AND i_round_id = '"+i_round_id+"' ";
-					wh += " AND i_driver_id != '"+login_id+"' ";
-					wh += " AND i_status = '0' ";
-					
-					dclass._update( 'tbl_buzz', _insBuzz, wh, function( status, data ){ 
-						callback( null );
-					});
-					
-				},
 				
 				// Close other driver Notification
 				function( callback ){
@@ -184,7 +181,7 @@ var currentApi = function( req, res, next ){
 								if( _drivers[i].v_device_token ){
 									tokens.push({ 
 										'id'    : _drivers[i].id,
-										'lang'  : _lang, //_drivers[i].l_data.lang ? _drivers[i].l_data.lang : _lang,
+										'lang'  : User.lang( _drivers[i] ),
 										'token' : _drivers[i].v_device_token,
 									});
 								}
@@ -213,7 +210,7 @@ var currentApi = function( req, res, next ){
 			], 
 			function( error, results ){
 				if( buzzAccepted ){
-					gnrl._api_response( res, 1, 'succ_ride_accepted', results );
+					gnrl._api_response( res, 1, 'succ_ride_accepted', {} );
 				}
 				else{
 					gnrl._api_response( res, 0, 'error', {} );
@@ -233,10 +230,10 @@ var currentApi = function( req, res, next ){
 					var _q = [];
 					
 					// Update Vehicle To Idle 
-					_q.push( "UPDATE tbl_user SET is_idle = 1 WHERE true AND id = '"+login_id+"'; " );
+					_q.push( "UPDATE tbl_user SET is_buzzed = '0' WHERE true AND id = '"+login_id+"'; " );
 					
 					// Update Buzz To Auto Close
-					_q.push( "UPDATE tbl_buzz SET i_status = -1, is_alive = 0, d_modified = '"+gnrl._db_datetime()+"' WHERE true AND i_status = '0' AND i_ride_id = '"+i_ride_id+"' AND i_driver_id = '"+login_id+"' AND i_round_id = '"+i_round_id+"'; " );
+					_q.push( "UPDATE tbl_buzz SET i_status = -1, d_modified = '"+gnrl._db_datetime()+"' WHERE true AND i_status = '0' AND i_ride_id = '"+i_ride_id+"' AND i_driver_id = '"+login_id+"' AND i_round_id = '"+i_round_id+"'; " );
 					
 					dclass._query( _q.join(''), function( status, data ){ 
 						callback( null );
@@ -264,10 +261,10 @@ var currentApi = function( req, res, next ){
 					var _q = [];
 					
 					// Update Vehicle To Idle 
-					_q.push( "UPDATE tbl_user SET is_idle = 1 WHERE true AND id = '"+login_id+"'; " );
+					_q.push( "UPDATE tbl_user SET is_buzzed = '0' WHERE true AND id = '"+login_id+"'; " );
 					
 					// Update Buzz To Auto Close
-					_q.push( "UPDATE tbl_buzz SET i_status = -2, is_alive = 0, d_modified = '"+gnrl._db_datetime()+"' WHERE true AND i_status = '0' AND i_ride_id = '"+i_ride_id+"' AND i_driver_id = '"+login_id+"' AND i_round_id = '"+i_round_id+"'; " );
+					_q.push( "UPDATE tbl_buzz SET i_status = -2, d_modified = '"+gnrl._db_datetime()+"' WHERE true AND i_status = '0' AND i_ride_id = '"+i_ride_id+"' AND i_driver_id = '"+login_id+"' AND i_round_id = '"+i_round_id+"'; " );
 					
 					dclass._query( _q.join(''), function( status, data ){ 
 						callback( null );

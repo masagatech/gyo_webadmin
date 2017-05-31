@@ -1,11 +1,6 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-
-
-
-    
-
 // _P($_REQUEST);
 // exit;
 	extract( $_POST );
@@ -89,7 +84,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -310,7 +306,7 @@ $gnrl->check_login();
                                             </div>
                                         </div>
                                         
-                                        <!-- <?php chk_all('drop');?> -->
+                                        
                                         <table class="table table-bordered" id="datatable" style="width:100%;" >
                                             <thead>
                                                 <tr>
@@ -329,7 +325,7 @@ $gnrl->check_login();
                                                         <td ><a href="javascript:;"><?php echo $row['u_name']; ?></a></td>
 
                                                         <td><?php echo $row['j_title'];?></td>
-                                                        <td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
+                                                        <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                         <td>
                                                             <div class="btn-group pull-right">
                                                                 <button class="btn btn-default btn-xs" type="button">Actions</button>
@@ -468,13 +464,21 @@ $gnrl->check_login();
                                 $wh = '';
                                 if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
                                     $keyword =  trim( $_REQUEST['keyword'] );
-                                    $wh = " AND ( 
+                                    $wh .= " AND ( 
                                        LOWER(u.v_name) like LOWER('%".$keyword."%')  OR
                                        LOWER(u.v_role) like LOWER('%".$keyword."%')  OR
                                        LOWER(l_message) like LOWER('%".$keyword."%')  OR
                                        LOWER(v_subject) like LOWER('%".$keyword."%')  
                                          
                                     )";
+                                }
+                                $checked="";
+                                if( isset( $_REQUEST['deleted'] ) ){
+                                    $keyword =  trim( $_REQUEST['keyword'] );
+                                    $wh .= " AND i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND i_delete='0'";
                                 }
                                // $ssql = "SELECT 
                                //          ".$table.".*,
@@ -485,12 +489,12 @@ $gnrl->check_login();
                                //           WHERE true".$wh;
                                 $ssql = "SELECT * FROM ".$table." WHERE true".$wh;
                                             
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+                                $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'v_name' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
-                               $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
+                                $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
                                 // _P($row_Data);
@@ -507,6 +511,11 @@ $gnrl->check_login();
                                                             <label>
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+                                                                <div class="clearfix"></div> 
+                                                                <div class="pull-left" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
                                                             </label>
                                                         </div>
                                                     </div>
@@ -515,21 +524,23 @@ $gnrl->check_login();
                                                             <label><?php $pagen->writeLimitBox(); ?></label>
                                                         </div>
                                                     </div>
+                                                    <label style="margin: 20px 20px;">
+                                                        
+                                                    </label>
                                                     <div class="clearfix"></div>
                                                 </div>
                                             </div>
-                                            
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
-                                                    <tr>
-                                                        <th width="30%">Name</th>
-                                                        <th width="5%">Subject</th>
-                                                         <th width="20%">Message</th>
-                                                        <th width="5%">Added Date</th>
-                                                        <th width="10%"><span class="pull-right">Action</span></th>
-                                                    </tr>
-                                                </thead>
+                                                <?php
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    'subject' => array( 'order' => 1, 'title' => 'Subject' ),
+                                                    'message' => array( 'order' => 1, 'title' => 'Message' ),
+                                                    'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?> 
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
@@ -541,7 +552,7 @@ $gnrl->check_login();
                                                                 <td><a id="<?php echo 'v_name'.$row['id'] ?>"href="javascript:;" class="md-trigger" data-modal="view_modal" onclick="view_message(<?php echo $row['id']; ?>);"><?php echo $row['v_name']; ?></a></td>
                                                                  <td></td>
                                                                   <td></td>
-                                                                <td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
+                                                                <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                                 <td>
                                                                     <div class="btn-group pull-right">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>

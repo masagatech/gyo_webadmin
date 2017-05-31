@@ -20,8 +20,8 @@ var currentApi = function( req, res, next ){
 	var _response = {};
 	
 	var login_id   = gnrl._is_undf( params.login_id ).trim();
-	var from_date   = gnrl._is_undf( params.from_date ).trim();
-	var to_date   = gnrl._is_undf( params.to_date ).trim();
+	var from_date   = gnrl._is_undf( params.from_date, 0 );
+	var to_date   = gnrl._is_undf( params.to_date, 0 );
 
 	if( !from_date ){ _status = 0; _message = 'err_req_from_date'; }
 	if( _status && !to_date ){ _status = 0; _message = 'err_req_to_date'; }
@@ -56,8 +56,12 @@ var currentApi = function( req, res, next ){
 			// Get Wallet History
 			function( callback ){
 				
-				from_date = gnrl._db_ymd( '', new Date( from_date * 1000 ) );
-				to_date = gnrl._db_ymd( '', new Date( to_date * 1000 ) );
+				from_date = parseFloat( from_date );
+				to_date = parseFloat( to_date );
+				
+				from_date = gnrl._db_ymd( '', new Date( from_date ) );
+				to_date = gnrl._db_ymd( '', new Date( to_date ) );
+				
 				
 				Wallet.getWalletHistory( login_id, {
 					role : 'driver',
@@ -69,6 +73,12 @@ var currentApi = function( req, res, next ){
 					
 					for( var i = 0; i < wallet_history.length; i++ ){
 						wallet_history[i].details = wallet_history[i].l_data;
+						wallet_history[i].details.ride_date = wallet_history[i].d_date;
+						wallet_history[i].details.i_ride_id = 0;
+						wallet_history[i].details.vehicle_type = '';
+						wallet_history[i].details.action = '';
+						wallet_history[i].details.action_amount = '';
+						wallet_history[i].details.balance = '';
 					}
 					_wh.wallet_history = wallet_history;
 					

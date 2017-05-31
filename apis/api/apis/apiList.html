@@ -396,22 +396,6 @@
 				]
 			},
 			
-			// e_status
-					
-			{
-				id 		: 'getDriverRideDetails',
-				url 	: 'getDriverRideDetails',
-				name 	: 'Driver My Ride Details',
-				method 	: 'GET / POST',
-				params 	: [
-					{ name : 'login_id', required : false, info : 'Login ID' },
-					{ name : 'v_token', required : true, info : 'Auth Token' },
-					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
-				],
-				response   : [
-					
-				]
-			},	
 			{
 				id 		: 'getDriverWallet',
 				url 	: 'getDriverWallet',
@@ -458,6 +442,7 @@
 					{ name : 'i_ride_id', required : false, info : 'Ride ID' },
 					{ name : 'distance', required : false, info : 'Distance in Kilometer (It will be calculated from App site with each last Latitude-Longitude.)' },
 					{ name : 'run_type', required : false, info : 'dry, ride' },
+					{ name : 'speed', required : false, info : 'Formate : "0 m/s"' },
 				],
 				response   : []
 			},	
@@ -536,7 +521,7 @@
 					{ name : 'v_gender', required : false, info : 'male / female' },
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_device_token', required : true, info : '' },
-					{ name : 'referred_by', required : false, info : 'Referred by user ID' },
+					{ name : 'refferal_code', required : false, info : 'Refferal Code' },
 					{ name : 'lang', required : false, info : 'Language' },
 				],
 				response   : [],
@@ -584,7 +569,6 @@
 				name 	: 'User Reset Password',
 				method 	: 'GET / POST',
 				params 	: [
-					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_username', required : true, info : 'email or phone' },
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_otp', required : true, info : '' },
@@ -671,22 +655,6 @@
 				]
 			},
 			
-			// e_status
-					
-			{
-				id 		: 'getUserRideDetails',
-				url 	: 'getUserRideDetails',
-				name 	: 'User My Ride Details',
-				method 	: 'GET / POST',
-				params 	: [
-					{ name : 'login_id', required : false, info : 'Login ID' },
-					{ name : 'v_token', required : true, info : 'Auth Token' },
-					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
-				],
-				response   : [
-					
-				]
-			},		
 			{
 				id 		: 'userFeedback',
 				url 	: 'userFeedback',
@@ -815,34 +783,7 @@
 					) }
 				]
 			},
-			{
-				id 		: 'promotionCodeExists',
-				url 	: 'promotionCodeExists',
-				name 	: 'Promotion Code is Exists or Not',
-				method 	: 'GET / POST',
-				params 	: [
-					{ name : 'login_id', required : true, info : 'Login ID' },
-					{ name : 'v_token', required : true, info : 'Auth Token' },
-					{ name : 'city', required : true, info : 'City Name' },	
-					{ name : 'v_code', required : true, info : 'Promotion Code' },	
-				],
-				response   : [
-					{ name : 'data', info : (
-						'['
-							+BR+'{'
-								+BR+'id : Code ID,'
-								+BR+'v_title : Code Title,'
-								+BR+'v_code : Code,'
-								+BR+'d_start_date : Start Date,'
-								+BR+'d_end_date : End Date / Valid Till,'
-								+BR+'l_description : Code Description,'
-								+BR+'city_id : City ID'
-							+BR+'},'
-						+BR+
-						']'
-					) }
-				]
-			},
+			
 			{
 				id 		: 'addMoney',
 				url 	: 'addMoney',
@@ -868,6 +809,8 @@
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },	
 					{ name : 'l_latitude', required : false, info : 'Latitude' },	
 					{ name : 'l_longitude', required : false, info : 'Longitude' },
+					{ name : 'city', required : false, info : 'City' },
+					
 				],
 				response   : []
 			},
@@ -895,12 +838,10 @@
 					{ name : 'destination_longitude', required : true, info : 'Destination Longitude' },
 					
 					{ name : 'estimate_km', required : true, info : 'Estimate Kilometers' },
-					{ name : 'estimate_time', required : true, info : 'Estimate Time' },
-					{ name : 'estimate_amount', required : true, info : 'Estimate Amount' },
+					{ name : 'estimate_time', required : true, info : 'Estimate Time (In Minits)' },
 					
 					{ name : 'city', required : true, info : 'City Name' },
 					{ name : 'charges', required : true, info : 'Ride Charges' },
-					
 					
 					{ name : 'ride_type', required : false, info : 'ride_now(default), ride_later' },
 					{ name : 'ride_time', required : false, info : 'yyyy-mm-dd hh:ii:ss - if "ride_later" selected' },
@@ -925,35 +866,7 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 				],
-				response   : [
-					{ name : 'data', info : (
-						'{ \
-						"id": "18", \
-						"i_user_id": "1", \
-						"i_driver_id": "0", \
-						"i_vehicle_id": "0", \
-						"i_round_id": "0", \
-						"v_pin": "3506", \
-						"d_time": "2017-04-19T04:58:00.000Z", \
-						"d_start": null, \
-						"d_end": null, \
-						"l_data": { \
-						  "round_id": 0, \
-						  "estimate_km": "5", \
-						  "round_order": 0, \
-						  "vehicle_type": "auto", \
-						  "estimate_time": "10 mins", \
-						  "pickup_address": "Vastrapur railway crossing", \
-						  "estimate_amount": "50", \
-						  "pickup_latitude": "72.5182508", \
-						  "pickup_longitude": "72.5182508", \
-						  "destination_address": "Bodakdev ahmedabad", \
-						  "destination_latitude": "72.5182508", \
-						  "destination_longitude": "{\"destination_latitude\":\"72.5182508\",\"pickup_longitude\":\"72.5182508\"}" \
-						}, \
-						"e_status": "pending"}'
-					) }
-				],
+				response   : [],
 			},
 			{
 				id 		: 'confirmRide',
@@ -969,7 +882,52 @@
 				response   : [],
 			},
 			
-			
+			{
+				id 		: 'rideApplyPromotionCode',
+				url 	: 'rideApplyPromotionCode',
+				name 	: 'Ride Promotion Code Apply',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : true, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'city', required : true, info : 'City Name' },	
+					{ name : 'v_code', required : true, info : 'Promotion Code' },
+					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
+				],
+				response   : [
+					{ name : 'data', info : (
+						'{'
+							+BR+'promocode_id : Code ID,'
+							+BR+'promocode_code : Code,'
+							+BR+'promocode_code_discount : (Flat) OR (In %)'
+							+BR+'promocode_code_discount_upto : Max Discount'
+						+BR+'},'
+					) }
+				]
+			},
+			{
+				id 		: 'rideRemovePromotionCode',
+				url 	: 'rideRemovePromotionCode',
+				name 	: 'Ride Promotion Code Remove',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : true, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'city', required : true, info : 'City Name' },	
+					{ name : 'v_code', required : true, info : 'Promotion Code' },
+					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
+				],
+				response   : [
+					{ name : 'data', info : (
+						'{'
+							+BR+'promocode_id : Code ID,'
+							+BR+'promocode_code : Code,'
+							+BR+'promocode_code_discount : (Flat) OR (In %)'
+							+BR+'promocode_code_discount_upto : Max Discount'
+						+BR+'},'
+					) }
+				]
+			},
 			{
 				id 		: 'buzzAction',
 				url 	: 'buzzAction',
@@ -1017,21 +975,7 @@
 				],
 				response   : [],
 			},
-			/*
-			{
-				id 		: 'sendBuzz',
-				url 	: 'sendBuzz',
-				name 	: 'Send Buzz',
-				method 	: 'GET / POST',
-				params 	: [
-					{ name : 'login_id', required : true, info : 'Login ID' },	
-					{ name : 'v_token', required : true, info : 'Auth Token' },
-					{ name : 'action', required : true, info : '[send_buzz, direct_assign]' },
-					{ name : 'buzz_driver_ids', required : true, info : 'driver IDs' },
-					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
-				],
-				response   : [],
-			},*/
+			
 			{
 				id 		: 'startRide',
 				url 	: 'startRide',
@@ -1157,6 +1101,8 @@
 					{ name : 'vehicle_type', required : true, info : 'Vehicle Type' },
 					{ name : 'latitude', required : true, info : 'Latitude' },
 					{ name : 'longitude', required : true, info : 'Longitude' },
+					{ name : 'estimate_km', required : false, info : 'Estimate Kilometers' },
+					{ name : 'estimate_time', required : false, info : 'Estimate Time (in minits)' },
 				],
 				response   : [],
 			},
@@ -1299,17 +1245,10 @@
 		];
 		
 		var doneAPIs = {
-			'userProfileUpdate' : '', // (In Progress)
-			'getDriverRides' : '(Response Incomplete)',
-			'getDriverRideDetails' : '(Response Incomplete)',
-			'getUserRides' : '(Response Incomplete)',
-			'getUserRideDetails' : '(Response Incomplete)',
-			'getUserWallet' : '(Response Incomplete)',
-			'getDriverWallet' : '(Response Incomplete)',
-			'cancelRide' : '(If any action need to take)', // (API side changes needed)
-			'rideComplete' : '', // (API side changes needed)
-			// '' : '(In Progress)',
-		
+			// (Response Incomplete),
+			// (API side changes needed)
+			// (In Progress)
+			'' : '',
 		};
 		
 		var req_span = '<span style="color:#F00;font-size:16px;">*</span>';

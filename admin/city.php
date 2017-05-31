@@ -28,7 +28,8 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
 	if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 		$id = $_REQUEST['id'];
 		if($_REQUEST['chkaction'] == 'delete') {
-			$dclass->delete( $table ," id = '".$id."'");
+            $ins = array('i_delete'=>'1');
+            $dclass->update( $table, $ins, " id = '".$id."'");
 			$gnrl->redirectTo($page.".php?succ=1&msg=del");
 		}
 		// make records active
@@ -120,12 +121,6 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                 <label>Name</label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
                                             </div>
-                                           <!--  <div class="form-group">
-                                                <label>Status</label>
-                                                <select class="select2" name="e_status" id="e_status">
-                                                    <?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
-                                                </select>
-                                            </div> -->
                                             <div class="form-group">
                                                 <button class="btn btn-primary" type="submit" name="submit_btn" value="<?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?>"><?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?></button>
                                                 <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
@@ -166,20 +161,25 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                     $keyword =  trim( $_REQUEST['filter'] );
                                     $wh .= " AND id =".$keyword."";
                                 }
+
+                                if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND i_delete='0'";
+                                }
                                 
                                 $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
-                                            
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'v_name';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'DESC' : 'ASC';
+
+                                $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'v_name' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
                                 
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
                                 $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
+                                
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
-                                // _P($row_Data);
-                                // exit;
-                                
                                 
                                 ?>
                                 <div class="content">
@@ -193,6 +193,11 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                             <label>
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+                                                                <div class="clearfix"></div>
+                                                                 <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
                                                             </label>
                                                         </div>
                                                     </div>
@@ -215,18 +220,8 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                 </div>
                                             </div>
                                             
-                                            <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <!-- <thead>
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        <th>Added Date</th>
-                                                         <th>Status</th>
-                                                        <th><span class="pull-right">Action</span></th>
-                                                    </tr>
-                                                </thead> -->
-                                                 <?php
-                                                
+                                                <?php
                                                 echo $gnrl->renderTableHeader(array(
                                                     'v_name' => array( 'order' => 1, 'title' => 'Name' ),
                                                     'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
@@ -297,7 +292,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                         </div>
                                     </form>
                                 </div>
-                                 }
+                                 
                                  <?php 
                             }else{ ?>
                                     

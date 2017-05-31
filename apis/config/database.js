@@ -104,6 +104,11 @@ module.exports = {
 		var _q = "UPDATE "+_table+" SET "+setArr.join(',')+" WHERE true "+( _wh ? _wh : " AND 0 " );
 		
 		// UPDATE tbl_user SET l_data = COALESCE( l_data, '{}' ) || '{"is_otp_verified":"1"}' WHERE id = '15' 
+		// UPDATE tbl_ride SET l_data = jsonb_set( l_data, '{ charges, promocode_code_discount_amount22 }', '5', true) WHERE id = 61;
+		// Delete Key = // " l_data = l_data #- '{ charges, promocode_code_discount_amount22 }' ",
+		// " l_data = jsonb_set( l_data, '{charges}', l_data->'charges' || '"+gnrl._json_encode( tempJson )+"' ) ",
+		
+		//console.log( _q );
 		
 		dclass.none( _q )
 		.then( data => { 

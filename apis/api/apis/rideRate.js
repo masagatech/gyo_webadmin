@@ -20,13 +20,13 @@ var currentApi = function( req, res, next ){
 	var login_id    = gnrl._is_undf( params.login_id ).trim();
 	var i_ride_id   = gnrl._is_undf( params.i_ride_id ).trim();
 	var i_rate      = gnrl._is_undf( params.i_rate ).trim();
-	var l_comment   = gnrl._is_undf( params.l_comment ).trim();
+	var l_comment   = gnrl._is_undf( params.l_comment, '' ).trim();
 	var v_type      = gnrl._is_undf( params.v_type ).trim();
 	
 	if( !i_ride_id ){ _status = 0; _message = 'err_req_id'; }
 	if( _status && !i_rate ){ _status = 0; _message = 'err_req_rate'; }
-	if( _status && !l_comment ){ _status = 0; _message = 'err_req_comment'; }
 	if( _status && !v_type ){ _status = 0; _message = 'err_req_type'; }
+	// if( _status && !l_comment ){ _status = 0; _message = 'err_req_comment'; }
 	
 	if( !_status ){
 		gnrl._api_response( res, 0, _message );

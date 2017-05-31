@@ -21,7 +21,7 @@ var currentApi = function( req, res, next ){
 	var login_id = gnrl._is_undf( params.login_id ).trim();
 	
 	if( _status ){
-		dclass._select( '*', 'tbl_user', " AND v_role = 'user' AND ( id = '"+login_id+"' )", function( status, data ){ 
+		dclass._select( '*', 'tbl_user', " AND v_role = 'user' AND id = '"+login_id+"' ", function( status, data ){ 
 			if( !status ){
 				gnrl._api_response( res, 0, '', {} );
 			}

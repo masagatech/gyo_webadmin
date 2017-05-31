@@ -26,7 +26,7 @@
 				'</div>';
 	}
 	function confirm_delete(label, id) {
-		if(confirm("Are you sure you want to delete this "+label+"?")) {
+		if(confirm("Are you sure you want to delete this Record?")) {
 			document.location.href = label+".php?a=3&chkaction=delete&id="+id;
 		}
 		return false;

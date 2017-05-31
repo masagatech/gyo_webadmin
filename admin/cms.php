@@ -43,7 +43,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
 				if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -296,22 +297,24 @@ $gnrl->check_login();
                                            LOWER(v_key) like LOWER('%".$keyword."%') 
                                     )";
                                 }
-                                
+                                $checked="";
+                                if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND i_delete='0'";
+                                }
                                 $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
-                                            
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                                $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
-                                
+
+                                $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'v_key' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );
+
                                 $nototal = $dclass->numRows($ssql);
                                 $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
                                 $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
-                                if($_REQUEST['j'] == '1'){
-                                    // _P($row_Data);
-
-                                }
-
+                                
                                 ?>
                                 <div class="content">
                                     <form name="frm" action="" method="get" >
@@ -324,6 +327,11 @@ $gnrl->check_login();
                                                             <label>
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+                                                                <div class="clearfix"></div>
+                                                                 <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
                                                             </label>
                                                         </div>
                                                         <?php 
@@ -340,33 +348,26 @@ $gnrl->check_login();
                                                 </div>
                                             </div>
                                             
-                                            <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
-                                                    <tr>
-                                                        <th width="5%">No.</th>
-                                                        <th width="20%">Title</th>
-                                                        <th width="20%">key</th>
-                                                        
-                                                        <th width="5%">Action</th>
-                                                    </tr>
-                                                </thead>
+                                                <?php
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'j_title' => array( 'order' => 1, 'title' => 'Title' ),
+                                                    'v_key' => array( 'order' => 1, 'title' => 'Key' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
-                                                            $i=0;
                                                         foreach($row_Data as $row){
-                                                            $i++;
                                                             $j_title=json_decode($row['j_title'],true);
                                                             ?>
                                                             <tr>
-                                                                <td><?php echo $i; ?></td>
                                                                 <td>
-                                                                    <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $j_title[DEFAULT_LANGUAGE]; ?></td></a>
-
-                                                                
+                                                                    <?php echo $j_title[DEFAULT_LANGUAGE]; ?>
+                                                                </td>
                                                                 <td>
-                                                                    <a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['v_key']; ?></td></a>
+                                                                    <?php echo $row['v_key']; ?>
                                                                 </td>
                                                                 <td>
                                                                     <?php if(1){?> 
@@ -377,8 +378,6 @@ $gnrl->check_login();
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
                                                                             <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <!-- <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li> -->
                                                                             <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
                                                                         </ul>
                                                                     </div>

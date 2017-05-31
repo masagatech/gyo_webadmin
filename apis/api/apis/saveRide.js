@@ -24,9 +24,10 @@ var currentApi = function( req, res, next ){
 	var destination_address = gnrl._is_undf( params.destination_address ).trim();
 	var destination_latitude = gnrl._is_undf( params.destination_latitude ).trim();
 	var destination_longitude = gnrl._is_undf( params.destination_longitude ).trim();
+	
 	var estimate_km = gnrl._is_undf( params.estimate_km, 0 ).trim();
 	var estimate_time = gnrl._is_undf( params.estimate_time, 0 ).trim();
-	var estimate_amount = gnrl._is_undf( params.estimate_amount, 0 ).trim();
+
 	var city = gnrl._is_undf( params.city ).trim();
 	var charges = gnrl._is_undf( params.charges, {} );
 	var ride_type = gnrl._is_undf( params.ride_type ).trim();
@@ -53,10 +54,23 @@ var currentApi = function( req, res, next ){
 	else{
 		
 		var v_pin = Ride.getPin();
-		
 		var i_city_id = 0;
+		var _user = {};
+		var v_gender = 'male';
 		
 		async.series([
+			
+			// Get User
+			function( callback ){
+				User.get( login_id, function( status, data ){
+					if( status && data.length ){
+						_user = data[0];
+						v_gender = _user.v_gender;
+					}
+					
+					callback( null );
+				});
+			},
 			
 			// Get City ID
 			function( callback ){
@@ -77,10 +91,12 @@ var currentApi = function( req, res, next ){
 					'i_driver_id' 		: 0,
 					'i_vehicle_id' 		: 0,
 					'i_round_id' 		: 0,
+					'i_paid' 			: 0,
 					'v_pin' 			: v_pin,
 					'd_time' 			: ( ride_type == 'ride_later' ) ? ride_time : gnrl._db_datetime(),
 					'e_status' 		    : ( ride_type == 'ride_now' ? 'pending' : 'scheduled' ),
-					'l_data'            : gnrl._json_encode( {
+					'l_data'            : gnrl._json_encode({
+						
 						'round_id'              : 0,
 						'round_order'           : 0,
 						'vehicle_type'          : vehicle_type,
@@ -92,20 +108,26 @@ var currentApi = function( req, res, next ){
 						'destination_longitude' : destination_longitude,
 						'estimate_km'           : estimate_km,
 						'estimate_time'         : estimate_time,
-						'estimate_amount'       : estimate_amount,
 						'time_added'       		: gnrl._db_datetime(),
 						'ride_type'       		: ride_type,
 						'ride_time'       		: ride_time,
 						'city'       			: city,
 						'i_city_id'       		: i_city_id,
 						'charges'       		: JSON.parse( charges ),
+						'v_gender'       		: v_gender,
+						
 					}),
 				};
+				
+				v_pin = v_pin.toString();
+				
+				var new_pin = v_pin[0]+v_pin[1]+v_pin[2]+v_pin[3]+'-'+v_pin[4]+v_pin[5]+v_pin[6]+v_pin[7];
+				
 				dclass._insert( 'tbl_ride', _ins, function( status, data ){ 
 					if( status ){
 						gnrl._api_response( res, 1, "", { 
 							'i_ride_id' : data.id,
-							'v_pin' : v_pin,
+							'v_pin' : new_pin,
 						});
 					}
 					else{

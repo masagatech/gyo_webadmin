@@ -25,7 +25,10 @@ var currentApi = function( req, res, next ){
 	
 	var folder = 'drivers';
 	
-	if( _status ){
+	if( !_status ){
+		gnrl._api_response( res, 0, _message );
+	}
+	else{
 		
 		var _q = " SELECT ";
 		_q += " a.v_image, a.v_name, a.v_email, a.v_phone, a.v_password, a.v_gender, a.v_token, a.i_city_id ";
@@ -57,8 +60,6 @@ var currentApi = function( req, res, next ){
 					gnrl._api_response( res, 0, 'err_invalid_auth_token', {} );
 				}
 				else{
-					
-					
 					var fileArr = {
 						'v_image' 				: folder,
 						'v_image_rc_book' 		: folder,
@@ -72,15 +73,12 @@ var currentApi = function( req, res, next ){
 					for( var k in fileArr ){
 						if( data[0][k] ){ data[0][k] = gnrl._uploads( fileArr[k]+'/'+data[0][k] ) }
 					}
-					
 					gnrl._api_response( res, 1, '', data[0] );
 				}
 			}
 		});
 	}
-	else{
-		gnrl._api_response( res, 0, _message );
-	}
+	
 };
 
 module.exports = currentApi;

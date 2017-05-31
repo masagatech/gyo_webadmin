@@ -26,8 +26,7 @@ var currentApi = function( req, res, next ){
 	var v_device_token 	= gnrl._is_undf( params.v_device_token );
 	var v_otp 			= gnrl._get_otp();
 	var i_city_id 		= gnrl._is_undf( params.i_city_id, 0 );
-	var referred_by 	= gnrl._is_undf( params.referred_by, '' );
-	var lang 	        = gnrl._is_undf( params.lang );
+	var refferal_code 	= gnrl._is_undf( params.refferal_code, '' );
 	
 	if( !v_name.trim() ){ _status = 0; _message = 'err_req_name'; }
 	if( _status && !v_email.trim() ){ _status = 0; _message = 'err_req_email'; }
@@ -39,12 +38,24 @@ var currentApi = function( req, res, next ){
 	if( _status && !v_device_token.trim() ){ _status = 0; _message = 'err_req_device_token'; }
 	
 	if( _status ){
-
-		var _setting = [];
-		var _email_template = [];
-		var _user_insert = [];
+		
+		/*
+		STEPS
+			>> Check Email Exits
+			>> Check Phone Exits
+			>> Check Referral Code is Valid or Not
+			
+			>> Insert User
+			>> Send SMS
+			>> Send Email
+		*/
+		
+		var _user_insert = {};
+		var _code = {};
 		
 		async.series([
+		
+			// Check Email Exits
 			function( callback ){
 				dclass._select( '*', 'tbl_user', " AND ( LOWER( v_email ) = '"+v_email.toLowerCase()+"' )", function( status, user ){ 
 					if( !status ){
@@ -58,8 +69,10 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
+			
+			// Check Phone Exits
 			function( callback ){
-				dclass._select( '*', 'tbl_user', " AND ( v_phone = '"+v_phone+"' )", function( status, user ){ 
+				dclass._select( '*', 'tbl_user', " AND v_phone = '"+v_phone+"' ", function( status, user ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
@@ -71,6 +84,30 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
+			
+			// Check Referral Code is Valid or Not
+			function( callback ){
+				if( refferal_code == '' ){
+					callback( null );
+				}
+				else{
+					dclass._select( '*', 'tbl_referral_codes', " AND v_referral_code = '"+refferal_code+"' ", function( status, ref_code ){ 
+						if( !status ){
+							gnrl._api_response( res, 0, 'error', {} );
+						}
+						else if( !ref_code.length ){
+							gnrl._api_response( res, 0, 'err_invalid_referral_code', {} );
+						}
+						else{
+							_code = ref_code[0];
+							callback( null );
+						}
+					});
+				}
+			},
+			
+			
+			// Insert User
 			function( callback ){
 				var _ins = { 
 					'v_role' 			: 'user',
@@ -86,13 +123,18 @@ var currentApi = function( req, res, next ){
 					'e_status' 			: 'inactive',
 					'v_device_token' 	: v_device_token,
 					'i_city_id' 		: i_city_id,
+					'v_token' 			: '',
 					'l_data'            : gnrl._json_encode({
-						'lang'            : lang ? lang : _lang,
-						'is_otp_verified' : 0,
-						'v_referral_code' : '',
-						'referred_by'     : referred_by,
+						'lang'            	: _lang,
+						'is_otp_verified' 	: 0,
+						
+						'referral_code' 	: refferal_code,
+						'referral_code_id' 	: _code.id ? _code.id : 0,
+						'referral_user_id' 	: _code.i_user_id ? _code.i_user_id : 0,
+						'referral_amount' 	: parseFloat( _code.f_amount ? _code.f_amount : 0 ),
 					}),
 				};
+				
 				dclass._insert( 'tbl_user', _ins, function( status, user_insert ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
@@ -135,13 +177,17 @@ var currentApi = function( req, res, next ){
 					callback( null );
 				});
 			},
+			
+			
 		], 
 		
 		function( error, results ){
+			
 			gnrl._api_response( res, 1, 'succ_register_successfully', { 
 				'id' : _user_insert.id,
 				'v_phone' : v_phone
 			});
+			
 		});
 		
 	}

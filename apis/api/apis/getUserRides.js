@@ -21,58 +21,41 @@ var currentApi = function( req, res, next ){
 	
 	if( _status ){	
 
-		var condition = " AND tbl_ride.i_user_id = '"+login_id+"'";
-		condition += " AND tbl_ride.e_status IN('cancel','scheduled','complete')";
-		condition += " ORDER BY tbl_ride.d_time DESC";
+		var _q = "";
+		_q += " SELECT ";
+		_q += " tbl_ride.id AS id ";
+		_q += " , tbl_ride.e_status AS status ";
+		_q += " , tbl_ride.d_time AS ride_time ";
+		_q += " , tbl_ride.l_data->>'vehicle_type' AS vehicle_type ";
+		_q += " , tbl_ride.l_data->>'pickup_address' AS pickup_address ";
+		_q += " , tbl_ride.l_data->>'destination_address' AS destination_address ";
+		_q += " , tbl_user.v_name AS driver_name ";
 		
-		dclass._select( "tbl_ride.*, tbl_user.v_name AS user_v_name", 'tbl_ride AS tbl_ride LEFT JOIN tbl_user AS tbl_user ON tbl_user.id = tbl_ride.i_driver_id', condition, function( status, data ){
+		_q += " FROM tbl_ride AS tbl_ride LEFT JOIN tbl_user AS tbl_user ON tbl_user.id = tbl_ride.i_driver_id ";
+		_q += " WHERE true ";
+		_q += " AND tbl_ride.i_user_id = '"+login_id+"' ";
+		_q += " AND tbl_ride.e_status IN( 'start', 'confirm', 'scheduled', 'complete', 'cancel' ) ";
+		_q += " ORDER BY ";
+			_q += " CASE tbl_ride.e_status ";
+				_q += " WHEN 'start' THEN 1 ";
+				_q += " WHEN 'confirm' THEN 2 ";
+				_q += " WHEN 'scheduled' THEN 3 ";
+				_q += " WHEN 'complete' THEN 4 ";
+				_q += " WHEN 'cancel' THEN 5 ";
+				_q += " ELSE 6 ";
+			_q += " END ";
+		_q += " , tbl_ride.d_time DESC ";
+		
+		
+		dclass._query( _q, function( status, data ){
 			if( status && !data.length ){
 				gnrl._api_response( res, 0, 'err_no_records', _response );
 			}
 			else{
-
-				for (var i = 0; i < data.length; i++) {
-
-					if( gnrl._isNull(data[i].user_v_name) ){
-						data[i].user_v_name = "Not Assigned";
-					}
-					if( gnrl._isNull(data[i].l_data.trip_time) ){
-						data[i].l_data.trip_time = "";
-					}
-
-					data[i].d_time = gnrl._timestamp(data[i].d_time);
-					data[i].d_start = gnrl._timestamp(data[i].d_start);
-					data[i].d_end = gnrl._timestamp(data[i].d_end);
-					
-					data[i].l_data.ride_time = gnrl._timestamp(data[i].l_data.ride_time);
-					data[i].l_data.time_added = gnrl._timestamp(data[i].l_data.time_added);
-					
-					
-					var _subkeys = {
-						actual_distance : 0,
-						final_amount : 0,
-						actual_dry_run : 0,
-						apply_dry_run : 0,
-						apply_dry_run_amount : 0,
-						ride_paid_by_cash : 0,
-						ride_paid_by_wallet : 0,
-						trip_time : {
-							days : 0,
-							hours : 0,
-							minutes : 0,
-							seconds : 0,
-						},
-						trip_time_in_min : 0,
-					};
-					for( var k in _subkeys ){
-						if( !data[i].l_data[k] ){
-							data[i].l_data[k] = _subkeys[k];
-						}
-					}
-					
-					
+				for( var k in data ){
+					data[k].ride_time = data[k].ride_time ? gnrl._timestamp( data[k].ride_time ) : '';
+					data[k].driver_name = data[k].driver_name ? data[k].driver_name : 'Not Assigned';
 				}
-
 				gnrl._api_response( res, 1, '', data );
 			}
 		});

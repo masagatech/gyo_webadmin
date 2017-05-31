@@ -73,7 +73,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
 				if(1){
-					$dclass->delete( $table ," id = '".$id."'");
+					$ins = array('i_delete'=>'1');
+            		$dclass->update( $table, $ins, " id = '".$id."'");
 					$gnrl->redirectTo($page.".php?succ=1&msg=del");
 				}else{
 					$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -342,11 +343,6 @@ $gnrl->check_login();
 												</div>
 								            </div>
 											
-											
-											
-											
-											
-											
 											<div class="row">
 												<div class="col-md-12">
 													<div class="form-group">
@@ -437,7 +433,14 @@ $gnrl->check_login();
 									   OR LOWER(a.l_data->'geo'->>'area_name') like LOWER('%".$keyword."%') 
 	                                )";
 	                            }
-	                           $ssql = 
+	                            if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND a.i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND a.i_delete='0'";
+                                }
+                                
+	                           	$ssql = 
 							   	"SELECT
 									a.*,
 									e.v_name as city_name
@@ -448,14 +451,15 @@ $gnrl->check_login();
 									
 								WHERE true ".$wh;
 	                                        
-	                            $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-	                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+	                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'city_name' );
+                            	$sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
 	                            
 	                            $nototal = $dclass->numRows($ssql);
 	                            $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
-	                           $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
+	                            $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
+
 	                            ?>
 	                            <div class="content">
 	                                <form name="frm" action="" method="get" >
@@ -468,6 +472,11 @@ $gnrl->check_login();
 	                                                        <label>
 	                                                            <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+	                                                            <div class="clearfix"></div> 
+                                                                <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
 	                                                        </label>
 	                                                    </div>
 	                                                    <?php 
@@ -486,16 +495,16 @@ $gnrl->check_login();
 	                                        
 	                                        <!-- <?php chk_all('drop');?> -->
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
-	                                            <thead>
-	                                                <tr>
-														<th>City </th>
-														<th>Area Info</th>
-														<th>Charge Condtion</th>
-														<th>Status </th>
-														<th>Added Date </th>
-	                                                    <th width="12%" class="text-right" >Action </th>
-	                                                </tr>
-	                                            </thead>
+	                                        	<?php
+				                                    echo $gnrl->renderTableHeader(array(
+				                                        'city_name' => array( 'order' => 1, 'title' => 'City' ),
+				                                        'l_data' => array( 'order' => 0, 'title' => 'Area Info' ),
+				                                        'v_vehicle_type' => array( 'order' => 0, 'title' => 'Charge Condtion' ),
+				                                        'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+				                                        'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+				                                        'action' => array( 'order' => 0, 'title' => 'Action' ),
+				                                    ));
+				                                ?>
 	                                            <tbody>
 	                                                <?php 
 	                                                if( $nototal > 0 ){
@@ -506,7 +515,7 @@ $gnrl->check_login();
 	                                                    	?>
 	                                                        <tr>
 																<td>
-																	<a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo $row['city_name'];?></a>
+																	<?php echo $row['city_name'];?>
 																	<br> (<?php echo ucfirst( $row['v_vehicle_type'] );?>)
 																</td>
 																<td>

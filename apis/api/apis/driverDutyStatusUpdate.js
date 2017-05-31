@@ -27,14 +27,14 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 		
-		var is_onduty = ( e_status == 'active' ) ? 1 : 0;
-		
 		async.series([
 			
 			// Update Driver
 			function( callback ){
 				var _ins = {
-					'is_onduty' : is_onduty,
+					'is_onduty' : ( e_status == 'active' ) ? 1 : 0,
+					'is_onride' : 0,
+					'is_buzzed' : 0,
 				};
 				dclass._update( 'tbl_user', _ins, " AND id = '"+login_id+"' ", function( status, data ){ 
 					callback( null );
@@ -43,18 +43,22 @@ var currentApi = function( req, res, next ){
 			
 			// Take Tracking
 			function( callback ){
-				var _ins = {
-					'i_driver_id' 	: login_id,
-					'd_time' 		: gnrl._db_datetime(),
-					'e_status' 		: e_status,
-				};
-				dclass._insert( 'tbl_track_vehicle_status', _ins, function( status, data ){
-					callback( null );
-				});
+				if( e_status == 'active' ){
+					User.startLog( login_id, 'driver', 'duty', function( status, data ){
+						callback( null );
+					});
+				}
+				else{
+					User.finishLog( login_id, 'driver', 'duty', function( status, data ){
+						callback( null );
+					});
+				}
 			}
 			
 		], function( error, results ){
+			
 			gnrl._api_response( res, 1, 'succ_status_updated', {} );
+			
 		});
 		
 	}

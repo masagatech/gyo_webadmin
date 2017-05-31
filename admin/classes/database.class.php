@@ -131,12 +131,9 @@ class database {
 		foreach( $dbFields as $k => $v ){
 			$elements[] = ( $v );
 		}
-		
 		$updateSql .= implode( ',', $elements );
-		
 		$updateSql .= " WHERE $where";
-		
-		// echo $updateSql; exit;
+		//echo $updateSql; exit;
 		$stmt = pg_query( $this->_resource, $updateSql );
 		$_result = pg_affected_rows( $stmt );
         return $_result;
@@ -171,16 +168,19 @@ class database {
 		
 		// }
   		$stmt = pg_query($this->_resource, $selectSql);
-  		$result=array();
-        $result = $this->fetchResults($stmt,$resultType);
-        if( is_array($result) && count( $result ) > 0 ){
-			foreach( $result as $k => $v ){
-				foreach( $v as $k_1 => $v_1 ){
-					// $v[$k_1] = stripslashes($v_1);
-				}
-				$result[$k] = $v;
+		$resultSet = $this->fetchResults($stmt,$resultType);
+		
+		//_p($selectSql);
+		//_p($resultSet);
+		
+		
+  		$result = array();
+		if( is_array($resultSet) && count( $resultSet ) > 0 ){
+			foreach( $resultSet as $k => $v ){
+				$result[] = $v;
 			}
 		} 
+		//_p($result);
    		return $result;
  	}
  	/**
@@ -193,9 +193,9 @@ class database {
 		
 	// $stmt = $this->_resource->prepare($deleteSql);
 	$stmt = pg_query($this->_resource, $sql);
-	_P($stmt);
+	
 	$_result=pg_affected_rows($stmt);
-	;
+	
 	 // $result = $stmt->execute();
 	 
 	 return $_result;

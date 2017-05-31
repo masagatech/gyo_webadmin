@@ -36,6 +36,7 @@ var currentApi = function( req, res, next ){
 			service_tax : 0,
 			surcharge : 0,
 			final_amount : 0,
+			discount : 0,
 			apply_dry_run : 0,
 			apply_dry_run_amount : 0,
 			ride_paid_by_cash : 0,
@@ -50,9 +51,11 @@ var currentApi = function( req, res, next ){
 			charges : {
 				'min_charge' : 0,
 				'base_fare' : 0,
+				'total_fare' : 0,
 				'ride_time_charge' : 0,
 				'service_tax' : 0,
 				'surcharge' : 0,
+				'discount' : 0,
 			},
 			ride : {},
 			user : {},
@@ -90,7 +93,6 @@ var currentApi = function( req, res, next ){
 			
 			>> Calculate Company Comission
 			
-			>> Set Vehicle To Idle
 			>> Get User Wallet
 
 			>> Update ride to paid
@@ -135,7 +137,7 @@ var currentApi = function( req, res, next ){
 					else if( !ride_data.length ){
 						gnrl._api_response( res, 0, 'err_no_ride', {} );
 					}
-					else if( !ride_data[0].e_status == 'complete' ){
+					else if( ride_data[0].e_status == 'complete' ){
 						gnrl._api_response( res, 0, 'err_msg_ride_alreay_completed', {} );
 					}
 					else{
@@ -169,7 +171,6 @@ var currentApi = function( req, res, next ){
 				Ride.calculateDistances( i_ride_id, function( status, data ){
 					_data.actual_distance = data.actual_distance;
 					_data.actual_dry_run = data.actual_dry_run;
-					
 					callback( null );
 				});
 			},
@@ -187,6 +188,7 @@ var currentApi = function( req, res, next ){
 				
 				callback( null );
 			},
+			
 			
 			// Calculate Dry Run
 			function( callback ){
@@ -273,7 +275,9 @@ var currentApi = function( req, res, next ){
 				if( _data.actual_distance > _data.charges.upto_km ){ 
 					_data.actual_amount += ( _data.charges.upto_km_charge * _data.charges.upto_km ); 
 				}
+				
 				_data.actual_amount += ( _data.charges.after_km_charge * ( _data.actual_distance - _data.charges.upto_km ) );
+				
 				if( _data.actual_amount <= 0 ){ 
 					_data.actual_amount = 0; 
 				}
@@ -311,7 +315,6 @@ var currentApi = function( req, res, next ){
 				_q += " tbl_ride_charges ";
 				_q += " WHERE true ";
 				_q += " AND i_ride_id = '"+i_ride_id+"' ";
-				// _q += " AND v_charge_type IN ('total_fare') ";
 				
 				dclass._query( _q, function( ftotal_status, ftotal_data ){
 					
@@ -364,7 +367,6 @@ var currentApi = function( req, res, next ){
 				_q += " tbl_ride_charges ";
 				_q += " WHERE true ";
 				_q += " AND i_ride_id = '"+i_ride_id+"' ";
-				// _q += " AND v_charge_type IN ('total_fare') ";
 				
 				dclass._query( _q, function( ftotal_status, ftotal_data ){
 					
@@ -406,6 +408,53 @@ var currentApi = function( req, res, next ){
 				
 			}, 
 			
+			
+			// Entry of Discount
+			function( callback ){
+				
+				if( _data.ride.l_data.charges.promocode_id > 0 && _data.ride.l_data.charges.promocode_code_discount != '' ){
+					
+					Ride.getFinalTotalWithoutDiscount( i_ride_id, function( total ){
+						
+						var tempDiscount = gnrl._isPercent( total, _data.ride.l_data.charges.promocode_code_discount );
+						
+						_data.discount = tempDiscount.comm_amount;
+						if( _data.discount > _data.ride.l_data.charges.promocode_code_discount_upto ){
+							_data.discount = _data.ride.l_data.charges.promocode_code_discount_upto;
+						}
+						
+						if( _data.discount > 0 ){
+							_data.discount = gnrl._minus( _data.discount );
+							var _ins = {
+								'i_ride_id' : _data.ride.id,
+								'v_charge_type' : 'discount',
+								'f_amount' : gnrl._minus( _data.discount ),
+								'd_added' : gnrl._db_datetime(),
+								'l_data' : gnrl._json_encode({
+									'i_added_by' : login_id,
+									'v_charge_info' : '',
+									'promocode_id' : _data.ride.l_data.charges.promocode_id,
+									'promocode_code' : _data.ride.l_data.charges.promocode_code,
+									'promocode_code_discount' : _data.ride.l_data.charges.promocode_code_discount,
+									'promocode_code_discount_upto' : _data.ride.l_data.charges.promocode_code_discount_upto,
+									'promocode_code_discount_amount' : _data.ride.l_data.charges.promocode_code_discount_amount,
+								}),
+							};
+							dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
+								callback( null );
+							});
+						}
+						else{
+							callback( null );
+						}
+					});
+				}
+				else{
+					callback( null );
+				}
+			}, 
+			
+			
 			// Get Final Total
 			function( callback ){
 				Ride.getFinalTotal( i_ride_id, function( total ){
@@ -416,24 +465,11 @@ var currentApi = function( req, res, next ){
 			
 			// Calculate Company Comission
 			function( callback ){
-				
 				_data.company_commision = _data.ride.l_data.charges.company_commission;
 				_data.company_commision_amount = gnrl._calc_commision( _data.final_amount, _data.company_commision );
 				_data.ride_driver_payable = _data.company_commision_amount;
 				_data.ride_driver_receivable = gnrl._round( _data.final_amount - _data.ride_driver_payable );
-				
 				callback( null );
-				
-			},
-			
-			// Set Vehicle To Idle
-			function( callback ){
-				var ins = {
-					is_idle : 1
-				};
-				dclass._update( 'tbl_user', ins, " AND id = '"+_data.ride.i_driver_id+"' ", function( status, data ){
-					callback( null );
-				});
 			},
 			
 			// Get User Wallet
@@ -466,9 +502,10 @@ var currentApi = function( req, res, next ){
 			
 			// Update Ride = Complete & Paid
 			function( callback ){
+				
 				var _ins = [
 					
-					"i_paid = '1'",
+					// "i_paid = '1'",
 					" l_data = l_data || '"+gnrl._json_encode({
 						'actual_distance' : _data.actual_distance,
 						'actual_dry_run' : _data.actual_dry_run,
@@ -477,6 +514,8 @@ var currentApi = function( req, res, next ){
 						'trip_time_in_min' : trip_time_in_min,
 						'apply_dry_run' : _data.apply_dry_run,
 						'apply_dry_run_amount' : _data.apply_dry_run_amount,
+						
+						'promocode_code_discount_amount' : _data.discount,
 						
 						'ride_paid_by_cash' : paymentArr.cash,
 						'ride_paid_by_wallet' : paymentArr.wallet,
@@ -806,7 +845,6 @@ var currentApi = function( req, res, next ){
 				}
 			},
 			
-			
 			// Send Notification for Ride Complete [Driver / User]
 			function( callback ){
 				
@@ -865,8 +903,6 @@ var currentApi = function( req, res, next ){
 				});
 				
 			},
-			
-			
 			
 		], 
 		

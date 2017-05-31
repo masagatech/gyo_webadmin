@@ -14,13 +14,13 @@ var currentApi = function( req, res, next ){
 	var params = gnrl._frm_data( req );
 	var _lang = gnrl._getLang( params );
 	
-	var _status   = 1;
-	var _message  = '';
+	var _status = 1;
+	var _message = '';
 	var _response = {};
 	
-	var v_username 		= gnrl._is_undf( params.v_username ).trim();
-	var v_password 		= gnrl._is_undf( params.v_password ).trim();
-	var v_device_token 	= gnrl._is_undf( params.v_device_token ).trim();
+	var v_username = gnrl._is_undf( params.v_username ).trim();
+	var v_password = gnrl._is_undf( params.v_password ).trim();
+	var v_device_token = gnrl._is_undf( params.v_device_token ).trim();
 	
 	if( !v_username ){ _status = 0; _message = 'err_req_email_or_phone'; }
 	if( _status && !v_password ){ _status = 0; _message = 'err_req_password'; }
@@ -31,86 +31,180 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 		
-		var _user = [];
+		/*
+			>> Get User
+			>> Check Verified OR Not
+				>> Check Verified And Inactive
+			>> If not verified
+				>> Update OTP
+				>> Resend OTP
+			>> If verified 
+				>> Make Login
+				>> Take Login Log
+				>> Get Vehicle ID
+		*/
 		
-		var v_token;
+		
+		var _user = {};
+		var v_token = '';
+		var v_otp = gnrl._get_otp();
+		var d_last_login = gnrl._db_datetime();
+		var isVerified = 1;
+		var vehicle_id = 0;
 		
 		async.series([
+		
+			// Get User
 			function( callback ){
-				
-				v_username = v_username.toLowerCase();
-				
-				dclass._select( '*', 'tbl_user', " AND v_role = 'driver' AND ( LOWER( v_email ) = '"+v_username+"' OR v_phone = '"+v_username+"' )", function( status, user ){ 
-					
-					// 
-					
+				User.getByUsername( v_username, function( status, user ){
 					if( !status ){
-						gnrl._api_response( res, 0, 'error', { } );
+						gnrl._api_response( res, 0, 'error', {} );
 					}
 					else if( !user.length ){
-						gnrl._api_response( res, 0, 'err_no_records', {} );
+						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
+					}
+					else if( !User.isDriver( user[0] ) ){
+						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
+					}
+					else if( !validator.equals( md5( v_password ), user[0].v_password ) ){ 
+						gnrl._api_response( res, 0, 'err_invalid_password', {} ); 
+					}
+					else if( user[0].v_token != '' ){ 
+						gnrl._api_response( res, 0, 'err_msg_already_login', {} ); 
 					}
 					else{
-						
 						_user = user[0];
-						
-						v_password = v_password ? md5( v_password ) : v_password;
-						
-						
-						
-						if( !_user.l_data ){
-							gnrl._api_response( res, 2, 'err_not_verified', {
-								'id' 		: _user.id,
-								'phone' 	: _user.v_phone,
-							});
-						}
-						else if( !_user.l_data.is_otp_verified ){
-							gnrl._api_response( res, 2, 'err_not_verified', {
-								'id' 		: _user.id,
-								'phone' 	: _user.v_phone,
-							});
-						}
-						else if( _user.e_status == 'inactive' ){
-							gnrl._api_response( res, 0, 'err_acc_inactive', {} );
-						}
-						else if( !validator.equals( v_password, _user.v_password ) ){
-							gnrl._api_response( res, 0, 'err_invalid_password', {} );
-						}
-						else{
-							callback( null );
-						}
-						
-					}
-				});				
-			},
-
-			// Login
-			function( callback ){
-				v_token = md5( _user.id+'-'+gnrl._db_datetime() );
-				var _ins = {
-					'v_token' 		 : v_token,
-					'v_device_token' : v_device_token,
-					'd_last_login' 	 : gnrl._db_datetime(),
-				};
-				dclass._update( 'tbl_user', _ins, " AND id = '"+( _user.id )+"' ", function( status, data ){ 
-					if( !status ){
-						gnrl._api_response( res, 0, _message );
-					}
-					else{
 						callback( null );
 					}
 				});
 			},
+			
+			
+			// Check Verified OR Not
+			function( callback ){
+				
+				isVerified = User.isVerified( _user );
+				
+				// Check Verified And Inactive
+				if( isVerified && _user.e_status == 'inactive' ){
+					gnrl._api_response( res, 0, 'err_acc_inactive', {} ); 
+				}
+				else{
+					callback( null );
+				}
+				
+			},
+			
+			
+			// If not verified
+			function( callback ){
+				
+				if( !isVerified ){
+					
+					async.series([
+						
+						// Update OTP
+						function( callback ){
+							var _ins = {
+								'v_otp' : v_otp,
+							};
+							dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){
+								callback( null );
+							});
+						},
+						
+						// Resend OTP
+						function( callback ){
+							SMS.send({
+								_key : 'resend_otp',
+								_to : _user.v_phone,
+								_lang : User.lang( _user ),
+								_keywords : {
+									'[user_name]' : _user.v_name,
+									'[otp]' : v_otp,
+								},
+							}, function( succ, err_info ){
+								callback( null );
+							});
+						},
+						
+					], function( error, results ){
+						
+						gnrl._api_response( res, 2, 'err_not_verified', {
+							'id' 		: _user.id,
+							'phone' 	: _user.v_phone,
+						});
+						
+					});
+					
+				}
+				else{
+					
+					callback( null );
+					
+				}
+				
+			},
+			
+			
+			// If verified 
+			function( callback ){
+				
+				async.series([
+						
+					// Make Login
+					function( callback ){
+						v_token = md5( _user.id+'-'+gnrl._db_datetime() );
+						var _ins = {
+							'is_onduty' : 0,
+							'is_onride' : 0,
+							'is_buzzed' : 0,
+							'v_token' : v_token,
+							'v_device_token' : v_device_token,
+							'd_last_login' : d_last_login,
+						};
+						dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){ 
+							if( !status ){
+								gnrl._api_response( res, 0, _message, {} );
+							}
+							else{
+								callback( null );
+							}
+						});
+					},
+					
+					// Take Login Log
+					function( callback ){
+						User.startLog( _user.id, _user.v_role, 'login', function( status, data ){
+							callback( null );
+						});
+					},
+					
+					// Get Vehicle ID
+					function( callback ){
+						dclass._select( '*', 'tbl_vehicle', " AND i_driver_id = '"+_user.id+"' ", function( status, data ){ 
+							if( status && data.length ){
+								vehicle_id = data[0].id;
+							}
+							callback( null );
+						});
+					}
+					
+				], function( error, results ){
+					
+					callback( null );
+					
+				});
+				
+			},
+			
 		], 
 		function( error, results ){
-			dclass._select( '*', 'tbl_vehicle', " AND i_driver_id = '"+( _user.id )+"' ", function( vehicle_status, vehicle_data ){ 
-				gnrl._api_response( res, 1, 'succ_login_successfully', {
-					'id' 		: _user.id,
-					'v_token' 	: v_token,
-					'vehicle_id': vehicle_data.length ? vehicle_data[0].id : 0,
-					'lang'      : User.lang( _user ),
-				});
-			});
+			delete _user.v_password;
+			_user.v_token = v_token;
+			_user.lang = User.lang( _user );
+			_user.vehicle_id = vehicle_id;
+			gnrl._api_response( res, 1, 'succ_login_successfully', _user );
 		});
 	}
 };

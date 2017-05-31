@@ -14,77 +14,87 @@ var currentApi = function( req, res, next ){
 	var params = gnrl._frm_data( req );
 	var _lang = gnrl._getLang( params );
 	
-	var _status   = 1;
-	var _message  = '';
+	var _status = 1;
+	var _message = '';
 	var _response = {};
 	
-	var v_username 		= gnrl._is_undf( params.v_username );
-	var v_otp 			= gnrl._is_undf( params.v_otp );
+	var v_username = gnrl._is_undf( params.v_username );
+	var v_otp = gnrl._is_undf( params.v_otp );
 	
 	if( !v_username ){ _status = 0; _message = 'err_req_email_or_phone'; }
-	if( _status && !v_otp.trim() ){ _status = 0; _message = 'err_req_otp'; }
+	if( _status && !v_otp ){ _status = 0; _message = 'err_req_otp'; }
 	
-	if( _status ){
+	if( !_status ){
 		
-		var _user = [];
+		gnrl._api_response( res, 0, _message, {} );
+		
+	}
+	
+	else{
+		var _data = {};
+		var _user = {};
+		
+		/*
+		STEPS
+			// Get User
+			// Check Validation
+			// Update User
+			// Send SMS & Email
+		*/
+		
 		async.series([
 		
+			// Get User
 			function( callback ){
-				
-				dclass._select( '*', 'tbl_user', " AND ( v_email = '"+v_username+"' OR v_phone = '"+v_username+"' )", function( status, user ){ 
-
+				User.getByPhone( v_username, function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
-					else if( !user.length ){
-						gnrl._api_response( res, 0, 'err_no_records', {} );
+					else if( !data.length ){
+						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else{
-						
-						_user = user[0];
-						
-						if( _user.l_data.is_otp_verified ){
-							gnrl._api_response( res, 0, 'err_already_verified', {} );
-						}
-						else if( _user.e_status == 'inactive' && _user.l_data.is_otp_verified == 1 ){
-							gnrl._api_response( res, 0, 'err_acc_inactive', {} );
-						}
-						else if( !validator.equals( v_otp, _user.v_otp ) ){
-							gnrl._api_response( res, 0, 'err_invalid_otp', {} );
-						}
-						else{
-							callback( null );
-						}
+						_user = data[0];
+						callback( null );	
 					}
-					
-				});		
-						
+				});
 			},
-
-			// Verify Account
+			
+			// Check Validation
 			function( callback ){
-				
-				if( _user.v_role = 'driver' ){
-					var _ins = [
-						"v_otp = ''",
-						" l_data = l_data || '"+gnrl._json_encode({
-							'is_otp_verified' : 1,
-						})+"' "
-					];	
+				if( User.isVerified( _user ) && _user.e_status == 'inactive' ){
+					gnrl._api_response( res, 0, 'err_acc_inactive', {} );
+				}
+				else if( User.isVerified( _user ) ){
+					gnrl._api_response( res, 0, 'err_already_verified', {} );
+				}
+				else if( !validator.equals( v_otp, _user.v_otp ) ){
+					gnrl._api_response( res, 0, 'err_invalid_otp', {} );
 				}
 				else{
-					var _ins = [
-						" v_otp = '' ",
-						" e_status = 'active' ",
-						" l_data = l_data || '"+gnrl._json_encode({
-							'is_otp_verified' : 1,
-						})+"' "
-					];	
+					callback( null );
+				}
+			},
+			
+			
+			// Update User
+			function( callback ){
+				
+				_user.l_data.is_otp_verified = 1;
+				
+				var _ins = [
+					" v_otp = '' ",
+					" l_data = '"+gnrl._json_encode( _user.l_data )+"' "
+				];
+				
+				// Check, if customer
+				if( User.isUser( _user ) ){
+					_ins.push( " e_status = 'active' " );
 				}
 				
 				dclass._updateJsonb( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){ 
 					if( !status ){
-						gnrl._api_response( res, 0, 'error', {} );
+						gnrl._api_response( res, 0, 'error', { data : data } );
 					}
 					else{
 						callback( null );
@@ -92,71 +102,91 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
-			// Send SMS
+			
+			
+			// Send SMS & Email
 			function( callback ){
-				if( _user.v_role = 'driver' ){
-					var params = {
-						_to      	: _user.v_phone,
-						_lang 		: _lang,
-						_key 		: 'driver_otp_verified',
-						_keywords 	: {
-							'[user_name]' : _user.v_name,
-							'[otp]' : v_otp,
+				
+				// Check, if customer
+				if( User.isUser( _user ) ){
+					
+					async.series([
+						
+						// Send SMS
+						function( callback ){
+							SMS.send({
+								_to : _user.v_phone,
+								_lang : User.lang( _user ),
+								_key : 'user_otp_verified',
+								_keywords : {
+									'[user_name]' : _user.v_name,
+									'[otp]' : v_otp,
+								},
+							}, function( error_sms, error_info ){
+								callback( null );
+							});
 						},
-					};
-					SMS.send( params, function( error_sms, error_info ){
+						
+						// Send Email
+						function( callback ){
+							Email.send({
+								_to : _user.v_email,
+								_lang : User.lang( _user ),
+								_key : 'user_otp_verified',
+								_keywords : {
+									'[user_name]' : _user.v_name,
+									'[otp]' : v_otp,
+								},
+							}, function( error_mail, error_info ){
+								callback( null );
+							});
+						},
+						
+					], function( error, results ){
 						callback( null );
 					});
+					
 				}
 				else{
-					var params = {
-						_to      	: _user.v_phone,
-						_lang 		: _lang,
-						_key 		: 'user_otp_verified',
-						_keywords 	: {
-							'[user_name]' : _user.v_name,
-							'[otp]' : v_otp,
+					
+					async.series([
+						
+						// Send SMS
+						function( callback ){
+							SMS.send({
+								_to : _user.v_phone,
+								_lang : User.lang( _user ),
+								_key : 'driver_otp_verified',
+								_keywords : {
+									'[user_name]' : _user.v_name,
+									'[otp]' : v_otp,
+								},
+							}, function( error_sms, error_info ){
+								callback( null );
+							});
 						},
-					};
-					SMS.send( params, function( error_sms, error_info ){
+						
+						// Send Email
+						function( callback ){
+							Email.send({
+								_to : _user.v_email,
+								_lang : User.lang( _user ),
+								_key : 'driver_otp_verified',
+								_keywords : {
+									'[user_name]' : _user.v_name,
+									'[otp]' : v_otp,
+								},
+							}, function( error_mail, error_info ){
+								callback( null );
+							});
+						}
+						
+					], function( error, results ){
 						callback( null );
 					});
 				}
+				
 			},
-			
-			// Send Email
-			function( callback ){
-				if( _user.v_role = 'driver' ){
-					var params = {
-						_to      	: _user.v_email,
-						_lang 		: _lang,
-						_key 		: 'driver_otp_verified',
-						_keywords 	: {
-							'[user_name]' : _user.v_name,
-							'[otp]' : v_otp,
-						},
-					};
-					Email.send( params, function( error_mail, error_info ){
-						callback( null );
-					});
-				}
-				else{
-					var params = {
-						_to      	: _user.v_email,
-						_lang 		: _lang,
-						_key 		: 'user_otp_verified',
-						_keywords 	: {
-							'[user_name]' : _user.v_name,
-							'[otp]' : v_otp,
-						},
-					};
-					Email.send( params, function( error_mail, error_info ){
-						callback( null );
-					});
-				}
-			},
-			
-			
 			
 		], 
 		function( error, results ){
@@ -164,9 +194,7 @@ var currentApi = function( req, res, next ){
 		});
 
 	}
-	else{
-		gnrl._api_response( res, 0, _message, {} );
-	}
+	
 };
 
 module.exports = currentApi;

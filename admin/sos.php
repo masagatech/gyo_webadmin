@@ -22,11 +22,9 @@ $gnrl->check_login();
         $ins = array(
             'v_phone'  => $v_phone,
             'i_city_id' => $i_city_id,
-            'v_type'  => $v_type,
             'd_added' => date('Y-m-d H:i:s'),
             'd_modified' => date('Y-m-d H:i:s'),
         );
-        
         $id = $dclass->insert( $table, $ins );
         $gnrl->redirectTo($page.".php?succ=1&msg=add");
     }
@@ -37,7 +35,8 @@ $gnrl->check_login();
             $id = $_REQUEST['id'];
             if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -86,7 +85,7 @@ $gnrl->check_login();
                 $ins = array(
                     'v_phone'  => $v_phone,
                     'i_city_id' => $i_city_id,
-                    'v_type'  => $v_type,
+                   
                     'd_modified' => date('Y-m-d H:i:s'),
                 );
                 $dclass->update( $table, $ins, " id = '".$id."' ");
@@ -141,16 +140,18 @@ $gnrl->check_login();
                             <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 
                                 <div class="content">
-                                    <div class="form-group">
-                                        <label>Phone</label>
-                                        <input type="text" class="form-control" id="v_phone" name="v_phone" value="<?php echo $v_phone; ?>" required />
-                                    </div>
                                    <div class="form-group">
                                         <label>City</label>
                                         <select class="select2" name="i_city_id" id="i_city_id">
+											<option value="0" >- Default -</option>
                                              <?php echo $gnrl->getCityDropdownList($i_city_id); ?>
                                         </select>
                                     </div>
+								    <div class="form-group">
+                                        <label>Phone</label>
+                                        <input type="text" class="form-control" id="v_phone" name="v_phone" value="<?php echo $v_phone; ?>" required />
+                                    </div>
+                                   
                                     <div class="form-group">
                                         <button class="btn btn-primary" type="submit" name="submit_btn" value="<?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?>"><?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?></button>
                                         <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
@@ -183,8 +184,8 @@ $gnrl->check_login();
                                 if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
                                     $keyword =  trim( $_REQUEST['keyword'] );
                                     $wh = " AND ( 
-                                       LOWER(v_name) like LOWER('%".$keyword."%')  OR
-                                        LOWER(e_status) like LOWER('%".$keyword."%')
+                                       LOWER(c.v_name) like LOWER('%".$keyword."%') OR
+                                       LOWER(s.v_phone) like LOWER('%".$keyword."%')
                                     )";
                                 }
                                 if( isset( $_REQUEST['srch_filter_city'] ) && $_REQUEST['srch_filter_city'] != '' ){
@@ -194,6 +195,14 @@ $gnrl->check_login();
                                    
                                          
                                 }
+                                
+                                 if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND s.i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND s.i_delete='0'";
+                                }
+
                                 $ssql = "SELECT s.*,c.v_name as city_name
 
                                              FROM ".$table." as s 
@@ -201,7 +210,7 @@ $gnrl->check_login();
                                              as c on s.i_city_id=c.id
                                             WHERE true ".$wh;
                                    
-                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'c.v_name';
+                                $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'city_name';
                                 $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st'] != '') ? $_REQUEST['st'] : 'ASC';
                                 
                                 
@@ -210,7 +219,7 @@ $gnrl->check_login();
                                 $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
-                                
+                                // _P($row_Data);
                                 ?>
                                 <div class="content">
                                     <form name="frm" action="" method="get" >
@@ -223,11 +232,17 @@ $gnrl->check_login();
                                                             <label>
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+                                                                <div class="clearfix"></div>
+                                                                 <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                            </div>
                                                             </label>
-                                                            <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_filter']) && $_REQUEST['srch_filter'] != '' || isset($_REQUEST['srch_otp_verified']) && $_REQUEST['srch_otp_verified'] != ''
-                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != ''   ){ ?>
-                                                                    <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
-                                                                    <h4> Clear Search </h4></a>
+                                                            <div class="clearfix"> </div>
+                                                            <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' 
+                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != ''){ ?>
+                                                                    <a href="<?php echo $page ?>.php" class="fright" style="" >
+                                                                   <h5>Clear Search </h5></a>
                                                             <?php } ?>
                                                         </div>
 
@@ -254,13 +269,21 @@ $gnrl->check_login();
                                             
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                                <thead>
+                                                <!-- <thead>
                                                     <tr>
                                                         <th>City</th>
                                                         <th>Phone</th>
                                                         <th><span class="">Action</span></th>
                                                     </tr>
-                                                </thead>
+                                                </thead> -->
+                                                <?php
+                                                
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'i_city_id' => array( 'order' => 1, 'title' => 'City' ),
+                                                    'v_phone' => array( 'order' => 1, 'title' => 'Phone' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
                                                 <tbody>
                                                     <?php 
                                                     if($nototal > 0){
@@ -269,7 +292,7 @@ $gnrl->check_login();
                                                             $i++;
                                                             ?>
                                                             <tr>
-                                                                <td><?php echo $row['city_name'];?></td>
+                                                                <td><?php echo $row['city_name'] ? $row['city_name'] : '- Default - ';?></td>
                                                                 <td><?php echo $row['v_phone'];?></td>
                                                                 <td>
                                                                     <div class="btn-group">
@@ -279,8 +302,8 @@ $gnrl->check_login();
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
                                                                             <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                           <!--  <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li> -->
                                                                             <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
                                                                         </ul>
                                                                     </div>

@@ -59,6 +59,7 @@ var currentApi = function( req, res, next ){
 			
 			// Check PIN
 			function( callback ){
+				_ride.v_pin = _ride.v_pin.toString();
 				var last_digits = _ride.v_pin[4]+_ride.v_pin[5]+_ride.v_pin[6]+_ride.v_pin[7];
 				if( last_digits != v_pin ){
 					gnrl._api_response( res, 0, 'err_invalid_pin' );

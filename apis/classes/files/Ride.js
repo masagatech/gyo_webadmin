@@ -12,35 +12,80 @@ var currClass = function( params ){
 	return {
 		
 		get : function( ride_id, cb ){
-			
 			var _self = this;
-			
 			dclass._select( '*', table, " AND id = '"+ride_id+"' ", function( status, data ){
 				if( status && data.length ){
-					var _subkeys = {
-						actual_distance : 0,
-						final_amount : 0,
-						actual_dry_run : 0,
-						apply_dry_run : 0,
-						apply_dry_run_amount : 0,
-						ride_paid_by_cash : 0,
-						ride_paid_by_wallet : 0,
-						trip_time : {
-							days : 0,
-							hours : 0,
-							minutes : 0,
-							seconds : 0,
-						},
-						trip_time_in_min : 0,
-					};
-					for( var k in _subkeys ){
-						if( !data[0].l_data[k] ){
-							data[0].l_data[k] = _subkeys[k];
+					_self.getDefaultFields( status, data, cb );
+				}
+				else{
+					cb( status, data );
+				}
+			});
+		},
+		
+		getWh : function( _wh, cb ){
+			var _self = this;
+			dclass._select( '*', table, _wh, function( status, data ){
+				if( status && data.length ){
+					_self.getDefaultFields( status, data, cb );
+				}
+				else{
+					cb( status, data );
+				}
+			});
+		},
+		
+		getDefaultFields : function( status, data, cb ){
+			
+			if( status && data.length ){
+				
+				var _subkeys = {
+					
+					actual_distance 		: 0,
+					final_amount 			: 0,
+					actual_dry_run 			: 0,
+					apply_dry_run 			: 0,
+					apply_dry_run_amount 	: 0,
+					ride_paid_by_cash 		: 0,
+					ride_paid_by_wallet 	: 0,
+					trip_time 				: {
+						days 	: 0,
+						hours 	: 0,
+						minutes : 0,
+						seconds : 0,
+					},
+					trip_time_in_min 		: 0,
+					
+					cancel_by 				: 0,
+					cancel_by_role 			: '',
+					cancel_reason_id 		: 0,
+					cancel_reason_id_text 	: '',
+					cancel_reason_text 		: '',
+					cancel_reason_final		: '',
+					
+					promocode_id					: 0,
+					promocode_code					: '',
+					promocode_code_discount			: 0,
+					promocode_code_discount_upto	: 0,
+					promocode_code_discount_amount	: 0,
+					
+					
+				};
+				
+				for( var k in _subkeys ){
+					for( var k1 in data ){
+						if( !data[k1].l_data[k] ){
+							data[k1].l_data[k] = _subkeys[k];
 						}
+						data[k1].l_data['cancel_reason_final'] = data[k1].l_data['cancel_reason_id_text'] ? 
+						data[k1].l_data['cancel_reason_id_text'] : data[k1].l_data['cancel_reason_text'];
 					}
 				}
 				cb( status, data );
-			});
+			}
+			else{
+				cb( status, data );
+			}
 		},
 		
 		getChargesData : function( data, cb ){
@@ -73,24 +118,24 @@ var currClass = function( params ){
 				actual_dry_run : 0,
 				actual_distance : 0,
 			};
-			dclass._select( '*', 'tbl_track_vehicle_location', " AND l_data->>'i_ride_id' = '"+ride_id+"'", function( status, data ){
-				if( !status ){
+			
+			var _q = "";
+			_q += " SELECT ";
+			_q += " ( SELECT COALESCE( SUM( ( l_data->>'distance' )::numeric ), 0 ) FROM tbl_track_vehicle_location WHERE l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '"+ride_id+"' ) AS actual_distance ";
+			_q += " , ( SELECT COALESCE( SUM( ( l_data->>'distance' )::numeric ), 0 ) FROM tbl_track_vehicle_location WHERE l_data->>'run_type' = 'dry_run' AND l_data->>'i_ride_id' = '"+ride_id+"' ) AS actual_dry_run ";
+			
+			dclass._query( _q, function( status, data ){
+				if( status && data.length ){
+					_result.actual_dry_run = parseFloat( data[0].actual_dry_run );
+					_result.actual_distance = parseFloat( data[0].actual_distance );
 					cb( status, _result );
 				}
 				else{
-					for( var k in data ){
-						var temp = parseFloat( data[k].l_data.distance ? data[k].l_data.distance : 0 );
-						if( data[k].l_data.run_type && data[k].l_data.run_type == 'ride' ){
-							_result.actual_distance += temp;
-						}
-						else{
-							_result.actual_dry_run += temp;
-						}
-					}
 					cb( status, _result );
 				}
 			});
 		},
+		
 		
 		getFinalTotal : function( ride_id, cb ){
 			var _self = this;
@@ -100,7 +145,20 @@ var currClass = function( params ){
 					cb( 0 );
 				}
 				else{
-					cb( gnrl._round( data[0].final_amount ) );
+					cb( gnrl._round( data.length ? data[0].final_amount : 0 ) );
+				}
+			});
+		},
+		
+		getFinalTotalWithoutDiscount : function( ride_id, cb ){
+			var _self = this;
+			var _q = " SELECT COALESCE( SUM( f_amount ), 0 ) AS final_amount FROM tbl_ride_charges WHERE v_charge_type NOT IN ('disount') AND i_ride_id = '"+ride_id+"' ";
+			dclass._query( _q, function( status, data ){
+				if( !status ){
+					cb( 0 );
+				}
+				else{
+					cb( gnrl._round( data.length ? data[0].final_amount : 0 ) );
 				}
 			});
 		},
@@ -192,6 +250,8 @@ var currClass = function( params ){
 		},
 		
 		getAllChargeTypes : function( type = null ){
+			
+			// var type == undefined ? null : type;
 		
 			/*
 			'upto_km' => 'Upto X Km',
@@ -214,6 +274,7 @@ var currClass = function( params ){
 				'service_tax' : 'Service Tax',
 				'surcharge' : 'Surcharge',
 				'total_fare' : 'Total Fare',
+				'discount' : 'Discount',
 			};
 			if( type != null ){
 				return types[type];

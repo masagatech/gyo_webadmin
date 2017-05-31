@@ -28,6 +28,7 @@ $mess=array(
 	"nameexists"=>"Entered Name already exists.",
 	"urlexists"=>"Entered Url already exists.",
 	"emailexists"=>"Entered Email already exists.",
+	"phoneexists"=>"Entered Phone already exists.",
 	"couponexists"=>"Entered Coupon already exists.",
 	"passwordmismatch"=>"Password fields are not matching.",
 	"invalid"=>"<span style='color:red;'>Invalid Usename/Password</span>",

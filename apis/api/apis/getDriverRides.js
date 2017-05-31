@@ -19,75 +19,80 @@ var currentApi = function( req, res, next ){
 	var _sort_by  = ['today', 'weekly', 'monthly'];
 	
 	var login_id   = gnrl._is_undf( params.login_id ).trim();
-	var sort_by    = gnrl._is_undf( params.sort_by ).trim();
+	var sort_by    = gnrl._is_undf( params.sort_by, 'today' ).trim();
+
 	
 	if( !sort_by ){ _status = 0; _message = 'err_req_sort_by'; }
-	if( _status && _sort_by.indexOf(sort_by) == -1 ){ _status = 0; _message = 'err_req_sort_by'; }
+	if( _status && _sort_by.indexOf( sort_by ) == -1 ){ _status = 0; _message = 'err_req_sort_by'; }
 	
 	if( _status ){	
 
-		var now_date = gnrl._db_date();
-
-		var _q = " SELECT tbl_ride.*";
-		_q += " ,(SELECT tbl_user.v_name FROM tbl_user AS tbl_user WHERE tbl_user.id = tbl_ride.i_user_id) AS user_v_name";
-		_q += " ,(SELECT tbl_user.v_image FROM tbl_user AS tbl_user WHERE tbl_user.id = tbl_ride.i_user_id) AS user_v_image";
-		_q += " ,(SELECT tbl_ride_rate.i_rate FROM tbl_ride_rate AS tbl_ride_rate WHERE tbl_ride_rate.i_ride_id = tbl_ride.id) AS ride_i_rate";
-		_q += " ,(SELECT tbl_ride_rate.l_comment FROM tbl_ride_rate AS tbl_ride_rate WHERE tbl_ride_rate.i_ride_id = tbl_ride.id) AS ride_l_comment";
-		_q += " FROM tbl_ride AS tbl_ride ";
+		var dates = gnrl._db_period_time( sort_by );
+		
+		var _q = "";
+		_q += " SELECT ";
+		_q += " tbl_ride.* ";
+		_q += " , tbl_ride.id AS id ";
+		_q += " , tbl_ride.e_status AS status ";
+		_q += " , tbl_ride.d_time AS ride_time ";
+		_q += " , ( SELECT tbl_user.v_name FROM tbl_user AS tbl_user WHERE tbl_user.id = tbl_ride.i_user_id ) AS user_v_name";
+		_q += " , ( SELECT tbl_user.v_image FROM tbl_user AS tbl_user WHERE tbl_user.id = tbl_ride.i_user_id ) AS user_v_image";
+		
+		
+		_q += " , tbl_ride.l_data->>'vehicle_type' AS vehicle_type ";
+		_q += " , tbl_ride.l_data->>'pickup_address' AS pickup_address ";
+		_q += " , tbl_ride.l_data->>'destination_address' AS destination_address ";
+		_q += " , tbl_user.v_name AS driver_name ";
+		
+		_q += " FROM tbl_ride AS tbl_ride LEFT JOIN tbl_user AS tbl_user ON tbl_user.id = tbl_ride.i_driver_id ";
 		_q += " WHERE true ";
-		_q += " AND tbl_ride.e_status IN('cancel','scheduled','complete')";
+		_q += " AND ( tbl_ride.d_time >= '"+dates.start+"' AND tbl_ride.d_time <= '"+dates.end+"' ) ";
 		_q += " AND tbl_ride.i_driver_id = '"+login_id+"' ";
+		_q += " AND tbl_ride.e_status IN( 'start', 'confirm', 'scheduled', 'complete', 'cancel' ) ";
+		_q += " ORDER BY ";
+			_q += " CASE tbl_ride.e_status ";
+				_q += " WHEN 'start' THEN 1 ";
+				_q += " WHEN 'confirm' THEN 2 ";
+				_q += " WHEN 'scheduled' THEN 3 ";
+				_q += " WHEN 'complete' THEN 4 ";
+				_q += " WHEN 'cancel' THEN 5 ";
+				_q += " ELSE 6 ";
+			_q += " END ";
+		_q += " , tbl_ride.d_time DESC ";
 
-		if( sort_by == 'today' ){
-			var today = now_date.D+'-'+now_date.M+'-'+now_date.Y;
-			_q += " AND to_char(tbl_ride.d_start, 'DD-MM-YYYY') = '"+today+"'";
-		}
-		if( sort_by == 'weekly' ){
-			var FD = now_date.WEEK_FIRST_DATE.D+'-'+now_date.WEEK_FIRST_DATE.M+'-'+now_date.WEEK_FIRST_DATE.Y;
-			var LD = now_date.WEEK_LAST_DATE.D+'-'+now_date.WEEK_LAST_DATE.M+'-'+now_date.WEEK_LAST_DATE.Y;
-			_q += " AND to_char(tbl_ride.d_start, 'DD-MM-YYYY') >= '"+FD+"' AND to_char(tbl_ride.d_start, 'DD-MM-YYYY') <= '"+LD+"'";
-		}
-		if( sort_by == 'monthly' ){
-			var monthly = now_date.M;
-			_q += " AND to_char(tbl_ride.d_start, 'MM') = '"+monthly+"'";
-		}
-
-		//gnrl._api_response( res, 1, '', _q );
+		
 		dclass._query( _q, function( status, data ){
 			if( status && !data.length ){
 				gnrl._api_response( res, 0, 'err_no_records', _response );
 			}
 			else{
-
+				
+				
 				for (var i = 0; i < data.length; i++) {
 
-					if( gnrl._isNull(data[i].ride_i_rate) ){
-						data[i].ride_i_rate = 0;
-					}
-					if( gnrl._isNull(data[i].ride_l_comment) ){
-						data[i].ride_l_comment = "";
-					}
-					if( gnrl._isNull(data[i].user_v_name) ){
-						data[i].user_v_name = "";
-					}
-					if( gnrl._isNull(data[i].user_v_image) ){
-						data[i].user_v_image = "";
-					}
-					else{
-						data[i].user_v_image = gnrl._uploads( 'users/'+data[i].user_v_image );
-					}
-
-					if( gnrl._isNull(data[i].l_data.trip_time) ){
-						data[i].l_data.trip_time = "";
-					}
-
-					data[i].d_time = gnrl._timestamp(data[i].d_time);
-					data[i].d_start = gnrl._timestamp(data[i].d_start);
-					data[i].d_end = gnrl._timestamp(data[i].d_end);
+					if( !data[i].ride_i_rate ){ data[i].ride_i_rate = ''; }
+					if( !data[i].ride_l_comment ){ data[i].ride_l_comment = ''; }
 					
+					if( !data[i].user_v_name ){ data[i].user_v_name = ''; }
+					
+					if( !data[i].user_v_image ){ data[i].user_v_image = ''; }
+					else{ data[i].user_v_image = gnrl._uploads( 'users/'+data[i].user_v_image ); }
+					
+					
+					if( !data[i].l_data.trip_time ){ data[i].l_data.trip_time = ''; }
+					if( !data[i].l_data.final_amount ){ data[i].l_data.final_amount = ''; }
+					
+					data[i].d_time = gnrl._timestamp( data[i].d_time );
+					
+					// data[i].d_start = gnrl._timestamp(data[i].d_start);
+					// data[i].d_end = gnrl._timestamp(data[i].d_end);
+					/*
 					data[i].l_data.ride_time = gnrl._timestamp(data[i].l_data.ride_time);
 					data[i].l_data.time_added = gnrl._timestamp(data[i].l_data.time_added);
+					*/
 				}
+				
+				
 
 				gnrl._api_response( res, 1, '', data );
 			}

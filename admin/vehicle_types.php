@@ -62,7 +62,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
 				if(1){
-					$dclass->delete( $table ," id = '".$id."'");
+					$ins = array('i_delete'=>'1');
+            		$dclass->update( $table, $ins, " id = '".$id."'");
 					$gnrl->redirectTo($page.".php?succ=1&msg=del");
 				}else{
 					$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -339,18 +340,22 @@ $gnrl->check_login();
 									     
 	                                )";
 	                            }
-	                            
-	                           $ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
+	                            if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND i_delete='0'";
+                                }
+	                           	$ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
 	                                        
-	                            $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-	                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+	                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'v_name' );
+                            	$sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
 	                            
 	                            $nototal = $dclass->numRows($ssql);
 	                            $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
 	                            $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
-	                            
 	                            
 	                            ?>
 	                            <div class="content">
@@ -364,6 +369,11 @@ $gnrl->check_login();
 	                                                        <label>
 	                                                            <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+	                                                              <div class="clearfix"></div> 
+                                                                <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
 	                                                        </label>
 	                                                    </div>
 	                                                    <?php 
@@ -382,14 +392,14 @@ $gnrl->check_login();
 	                                        
 	                                        <!-- <?php chk_all('drop');?> -->
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
-	                                            <thead>
-	                                                <tr>
-														<th width="25%">Vehicle Type</th>
-	                                                    <th width="5%">Status</th>
-	                                                    <th width="5%">Added Date</th>
-	                                                    <th width="7%"><span class="pull-right">Action</span> </th>
-	                                                </tr>
-	                                            </thead>
+	                                        	<?php
+				                                    echo $gnrl->renderTableHeader(array(
+				                                        'v_name' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+				                                        'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+				                                        'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+				                                        'action' => array( 'order' => 0, 'title' => 'Action' ),
+				                                    ));
+				                                ?>
 	                                            <tbody>
 	                                                <?php 
 	                                                if( $nototal > 0 ){
@@ -399,31 +409,27 @@ $gnrl->check_login();
 	                                                    	?>
 	                                                        <tr>
 																<td>
-																	<a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">
 																	<?php echo $row['v_name']; ?>
-																	</a>
 																	<br>
 																	(<?php echo $row['v_type'];?>)
 																</td>
 																<td><?php echo $row['e_status'];?></td>
-																<td><?php echo $gnrl->removeTimezone($row['d_added']) ; ?></td>
+																<td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
 	                                                            <td class="text-right" >
-	                                                            	
-		                                                                <div class="btn-group">
-		                                                                    <button class="btn btn-default btn-xs" type="button">Actions</button>
-		                                                                    <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
-		                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
-		                                                                    </button>
-		                                                                    <ul role="menu" class="dropdown-menu pull-right">
-																				
-		                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-		                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-		                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-		                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-		                                    									
-		                                                                    </ul>
-		                                                                </div>
-		                                                            
+	                                                                <div class="btn-group">
+	                                                                    <button class="btn btn-default btn-xs" type="button">Actions</button>
+	                                                                    <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
+	                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+	                                                                    </button>
+	                                                                    <ul role="menu" class="dropdown-menu pull-right">
+																			
+	                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+	                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+	                                    									
+	                                                                    </ul>
+	                                                                </div>
 	                                                            </td>
 	                                                        </tr><?php 
 	                                                    }
@@ -454,16 +460,13 @@ $gnrl->check_login();
 	                                </form>
 	                            </div>
                         	<?php
-                            
                         }?>
                     </div>
                 </div>
             </div>
         </div>
 	</div>
-</div>
-
-		
+</div>	
 <?php include('_scripts.php');?>
 <?php include('jsfunctions/jsfunctions.php');?>
 </body>

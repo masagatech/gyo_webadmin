@@ -72,7 +72,7 @@ var currentApi = function( req, res, next ){
 		var l_longitude = gnrl._is_undf( params.l_longitude );
 		var l_data = gnrl._is_undf( params.l_data, {} );
 		var v_otp = gnrl._get_otp();
-		var lang = gnrl._is_undf( params.lang );
+
 		
 		if( !v_name.trim() ){ _status = 0; _message = 'err_req_name'; }
 		if( _status && !v_email.trim() ){ _status = 0; _message = 'err_req_email'; }
@@ -153,6 +153,8 @@ var currentApi = function( req, res, next ){
 							'v_gender' 			: v_gender,
 							'v_imei_number' 	: v_imei_number,
 							'is_onduty'			: 0,
+							'is_onride' 		: 0,
+							'is_buzzed' 		: 0,
 							'v_password' 		: md5( v_password ),
 							'v_otp' 			: v_otp,
 							'd_added' 			: gnrl._db_datetime(),
@@ -162,11 +164,12 @@ var currentApi = function( req, res, next ){
 							'l_latitude' 		: l_latitude,
 							'l_longitude' 		: l_longitude,
 							'i_city_id' 		: i_city_id,
+							'v_token' 			: '',
 							'l_data'            : gnrl._json_encode({
 								'rate'            : 0,
 								'rate_total'      : 0,
 								'is_otp_verified' : 0,
-								'lang'            : lang ? lang : _lang,
+								'lang'            : _lang,
 							}),
 						};
 						dclass._insert( 'tbl_user', _ins, function( status, user_insert ){ 

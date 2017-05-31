@@ -58,6 +58,8 @@ var apiRouter = function( app ){
 		}
 	};
 	
+	
+	
 	// Common APIs
 	app.all(gnrl._api_base+'getLables', require('./apis/getLables') );
 	app.all(gnrl._api_base+'getRideCancelReasons', require('./apis/getRideCancelReasons') );
@@ -87,10 +89,8 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'driverProfileUpdate', require('./apis/driverProfileUpdate') );
 	app.all(gnrl._api_base+'driverPasswordUpdate', require('./apis/driverPasswordUpdate') );
 	app.all(gnrl._api_base+'getDriverRides', _is_login, require('./apis/getDriverRides') );
-	app.all(gnrl._api_base+'getDriverRideDetails', _is_login, require('./apis/getDriverRideDetails') );
 	app.all(gnrl._api_base+'getDriverWallet', _is_login, require('./apis/getDriverWallet') );
 	app.all(gnrl._api_base+'driverLocationUpdate', _is_login, require('./apis/driverLocationUpdate') );
-	//app.all(gnrl._api_base+'sendBuzz', _is_login, require('./apis/sendBuzz') );
 	app.all(gnrl._api_base+'getDriverEarning', _is_login, require('./apis/getDriverEarning') );
 	app.all(gnrl._api_base+'ridePayment', _is_login, require('./apis/ridePayment') );
 	app.all(gnrl._api_base+'verifyAccount', require('./apis/verifyAccount') );
@@ -106,7 +106,7 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'userResetPassword', require('./apis/userResetPassword') );
 	app.all(gnrl._api_base+'userPasswordUpdate', require('./apis/userPasswordUpdate') );
 	app.all(gnrl._api_base+'getUserRides', _is_login, require('./apis/getUserRides') );
-	app.all(gnrl._api_base+'getUserRideDetails', _is_login, require('./apis/getUserRideDetails') );
+
 	app.all(gnrl._api_base+'rideRate', _is_login, require('./apis/rideRate') );
 	app.all(gnrl._api_base+'userFeedback', _is_login, require('./apis/userFeedback') );
 	app.all(gnrl._api_base+'getUserWallet', _is_login, require('./apis/getUserWallet') );
@@ -114,7 +114,7 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'getReferralCode', _is_login, require('./apis/getReferralCode') );
 	app.all(gnrl._api_base+'getDriverLocation', require('./apis/getDriverLocation') );
 	app.all(gnrl._api_base+'getPromotionCodes', _is_login, require('./apis/getPromotionCodes') );
-	app.all(gnrl._api_base+'promotionCodeExists', _is_login, require('./apis/promotionCodeExists') );
+	
 	app.all(gnrl._api_base+'addMoney', _is_login, require('./apis/addMoney') );
 	app.all(gnrl._api_base+'rideSOS', _is_login, require('./apis/rideSOS') );
 	
@@ -133,6 +133,8 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'saveRide', _is_login, require('./apis/saveRide') );
 	app.all(gnrl._api_base+'getRide', _is_login, require('./apis/getRide') );
 	app.all(gnrl._api_base+'confirmRide', _is_login, require('./apis/confirmRide') );
+	app.all(gnrl._api_base+'rideApplyPromotionCode', _is_login, require('./apis/rideApplyPromotionCode') );
+	app.all(gnrl._api_base+'rideRemovePromotionCode', _is_login, require('./apis/rideRemovePromotionCode') );
 	
 	//Ride APIs Driver Side
 	//app.all(gnrl._api_base+'receiveBuzz', require('./apis/receiveBuzz') );

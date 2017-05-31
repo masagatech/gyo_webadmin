@@ -79,7 +79,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
 				if(1){
-					$dclass->delete( $table ," id = '".$id."'");
+					$ins = array('i_delete'=>'1');
+            		$dclass->update( $table, $ins, " id = '".$id."'");
 					$gnrl->redirectTo($page.".php?succ=1&msg=del");
 				}else{
 					$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -310,6 +311,12 @@ $gnrl->check_login();
 									   OR LOWER(a.l_data->'geo'->>'area_name') like LOWER('%".$keyword."%') 
 	                                )";
 	                            }
+	                            if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND a.i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND a.i_delete='0'";
+                                }
 	                            $ssql = 
 							   	"SELECT
 									a.*,
@@ -326,16 +333,14 @@ $gnrl->check_login();
 									
 								WHERE true ".$wh;
 	                                        
-	                            $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-	                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+	                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'v_vehicle_type' );
+                            	$sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
 	                            
 	                            $nototal = $dclass->numRows($ssql);
 	                            $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
-	                           $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
+	                            $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
-	                            // _P($row_Data);
-	                            // exit;
 	                            
 	                            ?>
 	                            <div class="content">
@@ -349,6 +354,11 @@ $gnrl->check_login();
 	                                                        <label>
 	                                                            <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+	                                                            <div class="clearfix"></div> 
+                                                                <div class="pull-right" style="">
+                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                    Show Deleted Data
+                                                                </div>
 	                                                        </label>
 	                                                    </div>
 	                                                    <?php 
@@ -364,38 +374,35 @@ $gnrl->check_login();
 	                                                <div class="clearfix"></div>
 	                                            </div>
 	                                        </div>
-	                                        
 	                                        <!-- <?php chk_all('drop');?> -->
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
-	                                            <thead>
-	                                                <tr>
-														
-														<th>Vehicle Type </th>
-														<th>Vehicle Name </th>
-														<th>Vehicle Number </th>
-														<th>Driver Name </th>
-														<th>Status</th>
-														<th> Added Date</th>
-														<th> Action </th>
-														 
-	                                                </tr>
-	                                            </thead>
+	                                        	<?php
+				                                    echo $gnrl->renderTableHeader(array(
+				                                        'v_vehicle_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+				                                        'vehicle_name' => array( 'order' => 1, 'title' => 'Vehicle Name' ),
+				                                        'vehicle_number' => array( 'order' => 1, 'title' => 'Vehicle Number' ),
+				                                        'driver_name' => array( 'order' => 1, 'title' => 'Driver Name' ),
+				                                        'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+				                                        'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+				                                        'action' => array( 'order' => 0, 'title' => 'Action' ),
+				                                    ));
+				                                ?>	
 	                                            <tbody>
 	                                                <?php 
 	                                                if( $nototal > 0 ){
 														
 														foreach( $row_Data as $row ){
 	                                                    	$l_data = json_decode( $row['l_data'], true );
-															// geo
 	                                                    	?>
 	                                                        <tr>
-																
-																<td><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>"><?php echo ucfirst( $row['v_vehicle_type'] );?></a></td>
+																<td>
+																	<?php echo ucfirst( $row['v_vehicle_type'] );?>
+																</td>
 																<td><?php echo ucfirst( $row['vehicle_name'] );?></td>
 																<td><?php echo ucfirst( $row['vehicle_number'] );?></td>
 																<td><?php echo ucfirst( $row['driver_name'] );?></td>
 																<td><?php echo $row['e_status'];?></td>
-																<td><?php echo $gnrl->removeTimezone($row['d_added']);?></td>
+																<td><?php echo $gnrl->displaySiteDate($row['d_added']);?></td>
 																<td>
 																	<?php if(1){?> 
 																		  <div class="btn-group">

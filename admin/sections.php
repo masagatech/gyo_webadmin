@@ -10,7 +10,8 @@ $title2 = 'Sections';
 // $v_role ='user';
 $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
 
-
+// _P($_REQUEST);
+// exit;
 
 ## Insert Record in database starts
 if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
@@ -44,7 +45,8 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
 		$id = $_REQUEST['id'];
 		    if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -117,7 +119,12 @@ foreach ($parent_section as $s_key => $s_value) {
     $parent_arr[$s_value['id']]=$s_value['v_title'];
 }
 	
-
+$checked="";
+if( isset( $_REQUEST['deleted'] ) ){
+    $checked="checked";
+}else{
+    $checked="";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -149,6 +156,7 @@ foreach ($parent_section as $s_key => $s_value) {
                                     <?php } ?>
 								<?php } ?>
                             </h3>
+                            
                         </div>
                         <?php 
                         if( ($script == 'add' || $script == 'edit') && 1){?>
@@ -203,11 +211,18 @@ foreach ($parent_section as $s_key => $s_value) {
                         else{
 						    if( 1 ){
 								
-                                $row_Data = $gnrl->getSections();
+                                $row_Data = $gnrl->getSections($checked);
 								
                                 ?>
                                 <div class="content">
                                     <form name="frm" action="" method="get" >
+                                        <div class="clearfix"></div>
+                                            <label class="pull-right" style="margin-top: 10px; ">
+                                             <div class="pull-right" style="">
+                                                <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                Show Deleted Data
+                                            </div>
+                                            </label>
                                         <div class="table-responsive">
                                         
 										    <table class="table table-bordered" id="datatable" style="width:100%;" >

@@ -34,23 +34,41 @@ var currentApi = function( req, res, next ){
 		
 		/*
 			>> Get User
-			>> Check Validations
-			>> Update Last Login
+			>> Check Verified OR Not
+				>> Check Verified And Inactive
+			>> If not verified
+				>> Update OTP
+				>> Resend OTP
+			>> If verified 
+				>> Make Login
+				>> Take Login Log
 		*/
 		
 		var _user = {};
 		var v_token = '';
+		var v_otp = gnrl._get_otp();
+		var d_last_login = gnrl._db_datetime();
+		var isVerified = 1;
 		
 		async.series([
 		
 			// Get User
 			function( callback ){
 				User.getByUsername( v_username, function( status, user ){
-					if( !status ){ 
-						gnrl._api_response( res, 0, 'error', {} ); 
+					if( !status ){
+						gnrl._api_response( res, 0, 'error', {} );
 					}
-					else if( !user.length ){ 
-						gnrl._api_response( res, 0, 'err_msg_no_account', {} ); 
+					else if( !user.length ){
+						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
+					}
+					else if( !User.isUser( user[0] ) ){
+						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
+					}
+					else if( !validator.equals( md5( v_password ), user[0].v_password ) ){ 
+						gnrl._api_response( res, 0, 'err_invalid_password', {} ); 
+					}
+					else if( user[0].v_token != '' && user[0].v_token != null ){ 
+						gnrl._api_response( res, 0, 'err_msg_already_login', {} ); 
 					}
 					else{
 						_user = user[0];
@@ -60,64 +78,117 @@ var currentApi = function( req, res, next ){
 			},
 			
 			
-			// Check Validations
+			// Check Verified OR Not
 			function( callback ){
 				
-				v_password = v_password ? md5( v_password ) : v_password;
+				isVerified = User.isVerified( _user );
 				
-				if( !_user.l_data ){
-					gnrl._api_response( res, 2, 'err_not_verified', {
-						'id' 		: _user.id,
-						'phone' 	: _user.v_phone,
-					});
-				}
-				else if( !_user.l_data.is_otp_verified ){
-					gnrl._api_response( res, 2, 'err_not_verified', {
-						'id' 		: _user.id,
-						'phone' 	: _user.v_phone,
-					});
-				}
-				
-				else if( _user.e_status == 'inactive' ){ 
+				// Check Verified And Inactive
+				if( isVerified && _user.e_status == 'inactive' ){
 					gnrl._api_response( res, 0, 'err_acc_inactive', {} ); 
-				}
-				else if( !validator.equals( v_password, _user.v_password ) ){ 
-					gnrl._api_response( res, 0, 'err_invalid_password', {} ); 
 				}
 				else{
 					callback( null );
 				}
 				
 			},
-
-			// Update Last Login
+			
+			
+			// If not verified
 			function( callback ){
 				
-				v_token = md5( _user.id+'-'+gnrl._db_datetime() );
+				if( !isVerified ){
+					
+					async.series([
+						
+						// Update OTP
+						function( callback ){
+							var _ins = {
+								'v_otp' : v_otp,
+							};
+							dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){
+								callback( null );
+							});
+						},
+						
+						// Resend OTP
+						function( callback ){
+							SMS.send({
+								_key : 'resend_otp',
+								_to : _user.v_phone,
+								_lang : User.lang( _user ),
+								_keywords : {
+									'[user_name]' : _user.v_name,
+									'[otp]' : v_otp,
+								},
+							}, function( succ, err_info ){
+								callback( null );
+							});
+						},
+						
+					], function( error, results ){
+						
+						gnrl._api_response( res, 2, 'err_not_verified', {
+							'id' 		: _user.id,
+							'phone' 	: _user.v_phone,
+						});
+						
+					});
+					
+				}
+				else{
+					
+					callback( null );
+					
+				}
 				
-				var _ins = {
-					'v_token' 		 : v_token,
-					'v_device_token' : v_device_token,
-					'd_last_login' 	 : gnrl._db_datetime(),
-				};
+			},
+			
+			// If verified 
+			function( callback ){
 				
-				dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){ 
-					if( !status ){
-						gnrl._api_response( res, 0, _message, {} );
-					}
-					else{
-						callback( null );
-					}
+				async.series([
+						
+					// Make Login
+					function( callback ){
+						v_token = md5( _user.id+'-'+gnrl._db_datetime() );
+						var _ins = {
+							'v_token' 		 : v_token,
+							'v_device_token' : v_device_token,
+							'd_last_login' 	 : d_last_login,
+						};
+						dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){ 
+							if( !status ){
+								gnrl._api_response( res, 0, _message, {} );
+							}
+							else{
+								callback( null );
+							}
+						});
+					},
+					
+					// Take Login Log
+					function( callback ){
+						User.startLog( _user.id, _user.v_role, 'login', function( status, data ){
+							callback( null );
+						});
+					},
+					
+				], function( error, results ){
+					
+					callback( null );
+					
 				});
 				
 			},
+			
 		], 
+		
 		function( error, results ){
-			gnrl._api_response( res, 1, 'succ_login_successfully', {
-				'id' 		: _user.id,
-				'v_token' 	: v_token,
-				'lang'      : _user.l_data.lang,
-			});
+			delete _user.v_password;
+			_user.v_token = v_token;
+			_user.lang = User.lang( _user );
+			gnrl._api_response( res, 1, 'succ_login_successfully', _user );
 		});
 
 	}

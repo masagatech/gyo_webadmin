@@ -38,7 +38,8 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
-                    $dclass->delete( $table ," id = '".$id."'");
+                    $ins = array('i_delete'=>'1');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
                     $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
@@ -264,11 +265,17 @@ $gnrl->check_login();
 										LOWER(e_status) like LOWER('%".$keyword."%')
 									)";
 	                            }
-	                            
+	                            $checked="";
+                                if( isset( $_REQUEST['deleted'] ) ){
+                                    $wh .= " AND i_delete='1'";
+                                    $checked="checked";
+                                }else{
+                                    $wh .= " AND i_delete='0'";
+                                }
 	                          	$ssql = "SELECT * FROM ".$table." WHERE true ".$wh;
 	                               
-	                            $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'i_order';
-	                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'DESC' : 'ASC';
+	                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'i_order' );
+                                $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );
 	                            
 	                            $nototal = $dclass->numRows($ssql);
 	                            $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
@@ -297,20 +304,28 @@ $gnrl->check_login();
 	                                                        <label><?php $pagen->writeLimitBox(); ?></label>
 	                                                    </div>
 	                                                </div>
+	                                                <label style="margin: 20px 20px;">
+                                                        <div class="clearfix"></div> 
+
+                                                        <div class="pull-left" style="">
+                                                            <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                            Show Deleted Data
+                                                        </div>
+                                                    </label>
 	                                                <div class="clearfix"></div>
 	                                            </div>
 	                                        </div>
 	                                        
 	                                        <!-- <?php chk_all('drop');?> -->
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
-	                                            <thead>
-	                                                <tr>
-	                                                    <th width="45%">Name</th>
-	                                                    <th width="10%">Status</th>
-	                                                    <th width="5%">Order</th>
-	                                                    <th width="7%"><span class="">Action</span></th>
-	                                                </tr>
-	                                            </thead>
+	                                        	<?php
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+                                                    'i_order' => array( 'order' => 1, 'title' => 'Order' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?> 
 	                                            <tbody>
 	                                                <?php 
 	                                                if($nototal > 0){
@@ -320,9 +335,7 @@ $gnrl->check_login();
 	                                                    	?>
 	                                                        <tr>
 																<td>
-																	<a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">
-																		<?php echo $row['v_name'];?>
-																	</a>
+																	<?php echo $row['v_name'];?>
 																</td>
 	                                                            <td><?php echo $row['e_status'];?></td>
 	                                                            <td><?php echo $row['i_order'];?></td>

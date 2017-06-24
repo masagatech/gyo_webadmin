@@ -27,7 +27,6 @@ var currentApi = function( req, res, next ){
 		>> Get Last Login Log
 		>> Update User
 		>> Terminate Logs
-		>> 
 		*/
 		
 		var _user = {};
@@ -93,8 +92,6 @@ var currentApi = function( req, res, next ){
 					});
 				}
 			},
-			
-			
 			
 		], function( error, results ){
 			

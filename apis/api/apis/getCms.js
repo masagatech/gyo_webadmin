@@ -25,7 +25,7 @@ var currentApi = function( req, res, next ){
 		gnrl._api_response( res, 0, _message, {} );
 	}
 	else{
-		dclass._select( '*', 'tbl_cms', " AND v_key = '"+key+"' ", function( status, data ){ 
+		dclass._select( '*', 'tbl_cms', " AND i_delete = '0' AND v_key = '"+key+"' ", function( status, data ){ 
 			if( !status ){
 				gnrl._api_response( res, 0, _message );
 			}

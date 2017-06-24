@@ -66,6 +66,7 @@ var currentApi = function( req, res, next ){
 		var staticSettings = 1;
 		var _data = {
 			ride : {},
+			rideBillStr : '',
 		};
 		
 		async.series([
@@ -136,6 +137,16 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
+			
+			// Get Charges STR
+			function( callback ) {
+				Ride.getChargesTableStr( i_ride_id, function( bill_table ){
+					_data.rideBillStr = bill_table;
+					callback( null );
+				});
+			},
+			
+			
 			// User Ride Completion Action
 			function( callback ){
 				
@@ -150,6 +161,22 @@ var currentApi = function( req, res, next ){
 							_keywords : {
 								'[user_name]' : _data.user.v_name,
 								'[i_ride_id]' : i_ride_id,
+								'[ride_pin]' : _data.ride.v_pin,
+								'[ride_code]' : _data.ride.v_ride_code,
+								'[ride_total]' : _data.ride.l_data.final_amount,
+								'[ride_total_time]' : _data.ride.l_data.trip_time_in_min,
+								'[ride_discount]' : _data.ride.l_data.promocode_code_discount,
+								'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_start ) ),
+								'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_end ) ),
+								'[ride_start_address]' : _data.ride.l_data.pickup_address,
+								'[ride_end_address]' : _data.ride.l_data.destination_address,
+								'[ride_distance]' : _data.ride.l_data.actual_distance,
+								'[ride_promocode_code]' : _data.ride.l_data.promocode_code,
+								'[ride_payment_method]' : _data.ride.l_data.payment_mode,
+								'[ride_bill_table]' : _data.rideBillStr,
+								'[city]' : _data.ride.l_data.city,
+								'[driver_name]' : _data.driver.v_name,
+								
 							},
 						}, function( error_mail, error_info ){
 							callback( null );
@@ -166,6 +193,21 @@ var currentApi = function( req, res, next ){
 							_keywords : {
 								'[user_name]' : _data.user.v_name,
 								'[i_ride_id]' : i_ride_id,
+								'[ride_pin]' : _data.ride.v_pin,
+								'[ride_code]' : _data.ride.v_ride_code,
+								'[ride_total]' : _data.ride.l_data.final_amount,
+								'[ride_total_time]' : _data.ride.l_data.trip_time_in_min,
+								'[ride_discount]' : _data.ride.l_data.promocode_code_discount,
+								'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_start ) ),
+								'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_end ) ),
+								'[ride_start_address]' : _data.ride.l_data.pickup_address,
+								'[ride_end_address]' : _data.ride.l_data.destination_address,
+								'[ride_distance]' : _data.ride.l_data.actual_distance,
+								'[ride_promocode_code]' : _data.ride.l_data.promocode_code,
+								'[ride_payment_method]' : _data.ride.l_data.payment_mode,
+								'[city]' : _data.ride.l_data.city,
+								
+								'[driver_name]' : _data.driver.v_name,
 							},
 						}, function( status, error_info ){
 							callback( null );
@@ -237,7 +279,6 @@ var currentApi = function( req, res, next ){
 						function( callback ){
 							User.get( referral_user_id, function( status, data ){
 								referral_user = data[0];
-								_p( '----------------', 'Get Referral User' );
 								callback( null );
 							});
 						},
@@ -246,7 +287,6 @@ var currentApi = function( req, res, next ){
 						function( callback ){
 							Wallet.get( referral_user_id, 'user', function( status, wallet ){
 								referral_wallet = wallet;
-								_p( '----------------', 'Get Referral Wallet' );
 								callback( null );
 							});
 						},
@@ -267,7 +307,6 @@ var currentApi = function( req, res, next ){
 								},
 							};
 							Wallet.addTransaction( _ins, function( status, data ){ 
-								_p( '----------------', 'Add To Referral Wallet' );
 								callback( null );
 							});
 							
@@ -276,7 +315,6 @@ var currentApi = function( req, res, next ){
 						// Refresh Wallet
 						function( callback ){
 							Wallet.refreshUserWallet( referral_user_id, function( status, data ){ 
-								_p( '----------------', 'Refresh Wallet' );
 								callback( null );
 							});
 						},
@@ -293,7 +331,6 @@ var currentApi = function( req, res, next ){
 									'[from]' : Wallet.getPaymentModeName( 'referral' ),
 								},
 							}, function( error_sms, error_info ){
-								_p( '----------------', 'Send SMS ' );
 								callback( null );
 							});
 						},
@@ -310,7 +347,6 @@ var currentApi = function( req, res, next ){
 									'[from]' : Wallet.getPaymentModeName( 'referral' ),
 								},
 							}, function( error_mail, error_info ){
-								_p( '----------------', 'Send Email ' );
 								callback( null );
 							});
 						},
@@ -326,7 +362,6 @@ var currentApi = function( req, res, next ){
 								})+"' "
 							];
 							dclass._updateJsonb( 'tbl_user', _ins, " AND id = '"+_data.user.id+"' ", function( status, data ){ 
-								_p( '----------------', 'Update Current User' );
 								callback( null );
 							});
 						},
@@ -338,7 +373,6 @@ var currentApi = function( req, res, next ){
 					});
 				}
 				else{
-					_p( '----------------', 'No Referral' );
 					callback( null );
 				}
 			},

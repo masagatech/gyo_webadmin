@@ -100,6 +100,8 @@ var currentApi = function( req, res, next ){
 		
 		var folder = 'drivers';
 		
+		var cityCode = '';
+		
 		if( err ){
 			gnrl._remove_loop_file( fs, fileArr );
 			gnrl._api_response( res, 0, 'error_file_upload' );
@@ -150,7 +152,7 @@ var currentApi = function( req, res, next ){
 							'v_image' 			: fileArr['v_image'].name,
 							'v_email' 			: v_email,
 							'v_phone' 			: v_phone,
-							'v_gender' 			: v_gender,
+							'v_gender' 			: v_gender.toLowerCase(),
 							'v_imei_number' 	: v_imei_number,
 							'is_onduty'			: 0,
 							'is_onride' 		: 0,
@@ -216,6 +218,30 @@ var currentApi = function( req, res, next ){
 
 								
 							}
+						});
+					},
+					
+					
+					// Get City
+					function( callback ){
+						City.get( i_city_id, function( status, city ){
+							if( status && city.length ){
+								cityCode = city[0].v_code;
+								callback( null );
+							}
+							else{
+								callback( null );
+							}
+						});
+					},
+					
+					// Generate ID
+					function( callback ){
+						var _ins = { 
+							'v_id' : cityCode+''+gnrl._pad_left( _user_insert.id, "00000" ),
+						};
+						dclass._update( 'tbl_user', _ins, " AND id = '"+_user_insert.id+"' ", function( status, updated ){ 
+							callback( null );
 						});
 					},
 					

@@ -6,16 +6,16 @@
         	<?php echo nl2br( $gnrl->getSettings('NOTICE_BOARD') ); ?>
         </div>
 		
-		<h2 style="max-width:80%;" ><?php echo $page_title;?></h2>
-		
-        <!--
+		<h2 style="max-width:80%;" >
+			<?php echo $page_title;?>
+		</h2>
+		<!--
         <ol class="breadcrumb">
             <li><a href="#">Home</a></li>
             <li><a href="#">Tables</a></li>
             <li class="active">DataTables</li>
         </ol>
         -->
-		
     </div> 
     
     <script type="text/javascript" >

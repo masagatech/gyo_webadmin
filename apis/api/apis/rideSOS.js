@@ -140,9 +140,20 @@ var currentApi = function( req, res, next ){
 					_key 		: 'ride_alert_sos',
 					_keywords 	: {
 						'[city]' : city,
-						'[i_ride_id]' : _ride.v_ride_code+' ('+i_ride_id+')',
-						'[user_name_id]' : _user.v_name+' ('+_user.v_phone+')',
-						'[driver_name_id]' : _driver.v_name+' ('+_driver.v_phone+')',
+						
+						'[user_id]' : _user.id,
+						'[user_name]' : _user.v_name,
+						'[user_email]' : _user.v_email,
+						'[user_phone]' : _user.v_phone,
+						
+						'[driver_id]' : _driver.id,
+						'[driver_name]' : _driver.v_name,
+						'[driver_email]' : _driver.v_email,
+						'[driver_phone]' : _driver.v_phone,
+						
+						'[ride_code]' : _ride.v_ride_code,
+						'[i_ride_id]' : i_ride_id,
+						
 					},
 				};
 				SMS.send( params, function( error_mail, error_info ){
@@ -158,10 +169,20 @@ var currentApi = function( req, res, next ){
 					_lang 		: _lang,
 					_key 		: 'ride_alert_sos',
 					_keywords 	: {
-						'[user_name]' : _admin.v_name,
+						'[city]' : city,
+						
+						'[user_id]' : _user.id,
+						'[user_name]' : _user.v_name,
+						'[user_email]' : _user.v_email,
+						'[user_phone]' : _user.v_phone,
+						
+						'[driver_id]' : _driver.id,
+						'[driver_name]' : _driver.v_name,
+						'[driver_email]' : _driver.v_email,
+						'[driver_phone]' : _driver.v_phone,
+						
+						'[ride_code]' : _ride.v_ride_code,
 						'[i_ride_id]' : i_ride_id,
-						'[user_name_id]' : _ride.user_v_name+'('+_ride.i_user_id+')',
-						'[driver_name_id]' : _ride.driver_v_name+'('+_ride.i_driver_id+')',
 					},
 				};
 				Email.send( params, function( error_mail, error_info ){

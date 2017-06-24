@@ -93,6 +93,12 @@ $gnrl->check_login();
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
             }
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
+            }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
                 if(1){
@@ -192,13 +198,6 @@ $gnrl->check_login();
                                         </a>
                                     <?php } ?>
 								<?php } ?>
-
-                                <?php 
-                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
-                                        <a href="<?php echo $page ?>.php" class="fright" >
-                                            <button class="btn btn-primary" type="button">Clear Search</button>
-                                        </a>
-                                <?php } ?>
                             </h3>
                         </div>
                         <?php if( ($script == 'add' || $script == 'edit') && 1 ){?>
@@ -208,7 +207,7 @@ $gnrl->check_login();
                                         <div class="content">
                                             <div class="form-group">
                                                <div class="form-group">
-                                                    <label>Name</label>
+                                                    <label>Name <?php echo $gnrl->getAstric(); ?></label>
                                                     <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name ?>" required />
                                                 </div>
                                             </div>
@@ -216,8 +215,8 @@ $gnrl->check_login();
                                                     foreach( $globLangArr as $_langK => $_langV ){$key = 'j_title';
                                                         ?>
                                                         <div class="form-group"> 
-                                                            <label>Notification Title (<?php echo $_langV?>)</label>
-                                                            <input name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" value="<?php echo $j_title[$_langK];?>" />
+                                                            <label>Notification Title (<?php echo $_langV?>) <?php echo $gnrl->getAstric(); ?></label>
+                                                            <input name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" value="<?php echo $j_title[$_langK];?>" required />
                                                         </div>
                                                          <?php
                                                 } ?>
@@ -226,8 +225,8 @@ $gnrl->check_login();
                                                         ?>
                                                         <?php $key = 'j_content'; ?>
                                                         <div class="form-group"> 
-                                                            <label>Notification Content (<?php echo $_langV?>)</label>
-                                                            <textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control"><?php echo $j_content[$_langK];?></textarea>
+                                                            <label>Notification Content (<?php echo $_langV?>) <?php echo $gnrl->getAstric(); ?></label>
+                                                            <textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" required><?php echo $j_content[$_langK];?></textarea>
                                                         </div>
                                                          <?php
                                                 } ?>
@@ -505,10 +504,15 @@ $gnrl->check_login();
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
                                                                 <div class="clearfix"></div>
-                                                                 <div class="pull-right" style="">
-                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
-                                                                    Show Deleted Data
+                                                                     <div class="pull-right" style="">
+                                                                        <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                        Show Deleted Data
                                                                 </div>
+                                                                <div class="clearfix"></div>
+                                                                <?php 
+                                                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
+                                                                            <a href="<?php echo $page ?>.php" class="fright" style="" > Clear Search </a>
+                                                                <?php } ?>
                                                             </label>
                                                         </div>
                                                     </div>
@@ -547,10 +551,19 @@ $gnrl->check_login();
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                            <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="<?php echo $page?>.php?script=send_noti&id=<?php echo $row['id'];?>">Send Notification</a></li>
-                                                                            <li><a href="<?php echo $page?>.php?a=4&script=view&id=<?php echo $row['id'];?>">View</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                    <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  
+                                                                                }else{ ?>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?script=send_noti&id=<?php echo $row['id'];?>">Send Notification</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?a=4&script=view&id=<?php echo $row['id'];?>">View</a></li>
+                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
+                                                                            ?>
+                                                                            
                                                                         </ul>
                                                                     </div>
                                                                 </td>

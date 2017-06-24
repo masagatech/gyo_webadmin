@@ -2,114 +2,132 @@
 include('includes/configuration.php');
 $gnrl->check_login();
 
-	extract( $_POST );
-	$page_title = "Manage User";
-	$page = "user";
-	$table = 'tbl_user';
-	$title2 = 'User';
-	$v_role ='user';
+    extract( $_POST );
+    $page_title = "Manage User";
+    $page = "user";
+    $table = 'tbl_user';
+    $title2 = 'User';
+    $v_role ='user';
     $folder='users';
-	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
+    $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
+    
 	
-	## Insert Record in database starts
-	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
-		
+    
+    ## Insert Record in database starts
+    if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
         $email_exit = $dclass->select('*',$table," AND v_email = '".$v_email."'");
-        
-        if(count($email_exit) && !empty($email_exit)){
+        $phone_exit = $dclass->select('*',$table," AND v_phone = '".$v_phone."'");
+        if( count( $email_exit ) && $email_exit != '' ){
             
-             $gnrl->redirectTo($page.".php?succ=0&script=add&msg=email_exit");
-        }else{
+            $gnrl->redirectTo($page.".php?succ=0&script=add&msg=emailexists");
+        }
+        else if( count( $phone_exit ) && $phone_exit != ''){
+            $gnrl->redirectTo($page.".php?succ=0&script=add&msg=phoneexists");
+        }
+        else{
 
              if(isset($_FILES['v_image']) && $_FILES['v_image']['name'] != ''){
                 $dest = UPLOAD_PATH.$folder."/";
                 
                 $file_name = $gnrl->removeChars( time().'-'.$_FILES['v_image']['name'] ); 
-                if( move_uploaded_file( $_FILES['v_image']['tmp_name'], $dest.$file_name ) ){
+                $imageFileType = pathinfo($file_name,PATHINFO_EXTENSION);
+                if($imageFileType == "jpg" && $imageFileType == "png" && $imageFileType == "jpeg"
+                && $imageFileType == "gif" ) {
+                    if( move_uploaded_file( $_FILES['v_image']['tmp_name'], $dest.$file_name ) ){
                     // $ins['v_image'] = $file_name;
+                    }
+                }else{
+                    $gnrl->redirectTo($page.".php?succ=0&msg=imagetype");
                 }
+                
              }
             $ins = array(
                 'v_name'  => $v_name,
                 'v_email' =>$v_email,
                 'v_phone'   => $v_phone,
-                'v_password'  => $v_password ? md5($v_password):'',
                 'v_role'=> $v_role,
                 'v_image' => $file_name ? $file_name : '',
                 'v_gender' => $v_gender,
+                'v_imei_number' =>$v_imei_number,
                 'e_status' => $e_status ,
                 'd_added' => date('Y-m-d H:i:s'),
                 'd_modified' => date('Y-m-d H:i:s')
             );
+			if($v_password){
+				$ins['v_password'] = md5($v_password);
+			}
             // exit;
             $id = $dclass->insert( $table, $ins );
             $gnrl->redirectTo($page.".php?succ=1&msg=add");
         }
-		
-	}
+        
+    }
 
-	## Delete Record from the database starts
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
-			$id = $_REQUEST['id'];
-			if($_REQUEST['chkaction'] == 'delete' ) {
+    ## Delete Record from the database starts
+    if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
+        if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+            $id = $_REQUEST['id'];
+            if($_REQUEST['chkaction'] == 'delete' ) {
                 if( 1 ){
-    				$ins = array('i_delete'=>'1');
+                    $ins = array('i_delete'=>'1');
                     $dclass->update( $table, $ins, " id = '".$id."'");
-    				$gnrl->redirectTo($page.".php?succ=1&msg=del");
+                    $gnrl->redirectTo($page.".php?succ=1&msg=del");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
-			}
-			// make records active
-			else if($_REQUEST['chkaction'] == 'active'){
+            }
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
+            }
+            // make records active
+            else if($_REQUEST['chkaction'] == 'active'){
                  if( 1 ){
-    				$ins = array('e_status'=>'active');
-    				$dclass->update( $table, $ins, " id = '".$id."'");
-    				$gnrl->redirectTo($page.".php?succ=1&msg=multiact");
+                    $ins = array('e_status'=>'active');
+                    $dclass->update( $table, $ins, " id = '".$id."'");
+                    $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
                  }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                  }
-			}
-			// make records inactive
-			else if($_REQUEST['chkaction'] == 'inactive'){
+            }
+            // make records inactive
+            else if($_REQUEST['chkaction'] == 'inactive'){
                 if( 1 ){
-    				$ins = array( 'e_status' => 'inactive' );
-    				$dclass->update( $table, $ins, " id = '".$id."'");
-    				$gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
+                    $ins = array( 'e_status' => 'inactive' );
+                    $dclass->update( $table, $ins, " id = '".$id."'");
+                    $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
-			}
-		}	
-	}
-	
-	## Edit Process
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
+            }
+        }   
+    }
+    
+    ## Edit Process
+    if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
         // _P($_REQUEST);
         // _P($_FILES);
         // exit;
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+        if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 
-			$id = $_REQUEST['id'];
-			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
-                $email_exit = $dclass->select('*',$table," AND id != ".$id." AND v_email = '".$v_email."'");
-               
-                if(count($email_exit) && !empty($email_exit)){
-                     $gnrl->redirectTo($page.'.php?succ=0&msg=email_exit&a=2&script=edit&id='.$_REQUEST['id']);
-                }else{
+            $id = $_REQUEST['id'];
+            if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
+                
+                
+                $email_exit = $dclass->select( '*', $table, " AND id != '".$id."' AND v_email = '".$v_email."' " );
+                $phone_exit = $dclass->select('*', $table," AND id != '".$id."' AND v_phone = '".$v_phone."'");
+                if( count( $email_exit ) && $email_exit != '' ){
+                    $gnrl->redirectTo($page.'.php?succ=0&msg=emailexists&a=2&script=edit&id='.$_REQUEST['id']);
+                }
+                else if( count( $phone_exit ) && $phone_exit != ''){
+                    $gnrl->redirectTo($page.'.php?succ=0&msg=phoneexists&a=2&script=edit&id='.$_REQUEST['id']);
+                }
+                else{
 
                     $ins = array();
-                     if(!empty($v_password)){
-                        #FOR CHECK PASSWORD
-                         $check_pass = $dclass->select('*',$table," AND id = ".$id."");
-                         if(count($check_pass)){
-                            if(md5($v_password) == $check_pass[0]['v_password']){
-                            }else{
-                                $ins['v_password']= md5($v_password);
-                            }
-                         }
-                     }
+                     
                      
                      // exit;
                      if(isset($_FILES['v_image']) && $_FILES['v_image']['name'] != ''){
@@ -126,27 +144,32 @@ $gnrl->check_login();
                     $ins['v_phone'] = $v_phone;
                     $ins['e_status'] = $e_status;
                     $ins['v_gender'] = $v_gender;
-					$ins['v_token'] = $v_token;
+                    $ins['v_token'] = $v_token;
+                    $ins['v_imei_number'] =$v_imei_number;
                     //$ins['l_data'] = json_encode($l_data);
+					if($v_password){
+						$ins['v_password'] = md5($v_password);
+					}
+					
                     $ins['d_modified'] = date('Y-m-d H:i:s');
 
                     $dclass->update( $table, $ins, " id = '".$id."' ");
                     $gnrl->redirectTo($page.'.php?succ=1&msg=edit&a=2&script=edit&id='.$_REQUEST['id']);
                 }
-			}
-			else {
-				$row = $dclass->select('*',$table," AND id = '".$id."'");
+            }
+            else {
+                $row = $dclass->select('*',$table," AND id = '".$id."'");
 
-				$row = $row[0];
+                $row = $row[0];
                 // _P($row);
                 // exit;
-				extract( $row );
+                extract( $row );
                 // $l_data=json_decode($l_data,true);
-			}
-		}
-	}
+            }
+        }
+    }
     
-	
+    
 
 ?>
 <!DOCTYPE html>
@@ -159,12 +182,12 @@ $gnrl->check_login();
 <!-- Fixed navbar -->
 <?php include('inc/header.php');?>
 <div id="cl-wrapper" class="fixed-menu">
-	<?php include('inc/sidebar.php'); ?>
-	<div class="container-fluid" id="pcont">
-		<?php include('all_page_head.php'); ?>
+    <?php include('inc/sidebar.php'); ?>
+    <div class="container-fluid" id="pcont">
+        <?php include('all_page_head.php'); ?>
 
         <div class="cl-mcont">
-        	<?php include('all_alert_msg.php'); ?>
+            <?php include('all_alert_msg.php'); ?>
             <div class="row">
                 <div class="col-md-12">
                     <div class="block-flat">
@@ -176,44 +199,48 @@ $gnrl->check_login();
                                 <a href="<?php echo $page?>.php?script=add" class="fright">
                                     <button class="btn btn-primary" type="button">Add <?php echo ' '.ucfirst( $title2 );?></button>
                                 </a>
-								
-								<?php } ?>
+                                
+                                <?php } ?>
                             </h3>
                         </div>
                         <?php 
                         if( ($script == 'add' || $script == 'edit') && 1 ){
                            
                             ?>
-                        	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
+                            <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="content">
                                             <div class="form-group">
-                                                <label>Name</label>
+                                                <label>Name <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Email</label>
+                                                <label>Email <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="email" class="form-control" id="v_email" name="v_email" value="<?php echo $v_email; ?>" required />
                                             </div>
                                               <div class="form-group">
-                                                <label>Gender</label>
-                                                <select class="select2" name="v_gender" id="v_gender">
+                                                <label>Gender <?php echo $gnrl->getAstric(); ?></label>
+                                                <select class="select2 required" name="v_gender" id="v_gender">
+                                                <option value="">--Select--</option>
                                                     <?php $gnrl->getDropdownList(array('male','female'),$v_gender); ?>
                                                 </select>
                                             </div>
                                             <div class="form-group">
-                                                <label>Phone</label>
+                                                <label>Phone <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_phone" name="v_phone" value="<?php echo $v_phone; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Password</label>
                                                 <?php 
                                                 $required="";
-                                                if($script=='add'){
-                                                    $required='required';
-                                                } ?>
-                                                <input type="password" class="form-control" id="v_password" name="v_password" value="" <?php echo $required ?> />
+                                                if($script=='add'){ ?>
+                                                    
+                                                <label>Password <?php echo $gnrl->getAstric(); ?></label>
+                                                <input type="password" class="form-control" id="v_password" name="v_password" value="" required="" />
+                                               <?php  }else { ?>
+                                                  <label>Password</label>
+                                                  <input type="password" class="form-control" id="v_password" name="v_password" value=""  />
+                                                <?php } ?>
                                             </div>
                                             <div class="form-group">
                                                 <label>Image</label>
@@ -224,9 +251,13 @@ $gnrl->check_login();
                                                     <input type="hidden" name="oldname_v_image" value="<?php echo $v_image; ?>">
                                                 <?php } ?>
                                             </div>
-											<div class="form-group">
+                                            <div class="form-group">
                                                 <label>Login Token</label>
                                                 <input type="text" class="form-control" id="v_token" name="v_token" value="<?php echo $v_token;?>" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>IMEI Number</label>
+                                                <input type="text" class="form-control" id="v_imei_number" name="v_imei_number" value="<?php echo $v_imei_number;?>" />
                                             </div>
                                             <div class="form-group">
                                                 <label>Status</label>
@@ -241,8 +272,8 @@ $gnrl->check_login();
                                         </div>
                                     </div>
                                 </div>
-							</form>
-							<?php 
+                            </form>
+                            <?php 
                         }
                         else{
                             if(1){
@@ -272,6 +303,7 @@ $gnrl->check_login();
                                        LOWER(v_role) like LOWER('%".$keyword."%')  OR
                                        LOWER(v_phone) like LOWER('%".$keyword."%')  OR
                                          LOWER(e_status) like LOWER('%".$keyword."%')
+										 OR LOWER(v_id) like LOWER('%".$keyword."%')
                                     )";
                                 }
                                 if( isset( $_REQUEST['deleted'] ) ){
@@ -329,19 +361,20 @@ $gnrl->check_login();
                                             </div>
                                             
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
-											
-												<?php
-												
-												echo $gnrl->renderTableHeader(array(
-													'v_name' => array( 'order' => 1, 'title' => 'Name' ),
-													'v_email' => array( 'order' => 1, 'title' => 'Email' ),
-													'v_phone' => array( 'order' => 1, 'title' => 'Phone' ),
-													'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
-													'e_status' => array( 'order' => 1, 'title' => 'Status' ),
-													'action' => array( 'order' => 0, 'title' => 'Action' ),
-												));
-												?>
-											
+                                            
+                                                <?php
+                                                
+                                                echo $gnrl->renderTableHeader(array(
+                                                    'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+													'v_id' => array( 'order' => 1, 'title' => 'ID' ),
+                                                    'v_email' => array( 'order' => 1, 'title' => 'Email' ),
+                                                    'v_phone' => array( 'order' => 1, 'title' => 'Phone' ),
+                                                    'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
+                                                    'e_status' => array( 'order' => 1, 'title' => 'Status' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                                ?>
+                                            
                                                
                                                 <tbody>
                                                     <?php 
@@ -353,6 +386,7 @@ $gnrl->check_login();
                                                             <tr>
                                                                 
                                                                 <td><?php echo $row['v_name']; ?></td>
+																<td><?php echo $row['v_id']; ?></td>
 
                                                                 <td><?php echo $row['v_email'];?></td>
                                                                 
@@ -369,10 +403,18 @@ $gnrl->check_login();
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                            <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                    <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  
+                                                                                }else{ ?>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
+                                                                            ?>
+                                                                           
                                                                         </ul>
                                                                     </div>
 
@@ -412,12 +454,12 @@ $gnrl->check_login();
                             } 
                             else{}
                         }
-						?>
+                        ?>
                     </div>
                 </div>
             </div>
         </div>
-	</div>
+    </div>
 </div>
 <?php include('_scripts.php');?>
 <?php include('jsfunctions/jsfunctions.php');?>

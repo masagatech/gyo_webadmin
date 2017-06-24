@@ -44,7 +44,7 @@ $gnrl->check_login();
 			$id = $dclass->insert( $table, $ins );
 			$filesArray = array(
 				'list_icon',
-				'active_icon',
+				
 				'plotting_icon',
 			);
 			$keyVal = array();
@@ -80,6 +80,12 @@ $gnrl->check_login();
 					$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
 				}
 			}
+			// make records restore
+	        if($_REQUEST['chkaction'] == 'restore') {
+	            $ins = array('i_delete'=>'0');
+	            $dclass->update( $table, $ins, " id = '".$id."'");
+	            $gnrl->redirectTo($page.".php?succ=1&msg=del");
+	        }
 			// make records active
 			else if($_REQUEST['chkaction'] == 'active'){
 				if(1){
@@ -138,7 +144,7 @@ $gnrl->check_login();
 					$ins = array();
 					$filesArray = array(
 						'list_icon',
-						'active_icon',
+						
 						'plotting_icon',
 					);
 					$keyVal = array();
@@ -221,16 +227,18 @@ $gnrl->check_login();
                                         	<div class="row">
 		                                        <div class="col-md-12">
 		                                        	<div class="form-group">
-		                                        	   <label>Select City</label>
-		                                               <select class="select2" name="i_city_id" id="i_city_id">
+		                                        	   <label>Select City <?php echo $gnrl->getAstric(); ?></label>
+		                                               <select class="select2 required" name="i_city_id" id="i_city_id">
+		                                               		<option value=""> --Select-- </option>
 		                                                    <?php $gnrl->getCityDropdownList($i_city_id); ?>
 		                                                </select> 
 		                                            </div>
 		                                        </div>
 		                                        <div class="col-md-12">
 		                                            <div class="form-group">
-		                                                <label>Vehicle Type</label>
-		                                                <select class="select2" name="i_vehicle_type_id" id="i_vehicle_type_id">
+		                                                <label>Vehicle Type <?php echo $gnrl->getAstric(); ?></label>
+		                                                <select class="select2 required" name="i_vehicle_type_id" id="i_vehicle_type_id" required="">
+		                                                <option value=""> --Select-- </option>
 		                                                 <?php $gnrl->getVehicleTypeDropdownList($i_vehicle_type_id); ?>
 		                                                </select> 
 		                                            </div>
@@ -244,23 +252,23 @@ $gnrl->check_login();
 														<div class="row">
 															<div class="col-md-5">
 																<?php $key = "area_name"; ?>
-																<label>Area Name</label>
-																<input class="form-control" type="text" name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>" />
+																<label>Area Name <?php echo $gnrl->getAstric(); ?></label>
+																<input class="form-control" type="text"  name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>" required="" />
 															</div>
 															<div class="col-md-2">
 																<?php $key = "latitude"; ?>
-																<label>Latitude</label>
-																<input class="form-control" type="text" name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>" />
+																<label>Latitude <?php echo $gnrl->getAstric(); ?></label>
+																<input class="form-control" type="text" name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>" required="" />
 															</div>
 															<div class="col-md-2">
 																<?php $key = "longitude"; ?>
-																<label>Longitude</label>
-																<input class="form-control" type="text" name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>" />
+																<label>Longitude <?php echo $gnrl->getAstric(); ?></label>
+																<input class="form-control" type="text" name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>" required="" />
 															</div>
 															<div class="col-md-3">
 																<?php $key = "cover_area"; ?>
-																<label>Cover Area (In Km)</label>
-																<input class="form-control" type="text" name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>" />
+																<label>Cover Area (In Km) <?php echo $gnrl->getAstric(); ?></label>
+																<input class="form-control" type="text" name="l_data[geo][<?php echo $key;?>]" value="<?php echo $l_data['geo'][$key];?>"  required="" />
 															</div>
 														</div>
 													</div>
@@ -272,19 +280,19 @@ $gnrl->check_login();
 													<h3>Date Range</h3>
 													<div class="row" style="margin-top:0;" >
 														<div class="form-group col-md-6">
-															<label>From Date</label>
+															<label>From Date <?php echo $gnrl->getAstric(); ?></label>
 															<?php $key = "start_date"; ?> 
 															<div class="input-group date datetime" data-min-view="2" data-date-format="yyyy-mm-dd" data-link-field="dtp_input1">
 																<span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
-																<input class="form-control" type="text" name="l_data[dates][<?php echo $key; ?>]" value="<?php echo $l_data['dates'][$key];?>" readonly />
+																<input class="form-control" type="text" name="l_data[dates][<?php echo $key; ?>]" value="<?php echo $l_data['dates'][$key];?>" required readonly />
 															</div>
 														</div>
 														<div class="form-group col-md-6">
-															<label>End Date</label>
+															<label>End Date <?php echo $gnrl->getAstric(); ?></label>
 															<?php $key="end_date"; ?> 
 															<div class="input-group date datetime" data-min-view="2" data-date-format="yyyy-mm-dd" data-link-field="dtp_input1">
 																<span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
-																<input class="form-control" type="text" name="l_data[dates][<?php echo $key; ?>]" value="<?php echo $l_data['dates'][$key];?>" readonly />
+																<input class="form-control" type="text" name="l_data[dates][<?php echo $key; ?>]" value="<?php echo $l_data['dates'][$key];?>" required readonly />
 															</div>		
 														</div>
 													</div>
@@ -293,19 +301,19 @@ $gnrl->check_login();
 													<h3>Timing Hours</h3>
 													<div class="row" style="margin-top:0;" >
 														<div class="form-group col-md-6">
-															<label>From Hours</label>
+															<label>From Hours <?php echo $gnrl->getAstric(); ?></label>
 															<?php $key = "start_hour"; ?> 
 															<div class="input-group date datetime" data-start-view="1" data-date="" data-date-format="hh:ii" data-link-field="dtp_input1">
 																<span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
-																<input class="form-control" type="text"  id="l_data[hours][<?php echo $key;?>]" name="l_data[hours][<?php echo $key; ?>]" value="<?php echo $l_data['hours'][$key];?>" readonly />
+																<input class="form-control" type="text"  id="l_data[hours][<?php echo $key;?>]" name="l_data[hours][<?php echo $key; ?>]" value="<?php echo $l_data['hours'][$key];?>" required="" readonly />
 															</div>
 														</div>
 														<div class="form-group col-md-6">
-															<label>End Hours</label>
+															<label>End Hours <?php echo $gnrl->getAstric(); ?></label>
 															<?php $key="end_hour"; ?> 
 															<div class="input-group date datetime" data-start-view="1" data-date="" data-date-format="hh:ii" data-link-field="dtp_input1">
 																<span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
-																<input class="form-control" type="text"  id="l_data[hours][<?php echo $key;?>]" name="l_data[hours][<?php echo $key; ?>]" value="<?php echo $l_data['hours'][$key];?>" readonly />
+																<input class="form-control" type="text"  id="l_data[hours][<?php echo $key;?>]" name="l_data[hours][<?php echo $key; ?>]" value="<?php echo $l_data['hours'][$key];?>" required="" readonly />
 															</div>		
 														</div>
 													</div>
@@ -314,7 +322,7 @@ $gnrl->check_login();
 											
 											<div class="row" >
 												<div class="col-md-12">
-													<h3>Select Days</h3>
+													<h3>Select Days <?php echo $gnrl->getAstric(); ?></h3>
 													<div class="row" >
 														<?php
 														$dayArr = array(
@@ -331,7 +339,7 @@ $gnrl->check_login();
 																<div class="radio"> 
 																	<label class="">
 																		<div class="icheckbox_square-blue checkbox" style="position: relative;" aria-checked="" aria-disabled="false">
-																			<input name="l_data[days][]" class="icheck" value="<?php echo $rowDay?>" style="position: absolute; opacity: 0;" type="checkbox" <?php echo in_array( $rowDay, $l_data['days'] ) ? 'checked' : ''?> >
+																			<input name="l_data[days][]" class="icheck" value="<?php echo $rowDay?>" style="position: absolute; opacity: 0;" type="checkbox" <?php echo in_array( $rowDay, $l_data['days'] ) ? 'checked' : ''?> required="">
 																			<ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255) none repeat scroll 0% 0%; border: 0px none; opacity: 0;"></ins>
 																		</div> 
 																		&nbsp; <?php echo $rowDay?>
@@ -346,7 +354,7 @@ $gnrl->check_login();
 											<div class="row">
 												<div class="col-md-12">
 													<div class="form-group">
-														<h3>Show Estimate Charge</h3>
+														<h3>Show Estimate Charge </h3>
 														<?php $key = "i_show_estimate_charge"; ?>
 														<select class="select2" name="l_data[charges][<?php echo $key; ?>]" id="i_show_estimate_charge">
 															<?php echo $gnrl->get_keyval_drop($globalShowEstimateCharge,$l_data['charges'][$key]); ?>
@@ -356,7 +364,7 @@ $gnrl->check_login();
 											</div>
 											<div class="row">
 												<div class="col-md-12">
-													<h3>Ride Charges</h3>
+													<h3>Ride Charges </h3>
 													<div class="row" >
 														<div class="col-md-12">
 															<?php 
@@ -366,8 +374,8 @@ $gnrl->check_login();
 																}
 																?>
 																<div class="form-group">
-																	<label><?php echo $chargeVal;?></label>
-																	<input type="text" class="form-control" name="l_data[charges][<?php echo $chargeKey;?>]" value="<?php echo $l_data['charges'][$chargeKey];?>"  />
+																	<label><?php echo $chargeVal;?> <?php echo $gnrl->getAstric(); ?></label>
+																	<input type="text" class="form-control" name="l_data[charges][<?php echo $chargeKey;?>]" value="<?php echo $l_data['charges'][$chargeKey];?>" required=""  />
 																</div> <?php 
 															}?>		
 														</div>
@@ -377,14 +385,14 @@ $gnrl->check_login();
 											
 											<div class="row">
 												<div class="col-md-12">
-													<h3>Other Settings</h3>
+													<h3>Other Settings </h3>
 													<div class="row" >
 														<div class="col-md-12">
 															<?php 
 															foreach( $globalVehicleOtherSettings as $rowK => $rowV ) { ?>
 																<div class="form-group">
-																	<label><?php echo $rowV;?></label>
-																	<input type="text" class="form-control" name="l_data[other][<?php echo $rowK;?>]" value="<?php echo $l_data['other'][$rowK];?>"  />
+																	<label><?php echo $rowV;?> <?php echo $gnrl->getAstric(); ?></label>
+																	<input type="text" class="form-control" name="l_data[other][<?php echo $rowK;?>]" value="<?php echo $l_data['other'][$rowK];?>" required=""  />
 																</div> <?php 
 															}?>		
 														</div>
@@ -544,7 +552,7 @@ $gnrl->check_login();
 																</td>
 																<td><?php echo $row['e_status'];?></td>
 																<td><?php echo $row['d_added'];?></td>
-																<td class="text-right" >
+																<td class="text-right" style="width: 15%">
 																	
 	                                                                <div class="btn-group">
 	                                                                    <button class="btn btn-default btn-xs" type="button">Actions</button>
@@ -552,11 +560,17 @@ $gnrl->check_login();
 	                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
 	                                                                    </button>
 	                                                                    <ul role="menu" class="dropdown-menu pull-right">
-	                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-	                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-	                                    									<!--  <li><a href="<?php echo $page;?>.php?a=4&script=citywise&id=<?php echo $row['id'];?>">Manage City Wise</a></li> -->
+	                                                                    	<?php
+	                                                                           if(isset($_REQUEST['deleted'])){ ?>
+	                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+	                                                                            <?php  
+	                                                                            }else{ ?>
+	                                                                               <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+	                                                                        	   <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+	                                                                               <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+	                                                                               <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+	                                                                            <?php }
+	                                                                        ?>
 	                                                                    </ul>
 	                                                                </div>
 	                                                            </td>

@@ -26,15 +26,11 @@ var currentApi = function( req, res, next ){
 		gnrl._api_response( res, 0, _message );
 	}
 	else{
-		dclass._select( '*', 'tbl_ride_charges', " AND i_ride_id = '"+i_ride_id+"' ORDER BY id ASC", function( status, data ){ 
+		Ride.getCharges( i_ride_id, function( status, data ){ 
 			if( !status ){
 				gnrl._api_response( res, 0, 'error', {} );
 			}
 			else{
-				for( var i = 0; i < data.length; i++ ){
-					data[i].display_charge_type = Ride.getAllChargeTypes( data[i]['v_charge_type'] );
-					// display_charge_type
-				}
 				gnrl._api_response( res, 1, '', data );
 			}
 		});

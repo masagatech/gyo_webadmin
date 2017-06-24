@@ -27,6 +27,7 @@ var currentApi = function( req, res, next ){
 	var v_otp 			= gnrl._get_otp();
 	var i_city_id 		= gnrl._is_undf( params.i_city_id, 0 );
 	var refferal_code 	= gnrl._is_undf( params.refferal_code, '' );
+	var v_imei_number 	= gnrl._is_undf( params.v_imei_number );
 	
 	if( !v_name.trim() ){ _status = 0; _message = 'err_req_name'; }
 	if( _status && !v_email.trim() ){ _status = 0; _message = 'err_req_email'; }
@@ -36,6 +37,9 @@ var currentApi = function( req, res, next ){
 	if( _status && !v_password.trim() ){ _status = 0; _message = 'err_req_password'; }
 	if( _status && !validator.isLength( v_password, { min : 6, max : 10 } ) ){ _status = 0; _message = 'err_validation_password'; }
 	if( _status && !v_device_token.trim() ){ _status = 0; _message = 'err_req_device_token'; }
+	if( _status && !v_imei_number.trim() ){ _status = 0; _message = 'err_req_imei_number'; }
+	
+
 	
 	if( _status ){
 		
@@ -46,6 +50,7 @@ var currentApi = function( req, res, next ){
 			>> Check Referral Code is Valid or Not
 			
 			>> Insert User
+			>> Generate ID
 			>> Send SMS
 			>> Send Email
 		*/
@@ -114,7 +119,7 @@ var currentApi = function( req, res, next ){
 					'v_name' 			: v_name,
 					'v_email' 			: v_email,
 					'v_phone' 			: v_phone,
-					'v_gender' 			: v_gender,
+					'v_gender' 			: v_gender.toLowerCase(),
 					'v_password' 		: md5( v_password ),
 					'v_image' 			: '',
 					'v_otp' 			: v_otp,
@@ -122,12 +127,12 @@ var currentApi = function( req, res, next ){
 					'd_modified' 		: gnrl._db_datetime(),
 					'e_status' 			: 'inactive',
 					'v_device_token' 	: v_device_token,
+					'v_imei_number' 	: v_imei_number,
 					'i_city_id' 		: i_city_id,
 					'v_token' 			: '',
 					'l_data'            : gnrl._json_encode({
 						'lang'            	: _lang,
 						'is_otp_verified' 	: 0,
-						
 						'referral_code' 	: refferal_code,
 						'referral_code_id' 	: _code.id ? _code.id : 0,
 						'referral_user_id' 	: _code.i_user_id ? _code.i_user_id : 0,
@@ -143,6 +148,16 @@ var currentApi = function( req, res, next ){
 						_user_insert = user_insert;
 						callback( null );
 					}
+				});
+			},
+			
+			// Generate ID
+			function( callback ){
+				var _ins = { 
+					'v_id' : 'GY'+gnrl._pad_left( _user_insert.id, "000000" ),
+				};
+				dclass._update( 'tbl_user', _ins, " AND id = '"+_user_insert.id+"' ", function( status, updated ){ 
+					callback( null );
 				});
 			},
 			

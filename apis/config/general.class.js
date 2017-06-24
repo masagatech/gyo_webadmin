@@ -54,6 +54,12 @@ var gnrl = {
 		}
 	},
 	
+	_pad_left : function( str, pad ){
+		str = ''+str;
+		pad = ''+pad;
+		return pad.substring( 0, pad.length - str.length ) + str;
+	},
+	
 	// Get Uplods File Path
 	_uploads : function( url ){ 
 		if( url == undefined ) { url = '' }; 
@@ -192,16 +198,25 @@ var gnrl = {
 		DT = DT ? DT : new Date();
 		
 		var	Y = DT.getFullYear();
-		var	M = ''+( DT.getMonth() + 1 );
-		var	D = ''+( DT.getDate() );
-		var	H = ''+( DT.getHours() );
-		var	I = ''+( DT.getMinutes() );
-		var	S = ''+( DT.getSeconds() );
-		if( M.length < 2) M = '0'+M;
-		if( D.length < 2) D = '0'+D;
-		if( H.length < 2) H = '0'+H;
-		if( I.length < 2) I = '0'+I;
-		if( S.length < 2) S = '0'+S;
+		var	M = DT.getMonth() + 1;
+		var	D = DT.getDate();
+		var	H = DT.getHours();
+		var	I = DT.getMinutes();
+		var	S = DT.getSeconds();
+		
+		var hours = H;
+		var minutes = I;
+		var ampm = hours >= 12 ? 'PM' : 'AM';
+		hours = hours % 12;
+		hours = hours ? hours : 12; // the hour '0' should be '12'
+		
+		if( M < 10 ) M = '0'+M;
+		if( D < 10 ) D = '0'+D;
+		if( H < 10 ) H = '0'+H;
+		if( I < 10 ) I = '0'+I;
+		if( S < 10 ) S = '0'+S;
+		if( hours < 10 ) hours = '0'+hours;
+		if( minutes < 10 ) minutes = '0'+minutes;
 		
 		if( format == 'Y-m-d' ){ return Y+'-'+M+'-'+D; }
 		else if( format == 'Y-m-d H:i' ){ return Y+'-'+M+'-'+D+' '+H+':'+I; }
@@ -211,6 +226,8 @@ var gnrl = {
 		else if( format == 'H:i:s' ){ return H+':'+I+':'+S; }
 		else if( format == 'H' ){ return H; }
 		else if( format == 'i' ){ return I; }
+		else if( format == 'Y-m-d h:i A' ){ return Y+'-'+M+'-'+D+' '+hours+':'+minutes+' '+ampm; }
+		else if( format == 'h:i A' ){ return hours+':'+minutes+' '+ampm; }
 		
 		return Y+'-'+M+'-'+D+' '+H+':'+I+':'+S;
 	},
@@ -323,7 +340,7 @@ var gnrl = {
 	_getLangField : function( data, _lang ){
 		var val = '';
 		if( typeof( data ) == 'object' && data != null ){
-			val = data._lang;
+			val = data._lang ? data._lang : data['en'];
 		}
 		return val;
 	},

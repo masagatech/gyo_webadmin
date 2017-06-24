@@ -134,6 +134,152 @@ extract( $_REQUEST );
 			
 			echo $l_data;
 		}
+		
+		
+		if( $mode == "send_mail" ){
+			
+			// $data = $gnrl->prepare_and_send_email();
+			
+			$email_to = "deven.crestinfotech@gmail.com";
+			$email_from = "GoYo <noreply@goyo.in>";
+			$reply_to = "GoYo <noreply@goyo.in>";
+			$email_cc = "";
+			$email_bcc = "";
+			$email_data["subject"] = "Deven Testing";
+			$email_data["email_body"] = "Deven Testing";
+			
+			$data = $gnrl->custom_email( $email_to, $email_from, $reply_to, $email_cc, $email_bcc, $email_data["subject"], $email_data["email_body"], $email_format = "" );
+			_p( $data );
+			
+		}
+
+		if( $mode == "load_driver_warroom" ){
+
+			if( isset( $srch_filter_city ) && $srch_filter_city != '' ){
+				$wh .= " AND i_city_id = '".$srch_filter_city."' ";
+			}
+			if( isset( $srch_filter_type ) && $srch_filter_type != ''){
+				$wh .= " AND LOWER( v.v_type ) like LOWER('".trim( $srch_filter_type )."') ";
+			}
+			if( isset( $srch_on_off ) && $srch_on_off != '' ){
+				if( $srch_on_off == 'online' ){
+					$wh .= " AND ( u.v_token !='' OR u.v_token IS NOT NULL )";
+				}
+				if($srch_on_off == 'offline'){
+					$wh .= " AND ( u.v_token ='' OR u.v_token IS NULL )";
+				}
+			}
+			if( isset( $srch_on_duty ) && $srch_on_duty != '' ){
+				$wh .= " AND ( u.is_onduty = ".$srch_on_duty." )";
+			}
+			
+			if( isset( $srch_on_ride ) && $srch_on_ride != ''){
+				$keyword =  trim( $srch_on_ride );
+				$wh .= " AND ( u.is_onride = ".$keyword." )";
+			}
+			
+			$data = array();
+			
+			
+			
+			if( !$srch_filter_city ){
+			
+				$msg = 'Please Select City.';
+			
+			}
+			else{
+				
+				$ssql = " SELECT 
+				
+					u.v_name,
+					u.v_token,
+					u.v_id,
+					u.is_onduty,
+					u.is_onride,
+					u.l_latitude,
+					u.l_longitude,
+					
+					v.v_name AS vehicle_name,
+					v.v_type AS vehicle_type,
+					v.v_vehicle_number AS vehicle_number
+					
+					FROM tbl_user as u
+						LEFT JOIN tbl_vehicle as v ON u.id = v.i_driver_id
+					WHERE 
+						true 
+						AND u.l_latitude IS NOT NULL 
+						AND u.l_longitude IS NOT NULL 
+						AND u.v_role = 'driver' ".$wh;
+						
+				
+				$restepm = $dclass->query( $ssql );
+				$data = $dclass->fetchResults( $restepm );
+				
+				if( count( $data ) ){
+
+					#SAVE QUERY IN SESSION FOR REPORT GENERATE
+					// unset($_SESSION['report_query']);
+					// unset($_SESSION['warroom']);
+					// exit;
+					$_SESSION['report_query']['warroom']= $ssql;
+					$rowData = array();
+					
+					foreach( $data as $k => $row ){
+						
+						$row['icon'] = '';
+						
+						$row['str'] = array(
+							( $k + 1 ),
+							$row['v_id'],
+							$row['v_name'],
+							$row['vehicle_type'],
+						);
+						
+						if( $row['is_onride'] ){
+							$row['str'][] = 'On Ride';
+							$row['icon'] = 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+						}
+						else if( $row['v_token'] ){
+							$row['str'][] = 'Online';
+							$row['str'][] = $row['is_onduty'] ? 'Available' : 'Not Available';
+							$row['icon'] = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+						}
+						else{
+							$row['str'][] = 'Offline';
+							$row['icon'] = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+						}
+						
+						$row['str'] = implode( ' | ', $row['str'] );
+						
+						unset( $row['v_name'] );
+						unset( $row['v_token'] );
+						unset( $row['v_id'] );
+						unset( $row['is_onduty'] );
+						unset( $row['is_onride'] );
+						unset( $row['vehicle_number'] );
+						unset( $row['vehicle_type'] );
+						unset( $row['vehicle_name'] );
+						
+						$data[$k] = $row;
+					}
+				}
+				
+			}
+			
+			if( !$msg ){
+				$msg = count( $data ) ? '' : 'No records found.';
+			}
+			
+			echo json_encode( array(
+				'status' => count( $data ) ? 1 : 0,
+				'count' => count( $data ),
+				'data' => $data,
+				'msg' => ( $msg ? ( '<h3 style="color:#F00; text-align:center;" >'.$msg.'</h3>' ) : '' ),
+			) ); 
+			exit;
+			
+		}
+		
 		exit;
 	}
 	

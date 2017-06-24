@@ -26,6 +26,16 @@ $mail = new PHPMailer();
 			}
 			return $string;
 		}
+
+		function getKey($string){
+
+			$string= strtolower(str_replace(' ','_',$string));
+			return $string;
+		}
+		function getAstric(){
+		
+			return "<span class='text-danger'>*</span>";
+		}
 		
 		function back(){
 			return "<a href='javascript:history.go(-1);'>Back</a>";
@@ -74,9 +84,6 @@ $mail = new PHPMailer();
 		
 		// For dropdown
 		function getDropdownList($droparray,$selval){
-			// print_r($droparray);
-			// print_r($selval);
-			// exit;
 			$str = '';
 			foreach($droparray as $key => $val){
 				if($selval == $val) { $sel = 'selected="selected"'; }
@@ -221,38 +228,29 @@ $mail = new PHPMailer();
 		}
 		
 		function email( $email_to, $email_from = "", $reply_to = "", $email_cc = "", $email_bcc = "", $email_subject, $email_message, $email_format = "", $attachments = array() ){
-			
-			
 			$email_format = 'html';
 			if( $email_format == 'html' ){
 				$headers  = 'MIME-Version: 1.0' . "\r\n";
 				$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-				
 				if( count( $attachments ) ){
 					$file_name	= $attachments[0][0];
 					$file_path 	= $attachments[0][1];
-					
 					$file = fopen( $file_path, "rb" );
 					$data = fread( $file, filesize( $file_path ) );
 					fclose( $file );
 					$data = chunk_split( base64_encode( $data ) );
-					
 					$boundary = md5(time()); 
 					$headers = "MIME-Version: 1.0\n"."Content-Type: multipart/mixed; boundary=".$boundary."; ";
-					
 					$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-					
 					$mail_attached .= ( "--" . $boundary . "\n"
 					. "Content-Type: binary/octet-stream; name=".$file_name." \n"
 					. "Content-Transfer-Encoding: base64 \n" . $data."\n"
 					. "Content-Disposition: attachment; filename=".$file_name." \n"."--".$boundary."\n" ); 
-					
 					$email_message = ( "--".$boundary."\n".
 					"Content-Type: text/html; charset='UTF-8'\n".
 					"Content-Transfer-Encoding: 8bit \n\n".
 					$email_message." \n\n".$mail_attached );
 				}
-				
 			}
 			
 			$headers .= ( $email_from ? 'From: '.$email_from. "\r\n" : "" );
@@ -262,66 +260,37 @@ $mail = new PHPMailer();
 			
 			return mail( $email_to, $email_subject, $email_message, $headers );
 		}
+		
 		function custom_email( $email_to, $email_from = "", $reply_to = "", $email_cc = "", $email_bcc = "", $email_subject, $email_message, $email_format = "", $attachments = array() ){
+
+			$IS_SMTP 				= MAIL_VIA;
+			$SMTP_FROM_NAME  		= MAIL_FROM_NAME;
+			$SMTP_FROM_EMAIL 		= MAIL_FROM_EMAIL;
+			$SMTP_REPLY_TO_NAME		= MAIL_REPLY_NAME;
+			$SMTP_REPLY_TO_EMAIL	= MAIL_REPLY_EMAIL;
 			
-			$SMTP_FROM_NAME  		= $this->getSettings('SMTP_FROM_NAME');
-			$SMTP_FROM_EMAIL 		= $this->getSettings('SMTP_FROM_EMAIL');
-			$SMTP_REPLY_TO_EMAIL	= $this->getSettings('SMTP_REPLY_TO_EMAIL');
+			$email_from 			= $email_from ? $email_from : ( $SMTP_FROM_NAME.' < '.$SMTP_FROM_EMAIL.' >' );
+			$reply_to 				= $reply_to ? $reply_to : $SMTP_REPLY_TO_EMAIL;
 			
+			$email_subject 	= "=?UTF-8?B?".base64_encode( html_entity_decode( $email_subject, ENT_COMPAT, 'UTF-8' ) )."?=";
 			
-			$email_message = str_replace( "\n", "", $email_message );
-			$email_message = str_replace( "\r", "", $email_message );
-			$email_message = stripslashes( $email_message );
-			
-			$IS_SMTP = $this->getSettings('IS_SMTP');
-			
-			$email_subject = "=?UTF-8?B?".base64_encode( html_entity_decode( $email_subject, ENT_COMPAT, 'UTF-8' ) )."?=";
+			$email_message 	= str_replace( "\n", "", $email_message );
+			$email_message 	= str_replace( "\r", "", $email_message );
+			$email_message 	= stripslashes( $email_message );
 			
 			
 			## SMTP
-			if( $IS_SMTP ){
+			if( $IS_SMTP == 'smtp' ){
 				
 				$mail = new PHPMailer();
 				
 				## < $email_from > is not use for SMTP.
-				$SMTP_HOST 		 	= $this->getSettings('SMTP_HOST');
-				$SMTP_PORT 		 	= $this->getSettings('SMTP_PORT');
-				$SMTP_ENCRYPTION 	= $this->getSettings('SMTP_ENCRYPTION');
-				$SMTP_AUTH 		 	= $this->getSettings('SMTP_AUTH');
-				$SMTP_USERNAME   	= $this->getSettings('SMTP_USERNAME');
-				$SMTP_PASSWORD 	 	= $this->getSettings('SMTP_PASSWORD');
-				
-				
-				## Email To
-				$email_to = str_replace( '>', ' ', trim( $email_to ) );
-				$email_to = explode( '<', trim( $email_to ) );
-				if( is_array( $email_to ) && count( $email_to ) > 1 ){
-					$email_to = array( trim( $email_to[1] ), trim( $email_to[0] ) );
-				} 
-				else if( is_array( $email_to ) && count( $email_to ) ){
-					$email_to = trim( $email_to[0] );
-				}
-				else{
-					$email_to = trim( $email_to );
-				}
-				
-				## Reply To Email
-				$reply_to = $reply_to ? $reply_to : $SMTP_REPLY_TO_EMAIL;
-				$reply_to = str_replace( '>', ' ', trim( $reply_to ) );
-				$reply_to = explode( '<', trim( $reply_to ) );
-				if( is_array( $reply_to ) && count( $reply_to ) > 1 ) {
-					$reply_to =	array( trim( $reply_to[1] ), trim( $reply_to[0] ) );
-				}
-				else if( is_array( $reply_to ) && count( $reply_to ) ) {
-					$reply_to =	trim( $reply_to[0] );
-				}
-				else{
-					$reply_to =	trim( $reply_to );
-				}
-				
-				if( $_REQUEST['D'] ){
-					//$SMTP_AUTH = '';
-				}
+				$SMTP_HOST 		 	= MAIL_SMTP_HOST;
+				$SMTP_PORT 		 	= MAIL_SMTP_PORT;
+				$SMTP_ENCRYPTION 	= MAIL_SMTP_ENCRYPTION;
+				$SMTP_AUTH 		 	= true;
+				$SMTP_USERNAME   	= MAIL_SMTP_USERNAME;
+				$SMTP_PASSWORD 	 	= MAIL_SMTP_PASSWORD;
 				
 				$mail->IsSMTP();
 				$mail->Host 		= $SMTP_HOST;
@@ -330,17 +299,15 @@ $mail = new PHPMailer();
 				$mail->Password 	= $SMTP_PASSWORD;
 				$mail->SMTPSecure	= $SMTP_ENCRYPTION;
 				$mail->Port			= $SMTP_PORT;
-				
+				$mail->SMTPDebug 	= 1; // OR 2
 				$mail->FromName 	= $SMTP_FROM_NAME;
 				$mail->From 		= $SMTP_FROM_EMAIL;
 				
-				
 				$mail->AddAddress( $email_to );
-				//$mail->AddAddress( "email.address@gmail.com", "name" );
+				// $mail->AddAddress( "aa@aa.com", "name" );
 				
-				$mail->AddReplyTo( $reply_to[0], $reply_to[1] );
+				//$mail->AddReplyTo( $reply_to[0], $reply_to[1] );
 				//$mail->AddReplyTo( $reply_to );
-				
 				
 				## Add Attachements 
 				if( is_array( $attachments ) && count( $attachments ) ){
@@ -359,32 +326,22 @@ $mail = new PHPMailer();
 				}
 				
 				$mail->IsHTML( true );
-				
-				//$email_subject = "=?UTF-8?B?".base64_encode( html_entity_decode( $email_subject, ENT_COMPAT, 'UTF-8' ) )."?=";
-				
 				$mail->Subject = $email_subject;
-				
-				
 				$mail->Body    = $email_message;
 				
-				//_p( $mail ); _p( $reply_to ); exit;
-				//_p( $mail ); exit;
-				
 				if( !$mail->Send() ){
-				   echo "Message could not be sent. <p>";
-				   echo "Mailer Error: " . $mail->ErrorInfo;
-				   exit;
+					echo "Message could not be sent. <p>";
+					echo "Mailer Error: " . $mail->ErrorInfo;
+					exit;
 				} 
-				else {
+				else{
 					return 1;
 				}
 			}
-			else{
+			else {
 				
-				$email_from = $SMTP_FROM_NAME.' < '.$SMTP_FROM_EMAIL.' >';
-				$reply_to = $SMTP_REPLY_TO_EMAIL;
-				//$attachments
 				return $this->email( $email_to, $email_from, $reply_to, $email_cc, $email_bcc, $email_subject, $email_message, $email_format = "", $attachments );	
+				
 			}
 		}
 		
@@ -531,19 +488,19 @@ $mail = new PHPMailer();
 			return filter_var( $email, FILTER_VALIDATE_EMAIL ); ## Valid = Return Email, ## Invalid = Return Blank
 		}
 		
-		function get_email_data( $id = "" ){
+		function get_email_data( $v_key = "" ){
 			global $dclass;
-			$email = $dclass->select( "*", 'tbl_email', " AND id = '".$id."' " );
+			$email = $dclass->select( "*", 'tbl_email', " AND v_key = '".$v_key."' " );
 			if( count( $email ) ){
 				$email = $email[0];
+				// _P($email["j_title"]);
 				$email_data = array();
-				$email_data["from"] = $email["v_sent_from"];
-				$email_data["from_email"] = $email["v_sent_from_email"];
-				$email_data["reply"] = $email["v_reply_to"];
-				$email_data["reply_email"] = $email["v_reply_to_email"];
-				$email_data["title"] = lang( $email, "v_title" );
-				$email_data["subject"] = lang( $email, "v_subject" );
-				$email_data["email_body"] = '<meta http-equiv="Content-Type"content="text/html; charset=UTF-8"/><table cellpadding="5" width="700" border="0"><tr><td>'.lang( $email, "l_description" ).'</td></tr></table>';
+				$email_data["from"] = $email["v_from_name"];
+				$email_data["from_email"] = $email["v_from_email"];
+				$email_data["reply"] = $email["v_reply_name"];
+				$email_data["reply_email"] = $email["v_reply_email"];
+				$email_data["title"] = lang( json_decode( $email["j_title"], true ), "en" );
+				$email_data["email_body"] = '<meta http-equiv="Content-Type"content="text/html; charset=UTF-8"/><table cellpadding="5" width="700" border="0"><tr><td>'.lang( json_decode( $email["j_content"], true ), "en" ).'</td></tr></table>';
 				return $email_data;
 			}
 			return array();
@@ -551,19 +508,46 @@ $mail = new PHPMailer();
 		function email_keywords(){
 			$array = array(
 				'[email_body]' 			=> 'Email Body',
+				
+				'[user_id]' 			=> 'User ID',
 				'[user_name]' 			=> 'User Name',
 				'[user_email]' 			=> 'User Email',
 				'[user_phone]' 			=> 'User Phone',
-				'[otp]' 				=> 'OTP',
-				'[ride_pin]' 			=> 'Ride PIN',
-				'[amount]'              => 'Amount',
+				
+				'[driver_id]' 			=> 'Driver ID',
+				'[driver_name]' 		=> 'Driver Name',
+				'[driver_email]' 		=> 'Driver Email',
+				'[driver_phone]' 		=> 'Driver Phone',
+				
 				'[i_ride_id]'           => 'Ride ID',
+				'[ride_pin]' 			=> 'Ride PIN',
+				'[ride_code]'           => 'Ride Code',
+				'[ride_total]'          => 'Ride Total',
+				'[ride_discount]'       => 'Ride Total',
+				'[ride_start_time]'     => 'Ride Start Time',
+				'[ride_end_time]'     	=> 'Ride End Time',
+				'[ride_start_address]'  => 'Ride Start Address',
+				'[ride_end_address]'    => 'Ride End Address',
+				'[ride_distance]'    	=> 'Ride Distance',
+				'[ride_promocode_code]' => 'Ride Promocode Code',
+				'[ride_payment_method]' => 'Ride Payment Methods',
+				'[ride_bill_table]' 	=> 'Ride Bill Table',
+				
+				'[city]' 				=> 'City',
+				
+				'[otp]' 				=> 'OTP',
+				'[amount]'              => 'Amount',
 				'[user_name_id]'        => 'User Name & ID',
 				'[driver_name_id]'      => 'Driver Name & ID',
 				'[from]'                => 'From',
 				'[address]'             => 'Address',
 				'[pickup_address]'      => 'Pickup Address',
 				'[destination_address]' => 'Destination Address',
+				'[free_text]' => 'Free Text',
+				'[support_inq_id]' => 'Support Inquiry Id',
+				'[support_inq_text]' => 'Support Inquiry Text',
+				
+				
 			);
 			return $array;
 		}
@@ -571,23 +555,17 @@ $mail = new PHPMailer();
 		function email_replace_keyword( $str = "" , $data_arr = array() ){
 			$keywords = $this->email_keywords();
 			foreach( $keywords as $k => $v ){
-				$str = str_replace( $k, $data_arr[$v], $str );
+				$str = str_replace( $k, $data_arr[$k], $str );
 			}
 			return $str;
 		}
 		function prepare_and_send_email( $email_data, $replacer_arr ){
-			
+						
 			if( count( $email_data ) && $email_data["email_to"] != "" ){
 
 				$email_to = $email_data["email_to"];
 				$email_data["subject"] = $this->email_replace_keyword( $email_data["subject"], $replacer_arr );
 				$email_data["subject"] = strip_tags( $email_data["subject"] );
-				
-				if( isset($replacer_arr['free_text']) && $replacer_arr['free_text'] !=""  ){
-
-					$replacer_arr['free_text'] = $this->email_replace_keyword( $replacer_arr['free_text'], $replacer_arr );
-				}
-				 
 				$email_data["email_body"] = $this->email_replace_keyword( $email_data["email_body"], $replacer_arr );
 				$email_data["reply"] = $this->email_replace_keyword( $email_data["reply"], $replacer_arr );
 				$email_data["reply_email"] = $this->email_replace_keyword( $email_data["reply_email"], $replacer_arr );
@@ -601,6 +579,57 @@ $mail = new PHPMailer();
 			}
 			return 0;
 		}
+		
+		function _EMAIL( $options = array() ){ 
+		
+			global $dclass;
+			
+			/*
+			PARAMS
+				_key 				=> SMS Template Key
+				_subject 			=> Direct Subject
+				_body 				=> Direct Content
+				_user_id 			=> User ID
+				_user_lang 			=> User Lang
+				_to 				=> User Email
+				_replace_arr		=> Replace Arr
+			*/
+			
+			$_subject = $options["_subject"];
+			$_body = $options["_body"];
+			
+			$_user = $dclass->select( 'id, v_phone, l_data', 'tbl_user', " AND id = '".$options["_user_id"]."' " );
+			
+			if( $options['_key'] ){
+				
+				$_template = $dclass->select( '*', 'tbl_email', " AND i_delete = '0' AND e_status = 'active' AND v_key = '".$options['_key']."' " );
+				$_template = $_template[0];
+				
+				$_template['j_title'] = json_decode( $_template['j_title'], true );
+				$_template['j_content'] = json_decode( $_template['j_content'], true );
+				
+				$_subject = lang( $_template['j_title'], $options['_user_lang'] );
+				$_body = lang( $_template['j_content'], $options['_user_lang'] );
+				
+			}
+			
+			$_subject = $this->email_replace_keyword( $_subject, $options['_replace_arr'] );
+			$_body = $this->email_replace_keyword( $_body, $options['_replace_arr'] );
+			
+			$options['_user_lang'] = $options['_user_lang'] ? $options['_user_lang'] : DEFAULT_LANGUAGE;
+			
+			$emailTemplate = str_replace( '[email_body]', $_body, constant('EMAIL_TEMPLATE_'.$options['_user_lang']) );
+			
+			$_body = '<meta http-equiv="Content-Type"content="text/html; charset=UTF-8"/>';
+			$_body .= '<table cellpadding="0" width="100%" border="0" >';
+			$_body .= '<tr><td align="center" >'.$emailTemplate.'</td></tr>';
+			$_body .= '</table>';
+			
+			return $this->custom_email( $email_to = $options['_to'], $email_from = "", $reply_to = "", $email_cc = "", $email_bcc = "", $_subject, $_body, $email_format = "", $attachments = array() );
+			
+        }
+		
+		
 		
 		function get_status( $type = "" ){ 
 			if( $type == "payment" ){
@@ -663,7 +692,7 @@ $mail = new PHPMailer();
 		function getCityDropdownList($selval=""){
 			$orderBy="ORDER BY v_name ";
 			global $dclass; 	 
-			$row = $dclass->select('*','tbl_city'," ORDER BY v_name ");
+			$row = $dclass->select('*','tbl_city'," AND i_delete=0 ORDER BY v_name ");
 			$str = '';
 			foreach($row as $key => $val){
 				if($selval == $val['id']) { $sel = 'selected="selected"'; }
@@ -675,7 +704,7 @@ $mail = new PHPMailer();
 		
 		function getVehicleTypeDropdownList($selval="", $value = 'id'){
 			global $dclass; 	 
-			$row = $dclass->select('*','tbl_vehicle_type', " ORDER BY v_name ");
+			$row = $dclass->select('*','tbl_vehicle_type', " AND i_delete=0 ORDER BY v_name ");
 			$str = '';
 			foreach($row as $key => $val){
 				if($selval == $val[ $value ] ) { $sel = 'selected="selected"'; }
@@ -715,7 +744,12 @@ $mail = new PHPMailer();
 			return $return_data;
 		}
 
-		
+		function date_Difference($date1='',$date2=''){
+			if($date1 != '' && $date2 != ''){
+				$t_hours = round((strtotime($date1) - strtotime($date2))/3600, 1);
+			}
+			return $t_hours;
+		}
 		function isAllow( $action = '' ){
 			
 			$pageAccess = $_SESSION['page_access']['pages'];
@@ -754,10 +788,14 @@ $mail = new PHPMailer();
 				'invalid-access.php',
 				'index.php',
 				'adminActions.php',
+				'ajax_operations.php',
 				'warroom.php',
+				'log.php',
+				'top_drivers.php',
 				) ) ){
 				return '';
 			}
+			
 			
 			global $dclass;
 			$page = $dclass->select( '*', 'tbl_sections', " AND v_name = '".BASE_FILE."' " );
@@ -788,6 +826,89 @@ $mail = new PHPMailer();
 			}
 		}
 		
+		
+		
+		function _SMS( $options = array() ){ 
+		
+			global $dclass;
+			
+			/*
+			PARAMS
+				_key 				=> SMS Template Key
+				_body 				=> Direct Content
+				_user_id 			=> User ID
+				_user_lang 			=> User Lang
+				_to 				=> User Phone
+				_replace_arr		=> Replace Arr
+			*/
+			
+			$_body = $options["_body"];
+			
+			$_user = $dclass->select( 'id, v_phone, l_data', 'tbl_user', " AND id = '".$options["_user_id"]."' " );
+			
+			if( $options['_key'] ){
+				$_template = $dclass->select( '*', 'tbl_sms', " AND i_delete = '0' AND e_status = 'active' AND v_key = '".$options['_key']."' " );
+				$_template = $_template[0];
+				$_template['j_sms'] = json_decode( $_template['j_sms'], true );
+				$_body = lang( $_template['j_sms'], $options['_user_lang'] );
+			}
+			
+			
+			$_body = $this->email_replace_keyword( $_body, $options['_replace_arr'] );
+			
+			$url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS';
+			$url .= '?user='.SMS_USERNAME;
+			$url .= '&pwd='.SMS_PASSWORD;
+			$url .= '&sender='.SMS_SENDERNAME;
+			$url .= '&mt=2';
+            $url .= '&mobile='.$options['_to'];
+            $url .= '&msg='.urlencode( $_body );
+			
+			$returnArr = array(
+				'succ' => 0,
+				'data' => '',
+			);
+			
+			try{
+				
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL, $url ); 
+				curl_setopt($ch, CURLOPT_ENCODING, '');
+				curl_setopt($ch, CURLOPT_POST, 0 ); 
+				curl_setopt($ch, CURLOPT_FAILONERROR, 1 ); 
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 ); 
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false );
+				curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
+				$retValue = curl_exec($ch);
+				curl_close($ch);
+				
+				if( ( substr( $retValue, 0, 3 ) == 'MSP' ) ){
+					$returnArr['succ'] = 1;
+					$returnArr['data'] = $retValue;
+                }
+				else{
+                    $returnArr['succ'] = 0;
+					$returnArr['data'] = $retValue;
+                }
+			}
+			
+			catch( Exception $e ){
+				$returnArr['succ'] = 0;
+				$returnArr['data'] = $e;
+			}
+			
+			return $returnArr;
+			
+        }
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		function sendNotificationAndroid($deviceToken = NULL, $messageArr = array(),$authentication_key) {
             
 
@@ -801,7 +922,83 @@ $mail = new PHPMailer();
                 'Authorization: key='.$authentication_key.'',
                 'Content-Type: application/json'
             );
-         
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+            $result = curl_exec($ch);
+            if ($result === FALSE) {
+                die('Curl failed: ' . curl_error($ch));
+            }
+            curl_close($ch);
+            return $result;
+        }
+		
+		
+		
+		
+
+        function sendSMS( $url, $fields = array(), $method = 'GET' ){ 
+        	
+            if( $method == 'GET' ){
+               
+               try{
+				    if( count( $fields ) ){
+				    	
+						$url = $url.'?'.http_build_query( $fields );
+					}
+        			
+
+					$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, $url ); 
+					curl_setopt($ch, CURLOPT_ENCODING, '');
+					curl_setopt($ch, CURLOPT_POST, 0 ); 
+					curl_setopt($ch, CURLOPT_FAILONERROR, 1 ); 
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 ); 
+					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false );
+					curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
+					$retValue = curl_exec($ch);
+					
+					curl_close($ch);
+				}
+				catch( Exception $e ){
+					_p($e);
+				}
+            }
+            else{
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url ); 
+                curl_setopt($ch, CURLOPT_POST, 1 );
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query( $fields ) );
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false ); 
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
+                $retValue = curl_exec($ch);
+                curl_close($ch);
+            }
+            return $retValue; 
+        }
+
+        function sendNotificationManual($deviceToken = NULL, $messageArr = array(),$authentication_key) {
+            
+
+            $url = 'https://fcm.googleapis.com/fcm/send';
+            $registatoin_ids = array($deviceToken);
+            $fields = array(
+                'registration_ids' => $registatoin_ids,
+                'notification' => $messageArr,
+                'data' => $messageArr,
+                
+            );
+            $headers = array(
+                'Authorization: key='.$authentication_key.'',
+                'Content-Type: application/json'
+            );
+
+
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, true);
@@ -817,37 +1014,6 @@ $mail = new PHPMailer();
             return $result;
         }
 
-        function sendSMS( $url, $fields = array(), $method = 'GET' ){ 
-            if( $method == 'GET' ){
-                
-                if( count( $fields ) ){
-                    $url = $url.'?'.http_build_query( $fields );
-                }
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url ); 
-                curl_setopt($ch, CURLOPT_ENCODING, '');
-                curl_setopt($ch, CURLOPT_POST, 0 ); 
-                curl_setopt($ch, CURLOPT_FAILONERROR, 1 ); 
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 ); 
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false );
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
-                $retValue = curl_exec($ch);
-                
-                curl_close($ch);
-            }
-            else{
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url ); 
-                curl_setopt($ch, CURLOPT_POST, 1 );
-                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query( $fields ) );
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false ); 
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
-                $retValue = curl_exec($ch);
-                curl_close($ch);
-            }
-            return $retValue; 
-        }
+        
 	}
 ?>

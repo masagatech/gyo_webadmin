@@ -147,7 +147,7 @@ var currentApi = function( req, res, next ){
 					function( callback ){
 						var params = {
 							_to      	: _data.user.v_email,
-							_lang 		: _data.user.l_data.lang,
+							_lang 		: User.lang( _data.user ),
 							_key 		: 'user_add_money',
 							_keywords 	: {
 								'[user_name]' : _data.user.v_name,
@@ -168,7 +168,7 @@ var currentApi = function( req, res, next ){
 					function( callback ){
 						var params = {
 							_to      	: _data.user.v_phone,
-							_lang 		: _data.user.l_data.lang,
+							_lang 		: User.lang( _data.user ),
 							_key 		: 'user_add_money',
 							_keywords 	: {
 								'[user_name]' : _data.user.v_name,

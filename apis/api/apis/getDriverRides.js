@@ -33,11 +33,12 @@ var currentApi = function( req, res, next ){
 		_q += " SELECT ";
 		_q += " tbl_ride.* ";
 		_q += " , tbl_ride.id AS id ";
+		_q += " , tbl_ride.v_ride_code AS v_ride_code ";
 		_q += " , tbl_ride.e_status AS status ";
 		_q += " , tbl_ride.d_time AS ride_time ";
 		_q += " , ( SELECT tbl_user.v_name FROM tbl_user AS tbl_user WHERE tbl_user.id = tbl_ride.i_user_id ) AS user_v_name";
 		_q += " , ( SELECT tbl_user.v_image FROM tbl_user AS tbl_user WHERE tbl_user.id = tbl_ride.i_user_id ) AS user_v_image";
-		
+		_q += " , ( SELECT tbl_user.v_id FROM tbl_user AS tbl_user WHERE tbl_user.id = tbl_ride.i_user_id ) AS user_v_id";
 		
 		_q += " , tbl_ride.l_data->>'vehicle_type' AS vehicle_type ";
 		_q += " , tbl_ride.l_data->>'pickup_address' AS pickup_address ";

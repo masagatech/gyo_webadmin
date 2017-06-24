@@ -3,17 +3,17 @@ include('includes/configuration.php');
 $gnrl->check_login();
 // _P($_REQUEST);
 // exit;
-	extract( $_POST );
-	$page_title = "Manage Messages";
-	$page = "messages";
-	$table = 'tbl_messages';
+    extract( $_POST );
+    $page_title = "Manage Messages";
+    $page = "messages";
+    $table = 'tbl_messages';
     $table2 = 'tbl_track_messages';
-	$title2 = 'Message';
-	// $v_role ='user';
-	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' || $_REQUEST['script'] == 'send_msg' ) ) ? $_REQUEST['script'] : "";
-	
-	## Insert Record in database starts
-	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
+    $title2 = 'Message';
+    // $v_role ='user';
+    $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' || $_REQUEST['script'] == 'send_msg' ) ) ? $_REQUEST['script'] : "";
+    
+    ## Insert Record in database starts
+    if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
 
             $j_subject = str_replace( '\r', '', str_replace( '\n', '', json_encode( $j_subject ) ) );
             $j_message = str_replace( '\r', '', str_replace( '\n', '', json_encode( $j_message ) ) );
@@ -26,7 +26,7 @@ $gnrl->check_login();
             $id = $dclass->insert( $table, $ins );
             $gnrl->redirectTo($page.".php?succ=1&msg=add");
 
-	}
+    }
     ## Insert Record in database starts
     if(isset($_REQUEST['send_msg_btn']) && $_REQUEST['send_msg_btn']=='Send'){
        
@@ -51,8 +51,8 @@ $gnrl->check_login();
             // $url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user=Goyo&pwd=goyo123&sender=GoYooo';
             $url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user='.SMS_USERNAME.'&pwd='.SMS_PASSWORD.'&sender='.SMS_SENDERNAME.'';
             $url .= '&mt=2';
-            $url .= '&mobile=8758857048';
-            $url .= '&msg=Testing..';  //8758857048
+            $url .= '&mobile='.$user_row['v_phone'].'';
+            $url .= '&msg='.$l_data['j_message']['en'].'';  //8758857048
 
             try{
                 $is_send=$gnrl->sendSMS( $url );
@@ -78,11 +78,11 @@ $gnrl->check_login();
         $row_Data = $dclass->fetchResults($restepm);
         $gnrl->redirectTo($page.".php?succ=1&msg=success_msg");
     }
-	## Delete Record from the database starts
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
-			$id = $_REQUEST['id'];
-			if($_REQUEST['chkaction'] == 'delete') {
+    ## Delete Record from the database starts
+    if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
+        if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+            $id = $_REQUEST['id'];
+            if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
                     $ins = array('i_delete'=>'1');
                     $dclass->update( $table, $ins, " id = '".$id."'");
@@ -90,6 +90,12 @@ $gnrl->check_login();
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
+            }
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
@@ -117,16 +123,16 @@ $gnrl->check_login();
                 $dclass->update($table,$ins," id='$id'");
                 $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
             }
-			
-		}	
-	}
-	
-	## Edit Process
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+            
+        }   
+    }
+    
+    ## Edit Process
+    if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
+        if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 
-			$id = $_REQUEST['id'];
-			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
+            $id = $_REQUEST['id'];
+            if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
 
                 $j_subject = json_encode( $j_subject );
                 $j_subject = str_replace( '\r', '', $j_subject );
@@ -136,23 +142,23 @@ $gnrl->check_login();
                 $j_message = str_replace( '\r', '', $j_message );
                 $j_message = str_replace( '\n', '', $j_message );
 
-				$ins = array(
+                $ins = array(
                     'v_name'   => $v_name,
                     'j_subject'  => $j_subject,
                     'j_message' =>$j_message,
                 );
-				$dclass->update( $table, $ins, " id = '".$id."' ");
-				$gnrl->redirectTo($page.'.php?succ=1&msg=edit&a=2&script=edit&id='.$_REQUEST['id']);
-			}
-			else {
-				$row = $dclass->select('*',$table," AND id = '".$id."'");
-				$row = $row[0];
+                $dclass->update( $table, $ins, " id = '".$id."' ");
+                $gnrl->redirectTo($page.'.php?succ=1&msg=edit&a=2&script=edit&id='.$_REQUEST['id']);
+            }
+            else {
+                $row = $dclass->select('*',$table," AND id = '".$id."'");
+                $row = $row[0];
                 extract( $row );
                 $j_subject=json_decode($j_subject,true);
                 $j_message=json_decode($j_message,true);
-			}
-		}
-	}
+            }
+        }
+    }
 
 ?>
 <!DOCTYPE html>
@@ -165,12 +171,12 @@ $gnrl->check_login();
 <!-- Fixed navbar -->
 <?php include('inc/header.php');?>
 <div id="cl-wrapper" class="fixed-menu">
-	<?php include('inc/sidebar.php'); ?>
-	<div class="container-fluid" id="pcont">
-		<?php include('all_page_head.php'); ?>
+    <?php include('inc/sidebar.php'); ?>
+    <div class="container-fluid" id="pcont">
+        <?php include('all_page_head.php'); ?>
 
         <div class="cl-mcont">
-        	<?php include('all_alert_msg.php'); ?>
+            <?php include('all_alert_msg.php'); ?>
             <div class="row">
                 <div class="col-md-12">
                     <div class="block-flat">
@@ -189,13 +195,8 @@ $gnrl->check_login();
                                             <button class="btn btn-primary" type="button">Add</button>
                                         </a>
                                     <?php } ?>
-								<?php } ?>
-                                  <?php 
-                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
-                                        <a href="<?php echo $page ?>.php" class="fright" >
-                                            <button class="btn btn-primary" type="button">Clear Search</button>
-                                        </a>
                                 <?php } ?>
+                                
                             </h3>
                         </div>
                         <?php 
@@ -206,15 +207,15 @@ $gnrl->check_login();
                                         <div class="content">
                                             
                                                <div class="form-group">
-                                                    <label>Name</label>
+                                                    <label>Name <?php echo $gnrl->getAstric(); ?></label>
                                                     <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name ?>" required />
                                                 </div>
                                                 <?php
                                                     foreach( $globLangArr as $_langK => $_langV ){$key = 'j_subject';
                                                         ?>
                                                         <div class="form-group"> 
-                                                            <label>Message Subject (<?php echo $_langV?>)</label>
-                                                            <input name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" value="<?php echo $j_subject[$_langK];?>" />
+                                                            <label>Message Subject (<?php echo $_langV?>) <?php echo $gnrl->getAstric(); ?></label>
+                                                            <input name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" value="<?php echo $j_subject[$_langK];?>" required="" />
                                                         </div>
                                                          <?php
                                                 } ?>
@@ -223,8 +224,8 @@ $gnrl->check_login();
                                                         ?>
                                                         <?php $key = 'j_message'; ?>
                                                         <div class="form-group"> 
-                                                            <label>Message Content (<?php echo $_langV?>)</label>
-                                                            <textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control"><?php echo $j_message[$_langK];?></textarea>
+                                                            <label>Message Content (<?php echo $_langV?>) <?php echo $gnrl->getAstric(); ?></label>
+                                                            <textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" required=""><?php echo $j_message[$_langK];?></textarea>
                                                         </div>
                                                          <?php
                                                 } ?>
@@ -238,7 +239,7 @@ $gnrl->check_login();
                                     </div>
                                 </div>
                             </form>
-						<?php 
+                        <?php 
                         }elseif ($script == 'view' && 1) { 
                             $id = $_REQUEST['id'];
                             if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
@@ -280,8 +281,7 @@ $gnrl->check_login();
                             $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                             $restepm = $dclass->query($sqltepm);
                             $row_Data = $dclass->fetchResults($restepm);
-                            // _P($row_Data);
-                            // exit;
+                            
                             ?>
                             <div class="content">
                                 <form name="frm" action="" method="get" >
@@ -343,7 +343,7 @@ $gnrl->check_login();
                                                     }
                                                 }
                                                 else{?>
-                                                    <tr><td colspan="8">No Record found.</td></tr><?php 
+                                                    <tr><td colspan="8">No Messages found.</td></tr><?php 
                                                 }?>
                                             </tbody>
                                         </table>
@@ -511,23 +511,26 @@ $gnrl->check_login();
                                                             <label>
                                                                 <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                                 <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
-                                                                <div class="clearfix"></div> 
-                                                                <div class="pull-left" style="">
-                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
-                                                                    Show Deleted Data
+                                                                <div class="clearfix"></div>
+                                                                     <div class="pull-right" style="">
+                                                                        <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                                        Show Deleted Data
                                                                 </div>
+                                                                <div class="clearfix"></div>
+                                                                <?php 
+                                                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
+                                                                            <a href="<?php echo $page ?>.php" class="fright" style="" > Clear Search </a>
+                                                                <?php } ?>
                                                             </label>
                                                         </div>
+                                                       
                                                     </div>
                                                     <div class="pull-left">
                                                         <div id="datatable_length" class="dataTables_length">
                                                             <label><?php $pagen->writeLimitBox(); ?></label>
                                                         </div>
                                                     </div>
-                                                    <label style="margin: 20px 20px;">
-                                                        
-                                                    </label>
-                                                    <div class="clearfix"></div>
+                                                    
                                                 </div>
                                             </div>
                                             <!-- <?php chk_all('drop');?> -->
@@ -535,8 +538,8 @@ $gnrl->check_login();
                                                 <?php
                                                 echo $gnrl->renderTableHeader(array(
                                                     'v_name' => array( 'order' => 1, 'title' => 'Name' ),
-                                                    'subject' => array( 'order' => 1, 'title' => 'Subject' ),
-                                                    'message' => array( 'order' => 1, 'title' => 'Message' ),
+                                                    'subject' => array( 'order' => 0, 'title' => 'Subject' ),
+                                                    'message' => array( 'order' => 0, 'title' => 'Message' ),
                                                     'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
                                                     'action' => array( 'order' => 0, 'title' => 'Action' ),
                                                 ));
@@ -549,9 +552,13 @@ $gnrl->check_login();
                                                             
                                                             ?>
                                                             <tr>
+                                                                <?php  
+                                                                    $subject_1=json_decode($row['j_subject'],true); 
+                                                                    $message_1=json_decode($row['j_message'],true); 
+                                                                ?>
                                                                 <td><a id="<?php echo 'v_name'.$row['id'] ?>"href="javascript:;" class="md-trigger" data-modal="view_modal" onclick="view_message(<?php echo $row['id']; ?>);"><?php echo $row['v_name']; ?></a></td>
-                                                                 <td></td>
-                                                                  <td></td>
+                                                                <td> <?php echo $subject_1['en']; ?></td>
+                                                                <td> <?php echo $message_1['en']; ?></td>
                                                                 <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                                 <td>
                                                                     <div class="btn-group pull-right">
@@ -560,11 +567,20 @@ $gnrl->check_login();
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                             <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="<?php echo $page?>.php?a=4&script=view&id=<?php echo $row['id'];?>">View</a></li>
 
-                                                                            <li><a href="<?php echo $page?>.php?script=send_msg&id=<?php echo $row['id'];?>">Send Message</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                    <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  
+                                                                                }else{ ?>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?a=4&script=view&id=<?php echo $row['id'];?>">View</a></li>
+
+                                                                                    <li><a href="<?php echo $page?>.php?script=send_msg&id=<?php echo $row['id'];?>">Send Message</a></li>
+                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
+                                                                            ?>
+                                                                            
                                                                         </ul>
                                                                     </div>
                                                                 </td>
@@ -572,7 +588,7 @@ $gnrl->check_login();
                                                         }
                                                     }
                                                     else{?>
-                                                        <tr><td colspan="8">No Record found.</td></tr><?php 
+                                                        <tr><td colspan="8">No Messages found.</td></tr><?php 
                                                     }?>
                                                 </tbody>
                                             </table>
@@ -606,7 +622,7 @@ $gnrl->check_login();
                 </div>
             </div>
         </div>
-	</div>
+    </div>
 </div>
 <div class="md-modal colored-header custom-width md-effect-9" id="view_modal" style="width:50% !important;" >
         <div class="md-content">

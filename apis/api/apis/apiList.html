@@ -83,6 +83,7 @@
 					) }
 				],
 			},
+			
 			{
 				id 		: 'getCms',
 				url 	: 'getCms',
@@ -172,7 +173,7 @@
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_gender', required : false, info : 'male / female' },
 					{ name : 'v_device_token', required : true, info : '' },
-					{ name : 'v_imei_number', required : true, info : '' },
+					{ name : 'v_imei_number', required : true, info : 'Primary IMEI Number [SIM1 for dual sim]' },
 					
 					{ name : 'v_vehicle_type', required : true, info : 'GET types from API : <a href="javascript:;" onclick="document.getElementById(\'getVehicleTypes\').scrollIntoView({behavior: \'smooth\'});" >"Get Vehicles Types"</a>' },
 					{ name : 'v_vehicle_number', required : true, info : '' },
@@ -205,6 +206,7 @@
 					{ name : 'v_username', required : true, info : 'email or phone' },
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_device_token', required : true, info : '' },
+					{ name : 'v_imei_number', required : true, info : 'Primary IMEI Number [SIM1 for dual sim]' },
 				],
 				response   : [
 					{ name : 'data', info : (
@@ -339,7 +341,6 @@
 					{ name : 'v_email', required : true, info : '' },
 					{ name : 'v_phone', required : true, info : '' },
 					{ name : 'v_gender', required : false, info : 'male / female' },
-					{ name : 'v_imei_number', required : true, info : '' },
 					{ name : 'v_image', required : true, info : 'Image File' },
 					{ name : 'v_type', required : true, info : 'Vehicle type' },
 					{ name : 'v_vehicle_number', required : true, info : 'Vehicle number' },
@@ -377,8 +378,19 @@
 					{ name : 'v_old_password', required : true, info : 'must be 6 to 10 characters' },
 				],
 				response   : [],
-			},			
-			
+			},
+			{
+				id 		: 'driverReachAtPickup',
+				url 	: 'driverReachAtPickup',
+				name 	: 'Driver Reach At Pickup',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : false, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
+				],
+				response   : [],
+			},
 			
 			
 			{
@@ -441,8 +453,10 @@
 					{ name : 'l_longitude', required : true, info : 'Longitude' },
 					{ name : 'i_ride_id', required : false, info : 'Ride ID' },
 					{ name : 'distance', required : false, info : 'Distance in Kilometer (It will be calculated from App site with each last Latitude-Longitude.)' },
-					{ name : 'run_type', required : false, info : 'dry, ride' },
+					{ name : 'run_type', required : false, info : '[dry_run, ride, track]' },
 					{ name : 'speed', required : false, info : 'Formate : "0 m/s"' },
+					{ name : 'start_address', required : false, info : '' },
+					{ name : 'end_address', required : false, info : '' },
 				],
 				response   : []
 			},	
@@ -521,6 +535,7 @@
 					{ name : 'v_gender', required : false, info : 'male / female' },
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_device_token', required : true, info : '' },
+					{ name : 'v_imei_number', required : true, info : 'Primary IMEI Number [SIM1 for dual sim]' },
 					{ name : 'refferal_code', required : false, info : 'Refferal Code' },
 					{ name : 'lang', required : false, info : 'Language' },
 				],
@@ -535,6 +550,7 @@
 					{ name : 'v_username', required : true, info : 'email or phone' },
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_device_token', required : true, info : '' },
+					{ name : 'v_imei_number', required : true, info : 'Primary IMEI Number [SIM1 for dual sim]' },
 				],
 				response   : [
 					{ name : 'data', info : (
@@ -1086,7 +1102,55 @@
 			},
 			
 			
+{ id : 'br', name : 'Support & FAQs APIs', },
+			{
+				id 		: 'supportGetTypes',
+				url 	: 'supportGetTypes',
+				name 	: 'Support # Get Types',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : true, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+				],
+				response   : [],
+			},
+			{
+				id 		: 'faqGetTypes',
+				url 	: 'faqGetTypes',
+				name 	: 'FAQ # Get Types',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : true, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+				],
+				response   : [],
+			},
 			
+			{
+				id 		: 'ticketCreate',
+				url 	: 'ticketCreate',
+				name 	: 'Create Ticket',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : true, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'v_type', required : true, info : 'Type [faq / support_type]' },
+					{ name : 'i_type_id', required : true, info : 'Type ID [FAQ / Support Type]' },
+					{ name : 'v_support_text', required : true, info : 'Support Text' },
+				],
+				response   : [],
+			},
+			{
+				id 		: 'getMyTickets',
+				url 	: 'getMyTickets',
+				name 	: 'Get My Tickets',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : true, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+				],
+				response   : [],
+			},
 			
 			
 { id : 'br', name : 'Other APIs', },
@@ -1171,84 +1235,10 @@
 				response   : []
 			},
 
-{ id : 'br', name : 'Receive Notifications', },
-	
-			{
-				id 		: 'receiveBuzz',
-				url 	: 'receiveBuzz',
-				name 	: 'Driver Receive Buzz',
-				method 	: 'GET / POST',
-				params 	: [],
-				response   : [
-					{ name : 'title', info : 'Ride Request' },
-					{ name : 'body', info : '30 sec' },
-					{ name : 'i_ride_id', info : 'Ride ID' },
-					{ name : 'i_user_id', info : 'User ID (sent from user device)' },
-					{ name : 'buzz_time', info : 'integer' },
-					{ name : 'pickup_address', info : 'User Pickup address' },
-					{ name : 'type', info : 'driver_ride_buzz' },
-				]
-			},
-			{
-				id 		: 'receivedBuzzClose',
-				url 	: 'receivedBuzzClose',
-				name 	: 'Driver Received Buzz Close (other driver is assigned for ride)',
-				method 	: 'GET / POST',
-				params 	: [],
-				response   : [
-					{ name : 'title', info : 'Ride assigned to other' },
-					{ name : 'body', info : '' },
-					{ name : 'i_ride_id', info : 'Ride ID' },
-					{ name : 'type', info : 'driver_ride_other_assign' },
-				]
-			},
-			{
-				id 		: 'rideCompleteNotify',
-				url 	: 'rideCompleteNotify',
-				name 	: 'Complete Ride Notification',
-				method 	: 'GET / POST',
-				params 	: [],
-				response   : [
-					{ name : 'title', info : 'Ride Completed' },
-					{ name : 'body', info : '' },
-					{ name : 'i_ride_id', info : 'Ride ID' },
-					{ name : 'type', info : '[ driver_ride_complete / user_ride_complete ]' },
-				]
-			},
-			{
-				id 		: 'cancelRideNotify',
-				url 	: 'cancelRideNotify',
-				name 	: 'Cancel Ride and get Notify both side',
-				method 	: 'GET / POST',
-				params 	: [],
-				response   : [
-					{ name : 'title', info : 'Ride Cancelled' },
-					{ name : 'body', info : '' },
-					{ name : 'i_ride_id', info : 'Ride ID' },
-					{ name : 'type', info : '[ driver_ride_cancel / user_ride_cancel ]' },
-				]
-			},
-			{
-				id 		: 'rideStartNotify',
-				url 	: 'rideStartNotify',
-				name 	: 'Ride Start',
-				method 	: 'GET / POST',
-				params 	: [],
-				response   : [
-					{ name : 'title', info : 'Ride Start' },
-					{ name : 'body', info : '' },
-					{ name : 'i_ride_id', info : 'Ride ID' },
-					{ name : 'type', info : 'user_ride_start' },
-				]
-			},
-			
 		];
 		
 		var doneAPIs = {
-			// (Response Incomplete),
-			// (API side changes needed)
-			// (In Progress)
-			'' : '',
+			'' : '(In Progress)',
 		};
 		
 		var req_span = '<span style="color:#F00;font-size:16px;">*</span>';

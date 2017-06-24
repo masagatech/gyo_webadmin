@@ -35,8 +35,19 @@ var currClass = function( params ){
 			});
 		},
 		
+		getWhSelect : function( _select, _wh, cb ){
+			var _self = this;
+			dclass._select( _select, table, _wh, function( status, data ){
+				if( status && data.length ){
+					_self.getDefaultFields( status, data, cb );
+				}
+				else{
+					cb( status, data );
+				}
+			});
+		},
+		
 		getDefaultFields : function( status, data, cb ){
-			
 			if( status && data.length ){
 				
 				var _subkeys = {
@@ -69,7 +80,6 @@ var currClass = function( params ){
 					promocode_code_discount_upto	: 0,
 					promocode_code_discount_amount	: 0,
 					
-					
 				};
 				
 				for( var k in _subkeys ){
@@ -77,10 +87,12 @@ var currClass = function( params ){
 						if( !data[k1].l_data[k] ){
 							data[k1].l_data[k] = _subkeys[k];
 						}
-						data[k1].l_data['cancel_reason_final'] = data[k1].l_data['cancel_reason_id_text'] ? 
-						data[k1].l_data['cancel_reason_id_text'] : data[k1].l_data['cancel_reason_text'];
+						data[k1].l_data['cancel_reason_final'] = data[k1].l_data['cancel_reason_id_text'] ? data[k1].l_data['cancel_reason_id_text'] : data[k1].l_data['cancel_reason_text'];
 					}
 				}
+				
+				
+				
 				cb( status, data );
 			}
 			else{
@@ -89,9 +101,7 @@ var currClass = function( params ){
 		},
 		
 		getChargesData : function( data, cb ){
-			
 			var _self = this;
-			
 			var tempArr = {
 				'min_charge' : 0,
 				'base_fare' : 0,
@@ -128,6 +138,7 @@ var currClass = function( params ){
 				if( status && data.length ){
 					_result.actual_dry_run = parseFloat( data[0].actual_dry_run );
 					_result.actual_distance = parseFloat( data[0].actual_distance );
+					_result.actual_distance_new = 0;
 					cb( status, _result );
 				}
 				else{
@@ -135,7 +146,6 @@ var currClass = function( params ){
 				}
 			});
 		},
-		
 		
 		getFinalTotal : function( ride_id, cb ){
 			var _self = this;
@@ -163,57 +173,43 @@ var currClass = function( params ){
 			});
 		},
 		
-		overWriteChargeVehicleWise : function( params, cb ){
+		overWriteChargeVehicleWise : function( ride_id, cb ){
 			
 			var _self = this;
-			
-			var i_ride_id = params.i_ride_id ? params.i_ride_id : 0;
-			if( !i_ride_id ){
-				return cb( 0, '' );
-			}
 			
 			var _ride = {};
 			var _vehicle_wise = {};
 			
 			/*
-				>> Get Ride
-				>> Get Vehicle Wise Charge
-				>> Over Write Charges & Update Ride
+			>> Get Ride
+			>> Get Vehicle Wise Charge
+			>> Over Write Charges & Update Ride
 			*/
 			
 			async.series([
 				
 				// Get Ride
 				function( callback ){
-					_self.get( i_ride_id, function( status, ride ){
-						if( !status ){
-							return cb( 0, '' );
-						}
-						else if( !ride.length ){
-							return cb( 0, '' );
+					dclass._select( 'id, i_vehicle_id, l_data', table, " AND id = '"+ride_id+"' ", function( status, data ){
+						if( status && data.length ){
+							_ride = data[0];
+							callback( null );
 						}
 						else{
-							_ride = ride[0];
-							callback( null );
+							return cb();
 						}
 					});
 				},
 				
 				// Get Vehicle Wise Charge
 				function( callback ){
-					
-					var _q = " SELECT * FROM tbl_vehicle_fairs ";
-					_q += " WHERE true ";
-					_q += " AND v_type = 'vehicle_wise' ";
-					_q += " AND e_status = 'active' ";
-					_q += " AND i_vehicle_id = '"+_ride.i_vehicle_id+"' ";
-					
+					var _q = " SELECT id,l_data FROM tbl_vehicle_fairs WHERE i_delete = '0' AND v_type = 'vehicle_wise' AND e_status = 'active' AND i_vehicle_id = '"+_ride.i_vehicle_id+"' ";
 					dclass._query( _q, function( status, vehicle_charge ){
 						if( !status ){
-							return cb( 0, '' );
+							return cb();
 						}
 						else if( !vehicle_charge.length ){
-							return cb( 0, '' );
+							return cb();
 						}
 						else{
 							_vehicle_wise = vehicle_charge[0];
@@ -225,11 +221,10 @@ var currClass = function( params ){
 				// Over Write Charges & Update Ride
 				function( callback ){
 					
-					var _charge2 = _vehicle_wise.l_data.charges;
 					var charges = _ride.l_data.charges;
-					
 					charges.vehicle_wise_id = _vehicle_wise.id ? _vehicle_wise.id : 0;
 					
+					var _charge2 = _vehicle_wise.l_data.charges;
 					if( parseFloat( _charge2.max_dry_run_km ) > 0 ){ charges.max_dry_run_km = _charge2.max_dry_run_km; }
 					if( parseFloat( _charge2.max_dry_run_charge ) > 0 ){ charges.max_dry_run_charge = _charge2.max_dry_run_charge; }
 					
@@ -239,30 +234,17 @@ var currClass = function( params ){
 						}) )+"'",
 					];
 					dclass._updateJsonb( table, _ins, " AND id = '"+i_ride_id+"' ", function( status, data ){ 
-						return cb( 1, '' );
+						return cb();
 					});
 				}
 				
-				
-			],  function( error, results ){
-				return cb( 0, '' );
+			], function( error, results ){
+				return cb();
 			});
 		},
 		
-		getAllChargeTypes : function( type = null ){
-			
-			// var type == undefined ? null : type;
-		
-			/*
-			'upto_km' => 'Upto X Km',
-			'upto_km_charge' => 'Upto X Km Charge (Per Kilometer)',
-			'after_km_charge' => 'After X Km Charges',
-			'cancel_charge_driver' => 'Ride Cancellation Charge (Driver)',
-			'cancel_charge_user' => 'Ride Cancellation Charge (Customer)',
-			'max_dry_run_km' => 'Max Dry Run (In Km)',
-			'max_dry_run_charge' => 'Max Dry Run Price (Per Km)',
-			*/
-			
+		getAllChargeTypes : function( type ){
+			type == undefined ? null : type;
 			var types = {
 				'base_fare' : "Base Fare",
 				'min_charge' : "Minimum Charge",
@@ -282,7 +264,8 @@ var currClass = function( params ){
 			return types;
 		},
 		
-		getExtraChargeTypes : function( type = null ){
+		getExtraChargeTypes : function( type ){
+			type == undefined ? null : type;
 			var types = {
 				'toll_charge' : "Toll Charge",
 				'parking_charge' : "Parking Charge",
@@ -296,7 +279,51 @@ var currClass = function( params ){
 		
 		getPin : function(){
 			return Math.floor( 10000000 + Math.random() * 90000000 );
-		}
+		},
+		
+		getCharges : function( ride_id, cb ){
+			var _self = this;
+			dclass._select( '*', 'tbl_ride_charges', " AND i_ride_id = '"+ride_id+"' ORDER BY id ASC", function( status, data ){ 
+				if( status && data.length ){
+					for( var k in data ){
+						data[k].display_charge_type = _self.getAllChargeTypes( data[k]['v_charge_type'] );
+					}
+				}
+				cb( status, data );
+			});
+		},
+		
+		getChargesTableStr : function( ride_id, cb ){
+			var _self = this;
+			_self.getCharges( ride_id, function( status, data ){
+				var str = [];
+				if( status && data.length ){
+					str.push('<table border="0" width="100%" cellpadding="5" cellspacing="0" >');
+						str.push('<tr>');
+							str.push('<td colspan="2" align="center" ><strong>Ride Bill</strong></td>');
+						str.push('</tr>');
+						
+						var total = 0;
+						for( var k in data ){
+							str.push('<tr>');
+								str.push('<td align="left" >'+data[k].display_charge_type+'</td>');
+								str.push('<td align="right" > ₹'+data[k].f_amount+'</td>');
+							str.push('</tr>');
+							
+							total += data[k].f_amount;
+						}
+						
+						str.push('<tr>');
+							str.push('<td style="border-top:1px solid #CCC;" align="left" ><strong>Total Fare</strong></td>');
+							str.push('<td style="border-top:1px solid #CCC;" align="right" ><strong>₹'+total+'</strong></td>');
+						str.push('</tr>');
+						
+					str.push('</table>');
+				}
+				str = str.join( '' );
+				cb( str );
+			});
+		},
 		
 	}
 };

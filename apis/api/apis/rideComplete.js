@@ -86,8 +86,9 @@ var currentApi = function( req, res, next ){
 			
 			>> Entry of Min Charge
 			>> Entry of Base Fare
-			>> Entry of Surcharge
 			>> Entry of Service Tax
+			>> Entry of Surcharge
+			>> Entry of Discount
 			
 			>> Get Final Total
 			
@@ -171,6 +172,7 @@ var currentApi = function( req, res, next ){
 				Ride.calculateDistances( i_ride_id, function( status, data ){
 					_data.actual_distance = data.actual_distance;
 					_data.actual_dry_run = data.actual_dry_run;
+					_data.actual_distance_new = data.actual_distance_new;
 					callback( null );
 				});
 			},
@@ -214,6 +216,8 @@ var currentApi = function( req, res, next ){
 						'l_data' : gnrl._json_encode({
 							'i_added_by' : login_id,
 							'v_charge_info' : '',
+							'ride_time_charge' : _data.charges.ride_time_charge,
+							'trip_time_in_min' : trip_time_in_min,
 						}),
 					};
 					dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
@@ -292,6 +296,7 @@ var currentApi = function( req, res, next ){
 					'l_data' : gnrl._json_encode({
 						'i_added_by' : login_id,
 						'v_charge_info' : '',
+						'actual_distance' : _data.actual_distance,
 					}),
 				};
 				dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
@@ -340,6 +345,8 @@ var currentApi = function( req, res, next ){
 							'l_data' : gnrl._json_encode({
 								'i_added_by' : login_id,
 								'v_charge_info' : '',
+								'service_tax' : _data.charges.service_tax,
+								
 							}),
 						};
 						dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
@@ -392,6 +399,7 @@ var currentApi = function( req, res, next ){
 							'l_data' : gnrl._json_encode({
 								'i_added_by' : login_id,
 								'v_charge_info' : '',
+								'surcharge' : _data.charges.surcharge,
 							}),
 						};
 						dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
@@ -514,7 +522,7 @@ var currentApi = function( req, res, next ){
 						'trip_time_in_min' : trip_time_in_min,
 						'apply_dry_run' : _data.apply_dry_run,
 						'apply_dry_run_amount' : _data.apply_dry_run_amount,
-						
+						'actual_distance_new' : _data.actual_distance_new,
 						'promocode_code_discount_amount' : _data.discount,
 						
 						'ride_paid_by_cash' : paymentArr.cash,

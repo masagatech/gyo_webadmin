@@ -53,6 +53,12 @@ $gnrl->check_login();
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
             }
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
+            }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
                 if(1){
@@ -165,40 +171,80 @@ $gnrl->check_login();
                                         <div class="content">
 
                                             <div class="form-group">
-                                                <label>Type</label>
-                                                <select class="select2" name="v_type" id="v_type">
+                                                <label>Type <?php echo $gnrl->getAstric(); ?></label>
+                                                <select class="select2 required" name="v_type" id="v_type">
                                                     <option>--Select--</option>
                                                     <?php echo $gnrl->get_keyval_drop($globalPromotionType,$v_type); ?>
                                                 </select>
                                             </div>
                                             <div class="form-group">
-                                                <label>Title</label>
+                                                <label>Title <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_title" name="v_title" value="<?php echo $v_title; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Discount [ Flat (5) OR In Percentage (5%) ]</label>
+                                                <label>Discount [ Flat (5) OR In Percentage (5%) ] <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="discount_amount" name="discount_amount" value="<?php echo $discount_amount; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Upto Amount</label>
+                                                <label>Upto Amount <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="upto_amount" name="upto_amount" value="<?php echo $upto_amount; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Code</label>
+                                                <label>Code <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_code" name="v_code" value="<?php echo $v_code; ?>" required />
                                             </div>
                                             <div class="form-group">
                                                 <label>Description</label>
                                                 <textarea class="form-control" id="l_description" name="l_description"><?php echo $l_description; ?></textarea>
                                             </div>
+                                            <?php 
+                                                if($script=="edit"){
+                                                    $d_start_date=$gnrl->displaySiteDate($d_start_date);
+                                                    $d_end_date=$gnrl->displaySiteDate($d_end_date);
+                                                }else{
+                                                    $d_start_date='';
+                                                    $d_end_date='';
+                                                }
+
+                                            ?>
                                             <div class="form-group">
-                                                <label>Start Date</label>
-                                                <input class="form-control datetime" size="16" type="text" id="d_start_date" name="d_start_date" value="<?php echo $gnrl->displaySiteDate($d_start_date); ?>" data-date-format="yyyy-mm-dd hh:ii" readonly="" />
+                                                <label>Start Date <?php echo $gnrl->getAstric(); ?></label>
+                                                <input class="form-control" size="16" type="text" id="d_start_date" name="d_start_date" 
+												value="<?php echo $d_start_date ? $d_start_date : date('Y-m-d H:i'); ?>" readonly="" 
+												data-date-format="yyyy-mm-dd hh:ii"
+												/>
+												
                                             </div>
                                             <div class="form-group">
                                                 <label>End Date</label>
-                                                <input class="form-control datetime" size="16" type="text" id="d_end_date" name="d_end_date" value="<?php echo $gnrl->displaySiteDate($d_end_date); ?>" data-date-format="yyyy-mm-dd hh:ii" readonly="" onclick="datetimepicker()" />
+                                                <input class="form-control" size="16" type="text" id="d_end_date" name="d_end_date" 
+												value="<?php echo $d_end_date ? $d_end_date : date('Y-m-d H:i'); ?>" readonly="" 
+												data-date-format="yyyy-mm-dd hh:ii"
+												/>
                                             </div>
+											
+
+                                            <!-- <div class="form-group col-md-6">
+                                                <label>Start Date</label>
+                                                <div class="input-group date datetime " data-show-meridian="true"  data-date="<?php echo date(Y-m-d); ?>" data-date-format="yyyy-mm-dd  HH:ii" >
+                                                <span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
+                                                <input class="form-control" size="16" type="text" value="" id="d_start_date" name="d_start_date" value="<?php echo $gnrl->displaySiteDate($d_start_date); ?>" data-date-format="yyyy-mm-dd hh:ii" readonly="">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group col-md-6">
+                                                <label>End Date</label>
+                                                <div class="input-group date datetime " data-show-meridian="true"  data-date="<?php echo date(Y-m-d); ?>" data-date-format="yyyy-mm-dd  HH:ii" >
+                                                <span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
+                                                <input class="form-control" size="16" type="text" value="" id="d_end_date" name="d_end_date" value="<?php echo $gnrl->displaySiteDate($d_end_date); ?>" data-date-format="yyyy-mm-dd hh:ii" readonly="" onclick="datetimepicker()">
+                                                </div>
+                                            </div> -->
+<!-- 
+                                            <div class="form-group col-md-6">
+                                                <label>End Date</label>
+                                                <input class="form-control datetime" size="16" type="text" id="d_end_date" name="d_end_date" value="<?php echo $gnrl->displaySiteDate($d_end_date); ?>" data-date-format="yyyy-mm-dd hh:ii" readonly="" onclick="datetimepicker()" />
+                                            </div> -->
+
                                             <h3>Select Cities</h3>
                                             <div class="row" style="margin-top:0; margin-bottom:0;" >
                                                     <div class="form-group col-md-5">
@@ -377,17 +423,6 @@ $gnrl->check_login();
                                                         </div>
                                                        
                                                     </div>
-                                                    
-                                                 <!--    <label style="margin: 20px 20px;">
-                                                        <div class="clearfix"></div> 
-
-                                                        <div class="pull-left" style="">
-                                                            <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
-                                                            Show Deleted Data
-                                                        </div>
-                                                    </label> -->
-                                                    
-
                                                     <div class="clearfix"></div>
                                                 </div>
                                             </div>
@@ -423,7 +458,7 @@ $gnrl->check_login();
                                                                  <td><?php echo $gnrl->displaySiteDate($row['d_end_date']) ; ?></td>
                                                                   <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                                    <td><?php echo $row['e_status'];?></td>
-                                                                <td>
+                                                                <td style="width: 101px;">
                                                                     <?php
                                                                      if(1){ ?>
                                                                      <div class="btn-group pull-right">
@@ -432,10 +467,19 @@ $gnrl->check_login();
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                            <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                    <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  
+                                                                                }else{ ?>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
+                                                                            ?>
+                                                                           
                                                                         </ul>
                                                                     </div>
                                                                      <?php }?>
@@ -483,18 +527,60 @@ $gnrl->check_login();
 </div>
 
 <?php include('_scripts.php');?>
-<script>
 
-// START DATE END DATE VALIDATION
-function datetimepicker(){
-
-    var startdate = $('#d_start_date').val();
-    var enddate = $('#d_end_date').val();
-    $("#d_start_date").datetimepicker('setEndDate', enddate);
-    $("#d_end_date").datetimepicker('setStartDate', startdate);
-
-}
+<script type="text/javascript">
+$(function () {
+	
+	var startDate = 0;
+	var endDate = 0;
+    
+	$("#d_start_date").datetimepicker({
+		autoclose : true,
+		startDate : '<?php echo date('Y-m-d H:i'); ?>',
+		
+    }).on('changeDate', function( ev ){
+		
+		var newDate = $("#d_start_date").val();
+		
+		var DT = new Date( newDate );
+		
+		var	Y = DT.getFullYear();
+		var	M = DT.getMonth() + 1;
+		var	D = DT.getDate();
+		var	H = DT.getHours();
+		var	I = DT.getMinutes();
+		var	S = DT.getSeconds();
+		
+		if( M < 10 ) M = '0'+M;
+		if( D < 10 ) D = '0'+D;
+		if( H < 10 ) H = '0'+H;
+		if( I < 10 ) I = '0'+I;
+		if( S < 10 ) S = '0'+S;
+		
+		var startDate = Y+'-'+M+'-'+D+' '+H+':'+I;
+		
+		$("#d_end_date").datetimepicker('remove');
+		$("#d_end_date").datetimepicker({
+			autoclose : true,
+			startDate : startDate,
+		});
+		
+		if( Date.parse( new Date( $("#d_start_date").val() ) ) > Date.parse( new Date( $("#d_end_date").val() ) ) ){
+			$('#d_end_date').datetimepicker('setDate', DT );
+		}
+		
+	});
+	
+	$("#d_end_date").datetimepicker({
+		autoclose : true,
+		startDate : '<?php echo date('Y-m-d H:i'); ?>',
+	});
+	
+	
+	
+});
 </script>
+
 <?php include('jsfunctions/jsfunctions.php');?>
 </body>
 </html>

@@ -46,6 +46,12 @@ $gnrl->check_login();
 					$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
 				}
 			}
+			// make records restore
+	        if($_REQUEST['chkaction'] == 'restore') {
+	            $ins = array('i_delete'=>'0');
+	            $dclass->update( $table, $ins, " id = '".$id."'");
+	            $gnrl->redirectTo($page.".php?succ=1&msg=del");
+	        }
 			// make records active
 			else if($_REQUEST['chkaction'] == 'active'){
 				if(1){
@@ -152,7 +158,7 @@ $gnrl->check_login();
 												
 												<div class="col-md-12">
 													<div class="form-group">
-														<label>Title</label>
+														<label>Title <?php echo $gnrl->getAstric(); ?></label>
 														<?php $key = 'v_name';?>
 														<input type="text" class="form-control" name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required />
 													</div>	
@@ -190,9 +196,9 @@ $gnrl->check_login();
 												
 												<div class="col-md-12">
 													<div class="form-group">
-														<label>Assign Email</label>
+														<label>Assign Email <?php echo $gnrl->getAstric(); ?></label>
 														<?php $key = 'v_key';?>
-														<select class="select2" name="<?php echo $key;?>" id="<?php echo $key;?>" >
+														<select class="select2 required" name="<?php echo $key;?>" id="<?php echo $key;?>" >
 															<option value="" >- Select -</option>
 															<?php echo $gnrl->get_keyval_drop($globEmailTypes,$$key); ?>
 														</select>
@@ -207,7 +213,7 @@ $gnrl->check_login();
 													?>
 													<div class="col-md-12">
 														<div class="form-group"> 
-															<label>Subject (<?php echo $_langV?>)</label>
+															<label>Subject (<?php echo $_langV?>) <?php echo $gnrl->getAstric(); ?></label>
 															<input type="text" class="form-control" name="<?php echo $key;?>[<?php echo $_langK?>]" value="<?php echo $valArr[$_langK];?>" required />
 														</div>
 													</div> <?php
@@ -220,11 +226,11 @@ $gnrl->check_login();
 													?>
 													<div class="col-md-12">
 														<div class="form-group"> 
-															<label>Email Body (<?php echo $_langV?>)</label>
+															<label>Email Body (<?php echo $_langV?>) <?php echo $gnrl->getAstric(); ?></label>
 															<a href="javascript:;" class="md-trigger fright" data-modal="form-primary">
 																<span class="label label-primary">Keywords for Email Template</span>
 															</a>
-															<textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="ckeditor"><?php echo $valArr[$_langK];?></textarea>
+															<textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="ckeditor" required><?php echo $valArr[$_langK];?></textarea>
 														</div>
 													</div> <?php
 												} ?>
@@ -367,10 +373,19 @@ $gnrl->check_login();
 		                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
 		                                                                    </button>
 		                                                                    <ul role="menu" class="dropdown-menu pull-right">
-		                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-		                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-		                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-		                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+		                                                                    	<?php
+		                                                                           if(isset($_REQUEST['deleted'])){ ?>
+		                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+		                                                                            <?php  
+		                                                                            }else{ ?>
+		                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+		                                                                       			<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+		                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+		                                                                                <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+		                                                                            <?php }
+		                                                                        ?>
+		                                                                        
 		                                                                    </ul>
 		                                                                </div>
                                                                         <?php } ?>

@@ -13,14 +13,14 @@ var currClass = function( params ){
 		
 		get : function( param, cb ){
 			var _self = this;
-			dclass._select( '*', table, " AND id = '"+param+"' ", function( status, data ){
+			dclass._select( '*', table, " AND i_delete = '0' AND id = '"+param+"' ", function( status, data ){
 				cb( status, data );
 			});
 		},
 		
 		getByCityID : function( param, cb ){
 			var _self = this;
-			dclass._select( '*', table, " AND i_city_id = '"+param+"' ", function( status, data ){
+			dclass._select( '*', table, " AND i_delete = '0' AND i_city_id = '"+param+"' ", function( status, data ){
 				cb( status, data );
 			});
 		},

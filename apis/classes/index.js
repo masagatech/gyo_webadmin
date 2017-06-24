@@ -6,8 +6,6 @@ var _lables 	= require('../config/lable-translation.js');
 var gnrl 		= require('../config/general.class.js');
 var dclass 		= require('../config/database.js');
 
-
-	
 	var classes = {
 		_lables 	: _lables,
 		_config 	: _config,

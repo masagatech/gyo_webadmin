@@ -45,6 +45,12 @@ $gnrl->check_login();
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
             }
+             // make records restore
+	        if($_REQUEST['chkaction'] == 'restore') {
+	            $ins = array('i_delete'=>'0');
+	            $dclass->update( $table, $ins, " id = '".$id."'");
+	            $gnrl->redirectTo($page.".php?succ=1&msg=del");
+	        }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
                 if(1){
@@ -106,7 +112,7 @@ $gnrl->check_login();
 	
 	
 	$l_data_entities = array(  
-        'premium_driver' => 'Premium Driver (Value = 0:will not check, 1:will check)',
+        'premium_driver' => 'Premium Driver ( Only Apply Or Not, No need of value )',
 		'lowest_trip' => 'Lowest Trip (Trip Count)',
 		'max_dry_run' => 'Max Dry Run (In Km)',
 		'nearest' => 'Nearest',
@@ -145,13 +151,7 @@ $gnrl->check_login();
                                         </a>
                                     <?php } ?>
 
-                                <?php 
-                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
-										<a href="<?php echo $page ?>.php" class="fright" >
-		                                    <button class="btn btn-primary" type="button">Clear Search</button>
-		                                </a>
-	                                <?php }
-	                                ?>
+                               
 								<?php } ?>
                             </h3>
                         </div>
@@ -161,16 +161,16 @@ $gnrl->check_login();
                                 
 								<div class="content">
 									<div class="form-group">
-										<label>Name</label>
+										<label>Name <?php echo $gnrl->getAstric(); ?></label>
 										<input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
 									</div>
 									<div class="form-group">
-										<label>Order</label>
+										<label>Order <?php echo $gnrl->getAstric(); ?></label>
 										<input type="text" class="form-control" id="i_order" name="i_order" value="<?php echo $i_order; ?>" required />
 									</div>
 									<div class="form-group">
-										<label>Status</label>
-										<select class="select2" name="e_status" id="e_status">
+										<label>Status </label>
+										<select class="select2 required" name="e_status" id="e_status">
 											<?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
 										</select>
 									</div>
@@ -178,10 +178,10 @@ $gnrl->check_login();
 									
 									<div class="row" >
 										<div class="col-md-12" >
-											<h3>Round Buzz Time (Only Even and Positive Numbers )</h3>
+											<h3>Round Buzz Time (Only Even and Positive Numbers ) <?php echo $gnrl->getAstric(); ?> </h3>
 											<div class="col-md-12" >
 												<div class="form-group">
-													<input type="number" min="1" class="form-control" id="" name="l_data[buzz_time]" value="<?php echo $l_data['buzz_time'];?>" />
+													<input type="number" min="1" class="form-control" id="" name="l_data[buzz_time]" value="<?php echo $l_data['buzz_time'];?>" required="" />
 												</div>
 											</div> 
 										</div>
@@ -189,10 +189,10 @@ $gnrl->check_login();
 
 									<div class="row" >
 										<div class="col-md-12" >
-											<h3>Send Buzz Counter </h3>
+											<h3>Send Buzz Counter <?php echo $gnrl->getAstric(); ?> </h3>
 											<div class="col-md-12" >
 												<div class="form-group">
-													<input type="number" min="1" class="form-control" id="" name="l_data[buzz_count]" value="<?php echo $l_data['buzz_count'];?>" />
+													<input type="number" min="1" class="form-control" id="" name="l_data[buzz_count]" value="<?php echo $l_data['buzz_count'];?>" required="" />
 												</div>
 											</div> 
 										</div>
@@ -206,22 +206,42 @@ $gnrl->check_login();
 											foreach( $l_data_entities as $d_key => $d_value ){ 
 												$entityName = 'l_data[entity]['.$d_key.']';
 												$entityValues = $l_data['entity'][$d_key];
+												
 												?>
 												<div class="col-md-12" >
 													<div class="form-group">
 														<h4><?php echo $d_value;?></h4>
+														
+														
 														<div class="col-md-6" >
 															<div class="form-group">
-																<label>Check Order? [0 - will not check] [> 0 - will check]</label>
-																<input type="text" class="form-control" name="<?php echo $entityName;?>[check]" value="<?php echo $entityValues['check']?>" />
+																<label>Apply</label>
+																<select class="select2" name="<?php echo $entityName;?>[check]" >
+																	<?php echo $gnrl->get_keyval_drop( array(
+																		1 => 'Yes',
+																		0 => 'No',
+																	), $entityValues['check'] ); ?>
+																</select>
+																
 															</div>
 														</div>
+														
 														<div class="col-md-6" >
 															<div class="form-group">
-																<label>Value</label>
-																<input type="text" class="form-control" name="<?php echo $entityName;?>[value]" value="<?php echo $entityValues['value']?>" />
+																<label>Value <?php echo $gnrl->getAstric(); ?></label>
+																<?php 
+																if( $d_key == 'premium_driver' ){ ?>
+																	<input type="hidden" class="form-control" name="<?php echo $entityName;?>[value]" value="0" />
+																	<h5>Not Needed</h5>
+																	<?php
+																}
+																else{ ?>
+																	<input type="text" class="form-control" name="<?php echo $entityName;?>[value]" value="<?php echo $entityValues['value']?>" required="" />
+																	<?php
+																} ?>
 															</div>
 														</div>
+														
 														
 													</div>
 												</div> <?php 
@@ -296,23 +316,23 @@ $gnrl->check_login();
 	                                                        <label>
 	                                                            <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
+	                                                            <div class="clearfix"></div>
+	                                                                 <div class="pull-right" style="">
+	                                                                    <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+	                                                                    Show Deleted Data
+	                                                            </div>
 	                                                        </label>
 	                                                    </div>
-	                                                </div>
+	                                                    <?php 
+	                                                        if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
+	                                                                <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" > Clear Search </a>
+	                                                    <?php } ?>
+                                                	</div>
 	                                                <div class="pull-left">
 	                                                    <div id="datatable_length" class="dataTables_length">
 	                                                        <label><?php $pagen->writeLimitBox(); ?></label>
 	                                                    </div>
 	                                                </div>
-	                                                <label style="margin: 20px 20px;">
-                                                        <div class="clearfix"></div> 
-
-                                                        <div class="pull-left" style="">
-                                                            <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
-                                                            Show Deleted Data
-                                                        </div>
-                                                    </label>
-	                                                <div class="clearfix"></div>
 	                                            </div>
 	                                        </div>
 	                                        
@@ -346,10 +366,20 @@ $gnrl->check_login();
 	                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
 	                                                                    </button>
 	                                                                    <ul role="menu" class="dropdown-menu pull-right">
-	                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-	                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+	                                                                    	<?php
+	                                                                           if(isset($_REQUEST['deleted'])){ ?>
+	                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+	                                                                            <?php  
+	                                                                            }else{ ?>
+	                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+	                                                                        		<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+	                                                                       			<li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+	                                                                        		<li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+	                                                                            <?php }
+	                                                                        ?>
+
+	                                                                        
 	                                                                    </ul>
 	                                                                </div>
 	                                                            </td>

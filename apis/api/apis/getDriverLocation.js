@@ -23,7 +23,13 @@ var currentApi = function( req, res, next ){
 	
 	if( _status ){
 		
-		var _driver = {};
+		var _driver = {
+			l_latitude : 0,
+			l_longitude : 0,
+			list_icon : '',
+		
+			plotting_icon : '',
+		};
 		
 		async.series([
 		
@@ -37,6 +43,21 @@ var currentApi = function( req, res, next ){
 					}
 					else{
 						_driver = driver[0];
+						callback( null );
+					}
+				});
+			},
+			
+			function( callback ){
+				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = ( SELECT v_type FROM tbl_vehicle WHERE i_driver_id = '"+i_driver_id+"'  )", function( status, vehicle_type ){ 
+					if( status && vehicle_type.length ){
+						vehicle_type = vehicle_type[0];
+						if( vehicle_type.l_data.list_icon ){ _driver.list_icon = gnrl._uploads( 'vehicle_type/'+vehicle_type.l_data.list_icon ); }
+
+						if( vehicle_type.l_data.plotting_icon ){ _driver.plotting_icon = gnrl._uploads( 'vehicle_type/'+vehicle_type.l_data.plotting_icon ); }
+						callback( null );
+					}
+					else{
 						callback( null );
 					}
 				});

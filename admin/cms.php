@@ -50,6 +50,12 @@ $gnrl->check_login();
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
 			}
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
+            }
 			// make records active
 			else if($_REQUEST['chkaction'] == 'active'){
 				if(1){
@@ -186,7 +192,7 @@ $gnrl->check_login();
                                             
 										   	
                                             <div class="form-group">
-                                                <label>Key</label>
+                                                <label>Key <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_key" name="v_key" value="<?php echo $v_key; ?>" required />
                                             </div>
 											
@@ -200,8 +206,8 @@ $gnrl->check_login();
 													?>
 													<div class="col-md-12">
 														<div class="form-group"> 
-															<label>Content Title (<?php echo $_langV?>)</label>
-															<input type="text" name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" value="<?php echo $valArr[$_langK];?>" >
+															<label>Content Title (<?php echo $_langV?>) <?php echo $gnrl->getAstric(); ?></label>
+															<input type="text" name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control" value="<?php echo $valArr[$_langK];?>" required="" >
 														</div>
 													</div> <?php
 												} ?>
@@ -213,9 +219,8 @@ $gnrl->check_login();
 													?>
 													<div class="col-md-12">
 														<div class="form-group"> 
-															<label>Content Body (<?php echo $_langV?>)</label>
-															<textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control ckeditor" style="min-height:200px" >
-                                                            <?php echo $valArr[$_langK];?></textarea>
+															<label>Content Body (<?php echo $_langV?>) </label>
+															<textarea name="<?php echo $key;?>[<?php echo $_langK?>]" class="form-control ckeditor" style="min-height:200px" ><?php echo $valArr[$_langK];?></textarea>
 														</div>
 													</div> <?php
 												} ?>
@@ -377,8 +382,16 @@ $gnrl->check_login();
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                            <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  }else{ ?>
+                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
+                                                                            ?>
+                                                                           
                                                                         </ul>
                                                                     </div>
                                                                     <?php } ?>

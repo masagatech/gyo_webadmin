@@ -37,7 +37,7 @@ var currentApi = function( req, res, next ){
 			
 			// Get Vehicle Types
 			function( callback ){
-				dclass._select( '*', 'tbl_vehicle_type', " AND id = '"+i_vehicle_type_id+"' AND e_status = 'active' ", function( status, data ){ 
+				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND id = '"+i_vehicle_type_id+"' AND e_status = 'active' ", function( status, data ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, '', {} );
 					}
@@ -49,7 +49,7 @@ var currentApi = function( req, res, next ){
 						
 						var temp = newData;
 						if( temp.l_data.list_icon ){ temp.l_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.list_icon ); }
-						if( temp.l_data.active_icon ){ temp.l_data.active_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.active_icon ); }
+
 						if( temp.l_data.plotting_icon ){ temp.l_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.plotting_icon ); }
 						newData = temp;
 						
@@ -66,7 +66,7 @@ var currentApi = function( req, res, next ){
 				_q += " FROM ";
 				_q += " tbl_vehicle_fairs ";
 				_q += " WHERE i_city_id = '"+i_city_id+"' ";
-				_q += "  AND v_type = 'city_wise' ";
+				_q += " AND i_delete = '0' AND v_type = 'city_wise' ";
 				
 				dclass._query( _q, function( status, data ){
 					if( !status ){
@@ -88,8 +88,12 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
+			
 		], function( error, results ){
+			newData.l_data.charges.surcharge = newData.l_data.charges.surcharge+'%';
+			newData.l_data.charges.service_tax = newData.l_data.charges.service_tax+'%';
 			gnrl._api_response( res, 1, '', newData );
+			
 		});
 	}
 };

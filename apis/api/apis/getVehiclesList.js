@@ -38,7 +38,7 @@ var currentApi = function( req, res, next ){
 		
 			// Get Vehicle Type
 			function( callback ){
-				dclass._select( '*', 'tbl_vehicle_type', " AND v_type = '"+v_type+"' AND e_status = 'active' ", function( status, data ){ 
+				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = '"+v_type+"' AND e_status = 'active' ", function( status, data ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, '', {} );
 					}
@@ -74,8 +74,6 @@ var currentApi = function( req, res, next ){
 					_q += " AND b.e_status = 'active' ";
 					_q += " AND b.is_onduty = '1' ";
 					_q += " AND b.is_onride = '0' ";
-					_q += " AND b.is_buzzed = '0' ";
-					
 				_q += " ) AS sub ";
 				_q += " WHERE true ";
 				_q += " AND distance <= "+radius+" ";

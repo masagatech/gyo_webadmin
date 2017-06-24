@@ -31,6 +31,7 @@ var currentApi = function( req, res, next ){
 		
 		/*
 		>> Get Ride
+		>> Get Vehicle Icon
 		>> Get Driver
 		>> Get User
 		>> Get Rate & Comment
@@ -58,13 +59,28 @@ var currentApi = function( req, res, next ){
 						_row.d_start = _row.d_start ? gnrl._timestamp( _row.d_start ) : '';
 						_row.d_end 	 = _row.d_end ? gnrl._timestamp( _row.d_end ) : '';
 						
-						
 						var temp_v_pin = _row.v_pin.toString();
 						_row.v_pin = temp_v_pin[0]+temp_v_pin[1]+temp_v_pin[2]+temp_v_pin[3]+'-'+temp_v_pin[4]+temp_v_pin[5]+temp_v_pin[6]+temp_v_pin[7];
 						
 						callback( null );
 					}
 					
+				});
+			},
+			
+			// Get Vehicle Icon
+			function( callback ){
+				_row.vehicle_type_data = {
+					list_icon : '',
+					plotting_icon : '',
+				};
+				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = '"+_row.l_data.vehicle_type+"' ", function( status, data ){ 
+					if( status && data.length ){
+						var temp = data[0];
+						if( temp.l_data.list_icon ){ _row.vehicle_type_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.list_icon ); }
+						if( temp.l_data.plotting_icon ){ _row.vehicle_type_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.plotting_icon ); }
+						callback( null );
+					}
 				});
 			},
 			
@@ -86,6 +102,7 @@ var currentApi = function( req, res, next ){
 					_q += " , a.v_image AS driver_image";
 					_q += " , a.v_name AS driver_name";
 					_q += " , a.v_phone AS driver_phone";
+					_q += " , a.v_id";
 					
 					_q += " , b.id AS vehicle_id";
 					
@@ -151,6 +168,7 @@ var currentApi = function( req, res, next ){
 					_q += " ,v_email ";
 					_q += " ,v_phone ";
 					_q += " ,v_image ";
+					_q += " ,v_id ";
 					_q += " FROM ";
 					_q += " tbl_user ";
 					_q += " WHERE id = '"+_row.i_user_id+"' ";

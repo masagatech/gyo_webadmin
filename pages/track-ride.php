@@ -18,7 +18,7 @@ if( !$_SESSION['adminid'] && $rideInfo['e_status'] == 'complete' && $minutes > 6
 
 $l_data = json_decode( $rideInfo['l_data'], true );
 // AND (l_data->>'distance')::numeric < 0.2
-$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND (l_data->>'distance')::numeric < 0.25 AND l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '".$rideInfo['id']."' ORDER BY id ASC" );
+$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'track' AND l_data->>'i_ride_id' = '".$rideInfo['id']."' ORDER BY id ASC" );
 
 $totalLats = array();
 $totalLongs = array();
@@ -30,7 +30,7 @@ foreach( $rideTracking as $rowData ){
 	
 	$xx = "'".$rowData['l_latitude']."'";
 	$yy = "'".$rowData['l_longitude']."'";
-	if( !in_array($xx, $totalLats) || !in_array($yy, $totalLongs) ){
+	if( 1 || !in_array($xx, $totalLats) || !in_array($yy, $totalLongs) ){
 		$totalLats[]=$xx;
 		$totalLongs[]=$yy;
 		$gps_tracking[] = array(

@@ -67,7 +67,6 @@ var currClass = function( params ){
 			return data.v_role == 'driver' ? 1 : 0;
 		},
 		
-		
 		lang : function( data ){
 			var _self = this;
 			return gnrl._getLang( data.l_data ? data.l_data : {} );
@@ -115,8 +114,12 @@ var currClass = function( params ){
 			});
 		},
 		
-		getNewReferralCode : function( cb ){
+		getNewReferralCode : function( user_id, cb ){
 			var _self = this;
+			/*
+			_self.get( user_id, function( status, data ){
+				cb( data[0].v_phone );
+			});*/
 			var v_referral_code = gnrl._get_random_key( 8 );
 			dclass._select( '*', 'tbl_referral_codes', " AND v_referral_code = '"+v_referral_code+"' ", function( status, data ){
 				if( !status ){
@@ -142,7 +145,7 @@ var currClass = function( params ){
 					cb( data[0].v_referral_code );
 				}
 				else{
-					_self.getNewReferralCode( function( code ){
+					_self.getNewReferralCode( user_id, function( code ){
 						if( code ){
 							var _ins = {
 								'i_user_id' : user_id,

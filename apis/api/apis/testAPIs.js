@@ -327,152 +327,243 @@ var currentApi = function saveDriverInfo( req, res, done ){
 	
 	
 	
-	else if( action == 'refer' ){
-		
-		
-		
-
-		var referral_code 		= '91UNLOLI';
-		var referral_code_id 	= 2;
-		var referral_user_id 	= 1;
-		var referral_amount 	= 10;
-		var referral_user 		= {};
-		var referral_wallet 	= {};
-		
-		var _data = {};
-		
-		if( referral_code_id && referral_user_id && referral_code && referral_amount > 0 ){
-		
-			async.series([
-				
-				// Get Referral User
-				function( callback ){
-					User.get( referral_user_id, function( status, data ){
-						referral_user = data[0];
-						callback( null );
-					});
-				},
-				
-				
-			
-				// Get Referral Wallet
-				function( callback ){
-					Wallet.get( referral_user_id, 'user', function( status, wallet ){
-						referral_wallet = wallet;
-						callback( null );
-					});
-				},
-				
-				
-				
-				// Add To Referral Wallet
-				function( callback ){
-					var _ins = {
-						'i_wallet_id' : referral_wallet.id,
-						'i_user_id' : referral_user_id,
-						'v_type' : 'referral',
-						'v_action' : 'plus',
-						'f_amount' : referral_amount,
-						'd_added' : gnrl._db_datetime(),
-						'l_data' : {
-							'referred_user_id' : 21,
-							'i_ride_id' : 15,
-						},
-					};
-					Wallet.addTransaction( _ins, function( status, data ){ 
-						callback( null );
-					});
-					
-				},
-				
-				
-				
-				// Refresh Wallet
-				function( callback ){
-					Wallet.refreshUserWallet( referral_user_id, function( status, data ){ 
-						callback( null );
-					});
-				},
-				
-				
-				
-				// Send SMS 
-				function( callback ){
-					SMS.send({
-						_to : referral_user.v_phone,
-						_lang : User.lang( referral_user ),
-						_key : 'user_add_money',
-						_keywords : {
-							'[user_name]' : referral_user.v_name,
-							'[amount]' : referral_amount,
-							'[from]' : Wallet.getPaymentModeName( 'referral' ),
-						},
-					}, function( error_sms, error_info ){
-						callback( null );
-					});
-				},
-				
-				// Send Email 
-				function( callback ){
-					Email.send({
-						_to : referral_user.v_phone,
-						_lang : User.lang( referral_user ),
-						_key : 'user_add_money',
-						_keywords : {
-							'[user_name]' : referral_user.v_name,
-							'[amount]' : referral_amount,
-							'[from]' : Wallet.getPaymentModeName( 'referral' ),
-						},
-					}, function( error_mail, error_info ){
-						callback( null );
-					});
-				},
-				
-				
-				// Update Current User
-				function( callback ){
-					var _ins = [
-						" l_data = l_data || '"+gnrl._json_encode({
-							'referral_code' 	: '',
-							// 'referral_code_id' 	: 0,
-							'referral_user_id' 	: 0,
-							'referral_amount' 	: 0,
-						})+"' "
-					];
-					dclass._updateJsonb( 'tbl_user', _ins, " AND id = '22' ", function( status, data ){ 
-						callback( null );
-					});
-				},
-				
-				
-			], function( error, results ){
-				
-				gnrl._api_response( res, 1, 'succ_ride_completed', {
-					referral_code : referral_code,
-					referral_code_id : referral_code_id,
-					referral_user_id : referral_user_id,
-					referral_amount : referral_amount,
-					referral_user : referral_user,
-					referral_wallet : referral_wallet,
-					
-				});
-				
+	else if( action == 'support_types' ){
+		var i = 10;
+		var ins = {
+			'j_title' : {
+				'en' : 'Support '+i,
+				'hi' : 'Support '+i,
+				'gu' : 'Support '+i,
+			},
+			'j_text' : {
+				'en' : 'Support '+i,
+				'hi' : 'Support '+i,
+				'gu' : 'Support '+i,
+			},
+			'i_textbox' : 0,
+			'i_order' : i,
+			'd_added' : gnrl._db_datetime(),
+			'd_modified' : gnrl._db_datetime(),
+			'e_status' : 'active',
+		};
+		dclass._insert( 'tbl_support_types', ins, function( is_confirm_status, is_confirm_data ){
+			gnrl._api_response( res, 1, 'Done', {
+				is_confirm_status : is_confirm_status,
+				is_confirm_data : is_confirm_data,
 			});
-			
-		}
-		else{
-			
-			gnrl._api_response( res, 1, 'succ_ride_completed', {} );
-			
-		}
-
+		});
 		
 	}
 	
+	else if( action == 'simpleUser' ){
+		
+		var pickup_lat = '23.0401863';
+		var pickup_lng = '72.518715';
+		var _ride = {
+			l_data : {
+				vehicle_type : 'auto'
+			}
+		};
+		var _round = {
+			l_data : {
+				buzz_count : 20
+			}
+		};
+		
+		
+		var _q = " SELECT ";
+		_q += " id ";
+		_q += " , COALESCE( l_data->>'lang', '"+_lang+"' ) as lang ";
+		_q += " FROM tbl_user ";
+		_q += " WHERE true ";
+		
+		dclass._query( _q, function( status, data ){
+			
+			for( var k in data ){
+				// data[k].lang = data[k].lang ? data[k].lang : _lang;
+			}
+			
+			gnrl._api_response( res, 1, 'Done', {
+				status : status,
+				_q : _q,
+				data : data,
+			});
+		});
+		
+	}
 	
+	else if( action == 'simpleConfirmRide' ){
+		
+		var pickup_lat = '23.0401863';
+		var pickup_lng = '72.518715';
+		var _ride = {
+			l_data : {
+				vehicle_type : 'auto'
+			}
+		};
+		var _round = {
+			l_data : {
+				buzz_count : 20
+			}
+		};
+		
+		
+		var _q = " SELECT ";
+		_q += " * ";
+		_q += " FROM ( ";
+			_q += " SELECT ";
+			_q += " U.id ";
+			_q += " , inb.id AS vehicle_id ";
+			_q += " , "+gnrl._distQuery( pickup_lat, pickup_lng, "U.l_latitude::double precision", "U.l_longitude::double precision" )+" AS distance";
+			_q += " , U.v_device_token ";
+			_q += " , COALESCE( U.l_data->>'lang', '"+_lang+"' ) AS lang ";
+			_q += " FROM tbl_user U ";
+			_q += " LEFT JOIN tbl_vehicle inb ON U.id = inb.i_driver_id ";
+			_q += " WHERE true ";
+			_q += " AND inb.v_type = '"+_ride.l_data.vehicle_type+"' ";
+			_q += " AND inb.id > 0 ";
+			_q += " AND U.v_role = 'driver' ";
+			_q += " AND U.e_status = 'active' ";
+			_q += " AND U.is_onduty = '1' ";
+			_q += " AND U.is_onride = '0' ";
+			_q += " AND U.is_buzzed = '0' ";
+			_q += " AND U.v_token != '' ";
+		_q += " ) a ";
+		_q += " WHERE true ";
+		_q += " ORDER BY a.distance ASC";
+		_q += " LIMIT "+( _round.l_data.buzz_count ? _round.l_data.buzz_count : 10 ); 
+		
+		dclass._query( _q, function( status, data ){
+			
+			for( var k in data ){
+				// data[k].lang = data[k].lang ? data[k].lang : _lang;
+			}
+			
+			gnrl._api_response( res, 1, 'Done', {
+				status : status,
+				_q : _q,
+				data : data,
+			});
+		});
+		
+	}
 	
-	
-	
+	else if( action == 'complexConfirmRide' ){
+		
+		// testAPIs?action=complexConfirmRide&i_ride_id=1071&round_id=1&pickup_lat=23.0401863&pickup_lng=72.518715
+		
+		var pickup_lat 	= params.pickup_lat;
+		var pickup_lng 	= params.pickup_lng;
+		var i_ride_id 	= params.i_ride_id;
+		var round_id 	= params.round_id;
+		
+		var _ride = {};
+		var _round = {};
+		var _data = {};
+		var mainData = {};
+		
+		async.series( [
+			
+			function( callback ){
+				
+				dclass._select( '*', 'tbl_ride', " AND id = '"+i_ride_id+"' ", function( ride_status, ride_data ){ 
+					_ride = ride_data[0];
+					_data._ride = _ride;
+					callback( null );
+				});
+				
+			},
+			
+			function( callback ){
+				dclass._select( '*', 'tbl_round', " AND id = '"+round_id+"' ", function( round_status, round_data ){ 
+					_round = round_data[0];
+					_data._round = _round;
+					callback( null );
+				});
+			},
+			
+			
+			function( callback ){
+				
+				var _entity = _round.l_data.entity;
+				for( var k in _entity ){
+					_entity[k].check = parseFloat( _entity[k].check );
+					_entity[k].value = parseFloat( _entity[k].value );
+				}
+				
+				_data._entity = _entity;
+				
+				
+				
+				var _q = " SELECT ";
+				_q += " * ";
+				_q += " FROM ( ";
+					_q += " SELECT ";
+					
+					_q += " U.id ";
+					_q += " , inb.id AS vehicle_id ";
+					_q += " , "+gnrl._distQuery( pickup_lat, pickup_lng, "U.l_latitude::double precision", "U.l_longitude::double precision" )+" AS distance";
+					_q += " , U.v_device_token ";
+					_q += " , COALESCE( U.l_data->>'lang', '"+_lang+"' ) AS lang ";
+					
+					_q += " , COALESCE( U.l_data->>'rate', '0' ) AS rate ";
+					_q += " , U.is_premium ";
+					_q += " , ( SELECT COUNT(id) FROM tbl_ride WHERE e_status = 'complete' AND i_driver_id = U.id AND d_time >= '"+gnrl._db_ymd('Y-m-d')+" 00:00:00' AND d_time <= '"+gnrl._db_ymd('Y-m-d')+" 23:59:00' ) AS today_trip_count ";
+					_q += " , ( SELECT COUNT(id) FROM tbl_buzz WHERE ( i_status = -1 OR i_status = -2 ) AND i_driver_id = U.id AND d_time >= '"+gnrl._db_ymd('Y-m-d')+" 00:00:00' AND d_time <= '"+gnrl._db_ymd('Y-m-d')+" 23:59:00' ) AS today_buzz_count ";
+					_q += " , ( SELECT COUNT(id) FROM tbl_buzz WHERE ( i_status != -1 AND i_status != 1 ) AND i_ride_id = '"+i_ride_id+"' AND i_driver_id = U.id ) AS same_ride_buzz_count ";
+					
+					_q += " FROM tbl_user U ";
+					_q += " LEFT JOIN tbl_vehicle inb ON U.id = inb.i_driver_id ";
+					_q += " WHERE true ";
+					_q += " AND inb.v_type = '"+_ride.l_data.vehicle_type+"' ";
+					_q += " AND inb.id > 0 ";
+					_q += " AND U.v_role = 'driver' ";
+					_q += " AND U.e_status = 'active' ";
+					_q += " AND U.is_onduty = '1' ";
+					_q += " AND U.is_onride = '0' ";
+					_q += " AND U.is_buzzed = '0' ";
+					_q += " AND U.v_token != '' ";
+				_q += " ) a ";
+				_q += " WHERE true ";
+				_q += " AND a.same_ride_buzz_count <= '0' ";
+				
+				mainData.isDirectAssign = _entity.premium_driver.check;
+				if( _entity.premium_driver.check ){ _q += " AND a.is_premium = '1' "; }
+				if( _entity.lowest_trip.check ){ _q += " AND a.today_trip_count <= '"+_entity.lowest_trip.value+"' "; }	
+				if( _entity.max_dry_run.check ){ _q += " AND a.distance <= '"+_entity.max_dry_run.value+"' "; }
+				if( _entity.rating.check ){ _q += " AND a.rate >= '"+_entity.rating.value+"' "; }
+				if( _entity.already_offered.check ){ _q += " AND a.today_buzz_count <= '"+_entity.already_offered.value+"' "; }
+				
+				_q += " ORDER BY a.distance ASC, a.rate DESC ";
+				
+				if( mainData.isDirectAssign ){ 
+					_q += " LIMIT 1 "; 
+				} 
+				else { 
+					_q += " LIMIT "+( _round.l_data.buzz_count ? _round.l_data.buzz_count : 10 ); 
+				}
+				
+				_data._q = _q;
+				
+				
+				
+				dclass._query( _q, function( status, data ){
+					_data.status= status;
+					_data.data = data;
+					gnrl._api_response( res, 1, 'Done', _data );
+				});
+				
+			}
+			
+		], function( error, results ){
+					
+			gnrl._api_response( res, 1, 'Done', _data );
+			
+		});
+		
+		
+		
+	}
 	
 	else{
 		gnrl._api_response( res, 0, 'Action Needed', {} );

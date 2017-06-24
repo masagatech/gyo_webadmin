@@ -78,21 +78,21 @@ $gnrl->check_login();
 								<div class="row" >
 									<div class="col-md-4" >
 										<div class="form-group">
-											<label>SMS Gateway Username</label>
+											<label>SMS Gateway Username <?php echo $gnrl->getAstric(); ?></label>
 											<?php $key = 'SMS_USERNAME';?>
 											<input type="text" class="form-control"  name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required >
 										</div>
 									</div>
 									<div class="col-md-4" >
 										<div class="form-group">
-											<label>SMS Gateway Password</label>
+											<label>SMS Gateway Password <?php echo $gnrl->getAstric(); ?></label>
 											<?php $key = 'SMS_PASSWORD';?>
 											<input type="text" class="form-control"  name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required >
 										</div>
 									</div>
 									<div class="col-md-4" >
 										<div class="form-group">
-											<label>SMS Sender Name</label>
+											<label>SMS Sender Name <?php echo $gnrl->getAstric(); ?></label>
 											<?php $key = 'SMS_SENDERNAME';?>
 											<input type="text" class="form-control"  name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required >
 										</div>
@@ -108,14 +108,7 @@ $gnrl->check_login();
 								</div>
 							</div>                            
 						</div>
-						
-						
 					</form>
-					
-					
-					
-					
-					
                 </div>
             </div>
         </div>

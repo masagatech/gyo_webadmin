@@ -41,7 +41,7 @@ var currClass = function( params ){
 				// Get Template
 				function( callback ){
 					
-					var _q = "SELECT * FROM tbl_email WHERE v_key = '"+_key+"' AND e_status = 'active' ";
+					var _q = "SELECT * FROM tbl_email WHERE i_delete = '0' AND v_key = '"+_key+"' AND e_status = 'active' ";
 					
 					dclass._query( _q, function( status, data ){
 						if( !status ){

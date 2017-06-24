@@ -24,12 +24,15 @@ var currentApi = function( req, res, next ){
 		var _q = "";
 		_q += " SELECT ";
 		_q += " tbl_ride.id AS id ";
+		_q += " , tbl_ride.v_ride_code AS v_ride_code ";
 		_q += " , tbl_ride.e_status AS status ";
 		_q += " , tbl_ride.d_time AS ride_time ";
 		_q += " , tbl_ride.l_data->>'vehicle_type' AS vehicle_type ";
 		_q += " , tbl_ride.l_data->>'pickup_address' AS pickup_address ";
 		_q += " , tbl_ride.l_data->>'destination_address' AS destination_address ";
+		
 		_q += " , tbl_user.v_name AS driver_name ";
+		_q += " , tbl_user.v_id AS driver_v_id ";
 		
 		_q += " FROM tbl_ride AS tbl_ride LEFT JOIN tbl_user AS tbl_user ON tbl_user.id = tbl_ride.i_driver_id ";
 		_q += " WHERE true ";
@@ -55,6 +58,7 @@ var currentApi = function( req, res, next ){
 				for( var k in data ){
 					data[k].ride_time = data[k].ride_time ? gnrl._timestamp( data[k].ride_time ) : '';
 					data[k].driver_name = data[k].driver_name ? data[k].driver_name : 'Not Assigned';
+					data[k].driver_v_id = data[k].driver_v_id ? data[k].driver_v_id : '';
 				}
 				gnrl._api_response( res, 1, '', data );
 			}

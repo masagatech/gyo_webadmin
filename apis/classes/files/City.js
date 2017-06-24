@@ -13,21 +13,21 @@ var currClass = function( params ){
 		
 		get : function( param, cb ){
 			var _self = this;
-			dclass._select( '*', table, " AND id = '"+param+"' ", function( status, data ){
+			dclass._select( '*', table, " AND i_delete = '0' AND id = '"+param+"' ", function( status, data ){
 				cb( status, data );
 			});
 		},
 		
 		getByName : function( param, cb ){
 			var _self = this;
-			dclass._select( '*', table, " AND LOWER( v_name ) LIKE '%"+( param.toLowerCase() )+"%' ", function( status, data ){
+			dclass._select( '*', table, " AND i_delete = '0' AND LOWER( v_name ) LIKE '%"+( param.toLowerCase() )+"%' ", function( status, data ){
 				cb( status, data );
 			});
 		},
 		
 		getActiveList : function( cb ){
 			var _self = this;
-			dclass._select( '*', table, " AND e_status = 'active' ORDER BY v_name ", function( status, data ){
+			dclass._select( '*', table, " AND i_delete = '0' AND e_status = 'active' ORDER BY v_name ", function( status, data ){
 				cb( status, data );
 			});
 		},

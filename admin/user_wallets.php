@@ -8,9 +8,10 @@ $gnrl->check_login();
     $page_title = "Manage User Wallets";
     $page = "user_wallets";
     $table = 'tbl_wallet';
+    $table2 = 'tbl_wallet_transaction';
     $title2 = 'User Wallet';
     // $v_role ='user';
-    $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' ) ) ? $_REQUEST['script'] : "";
+    $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' || $_REQUEST['script'] == 'manual' ) ) ? $_REQUEST['script'] : "";
     
     ## Insert Record in database starts
     if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
@@ -37,6 +38,125 @@ $gnrl->check_login();
         
     }
 
+    if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='manual_submit'){
+
+        $i_user_id=$_REQUEST['id'];
+        if($amount < 0){
+            $v_action='minus';
+        }elseif ($amount > 0) {
+            $v_action='plus';
+        }else{
+            $gnrl->redirectTo($page.".php?succ=0&msg=wallet_error&a=2&script=manual&id=".$_REQUEST['id']);
+        }
+        $ins = array(
+            'i_user_id'  => $i_user_id,
+            'v_type' =>'custom',
+            'v_action'  => $v_action,
+            'f_amount'=> $amount,
+            'l_data'=> json_encode($l_data),
+            'd_added' => date('Y-m-d H:i:s'),
+        );
+      
+        $id = $dclass->insert( $table2, $ins );
+
+        if($id > 0){
+
+            
+            ##Sum of all transaction 
+            $ssql = "SELECT SUM(f_amount) as TOTAL from ".$table2." where i_user_id = ".$i_user_id." ";
+            $restepm = $dclass->query($ssql);
+            $row = $dclass->fetchResults($restepm);
+            $row = $row[0];
+            ## update the wallet
+            $ssql2="UPDATE ".$table." SET f_amount =  ".$row['total']." WHERE i_user_id = ".$i_user_id." ";
+            $restepm2 = $dclass->update_sql($ssql2);
+
+
+            #get user data
+            $user_info = $dclass->select('*','tbl_user'," AND id = '".$i_user_id."'");
+            $user_info = $user_info[0];
+            
+            #get notification template data
+            $notification_template = $dclass->select('*','tbl_push_notification'," AND v_type = 'user_manual_update'");
+            $notification_template = $notification_template[0];
+            $j_title =json_decode($notification_template['j_title'],true);
+            $j_content =json_decode($notification_template['j_content'],true);
+            
+            $notification_data=array(
+                'type' => 'user_manual_update',
+                'title' => $j_title['en'],
+                'body' => $l_data['description'],
+            );
+            
+            #send push notification
+            $is_send=$gnrl->sendNotificationManual($user_info['v_device_token'],$notification_data,USER_NOTIFICATION_KEY);
+            $is_send=json_decode($is_send,true);
+            if($is_send['success']=='1'){
+                $i_status=1;
+            }else{
+                $i_status=0;
+            }
+            $ins = array(
+                'i_user_id'  => $i_user_id,
+                'i_push_notification_id' =>$notification_template['id'],
+                'i_status'  => $i_status,
+                'd_added' => date('Y-m-d H:i:s'),
+                'l_data'=> json_encode($notification_data),
+                'v_type'=> 'user_manual_update',
+            );
+            #notification track entry
+            $id = $dclass->insert( 'tbl_track_push_notification', $ins );
+            
+
+
+            #send message
+            $sms_template = $dclass->select('*','tbl_sms'," AND v_key = 'user_manual_update'");
+            $sms_template = $sms_template[0];
+            $l_message= json_decode($sms_template['j_sms'],true);
+            $url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user='.SMS_USERNAME.'&pwd='.SMS_PASSWORD.'&sender='.SMS_SENDERNAME.'';
+            $url .= '&mt=2';
+            $url .= '&mobile='.$user_info['v_phone'].'';
+            $url .= '&msg='.urlencode($l_data['description']).'';  //8758857048
+            try{
+                $is_send=$gnrl->sendSMS( $url );
+                if((substr($is_send, 0, 3) == 'MSP')){
+                    $i_status='1';
+                }else{
+                    $i_status='0';
+                }
+            }
+            catch( Exception $e ){
+                _p($e);
+            }
+            $l_message=array(
+                'lang' => 'en',
+                'i_view' => '0',
+                'j_message' => $l_message['en'],
+            );
+            $ins = array(
+                'i_user_id'  => $i_user_id,
+                'i_messages_id' =>$sms_template['id'],
+                'i_status'  => $i_status,
+                'd_added' => date('Y-m-d H:i:s'),
+                'l_data'=> json_encode($l_message),
+            );
+            #messages track entry
+            $id = $dclass->insert( 'tbl_track_push_messages', $ins );
+
+            #email send
+            // $email_template = $dclass->select('*','tbl_email'," AND v_name = 'user_manual_update'");
+            // $email_template = $email_template[0];
+            $email_data=$gnrl->get_email_data('user_manual_update');
+            $email_data['email_to']=$user_info['v_email'];
+            $replacer_arr['[free_text]']=$l_data['description'];
+            $is_send=$gnrl->prepare_and_send_email($email_data,$replacer_arr);
+
+            // $is_send=$gnrl->custom_email($user_info['v_email'],$email_from = "", $reply_to = "", $email_cc = "", $email_bcc = "", $email_subject, $l_data['description'], $email_format = "", $attachments = array());
+            $gnrl->redirectTo($page.".php?succ=1&msg=wallet_upd");
+        }
+            
+    }
+
     ## Delete Record from the database starts
     if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
         if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
@@ -49,6 +169,12 @@ $gnrl->check_login();
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
+            }
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
@@ -116,12 +242,8 @@ $gnrl->check_login();
             }
             else {
                 $row = $dclass->select('*',$table," AND id = '".$id."'");
-
                 $row = $row[0];
-                // _P($row);
-                // exit;
                 extract( $row );
-                // $l_data=json_decode($l_data,true);
             }
         }
     }
@@ -254,7 +376,7 @@ $gnrl->check_login();
                             }
                             
                             
-                           $ssql = "SELECT t1.*,
+                            $ssql = "SELECT t1.*,
                                         t2.v_name as user_name
                                     FROM 
                                         tbl_wallet_transaction  t1
@@ -262,8 +384,8 @@ $gnrl->check_login();
  
                                      WHERE true AND t1.i_user_id=".$_REQUEST['id']." ".$wh;
 
-                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 't2.v_name' );
-                            $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'ASC' );            
+                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 't1.d_added' );
+                            $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );            
                             /*$sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
                             $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';*/
                             
@@ -272,7 +394,7 @@ $gnrl->check_login();
                             $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                             $restepm = $dclass->query($sqltepm);
                             $row_Data = $dclass->fetchResults($restepm);
-                           
+                            
                             ?>
                             <div class="content">
                                 <form name="frm" action="" method="get" >
@@ -362,6 +484,40 @@ $gnrl->check_login();
                                     </div>
                                 </form>
                             </div> <?php 
+                        }elseif( ($script == 'manual') && 1 ){
+                            $row = $dclass->select('*','tbl_user'," AND id = '".$id."'");
+                            $row = $row[0];
+                            extract( $row );
+                        ?>
+                           
+                                        
+                            <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
+                                <div class="row">
+                                    <div class="col-md-6 ">
+                                        <div class="content">
+                                            <div class="form-group">
+                                                <label>Driver Name</label>
+                                                <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" readOnly="" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label> Amount</label>
+                                                <input type="text"  pattern="\d" title="Only digits" class="form-control" id="amount" name="amount" value="" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label> Description</label>
+                                                <textarea class="form-control" name="l_data[description]"></textarea>
+                                            </div>
+                                           
+                                            <div class="form-group">
+                                                <button class="btn btn-primary" type="submit" name="submit_btn" value="manual_submit">Submit</button>
+                                                <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                                 
+                            <?php 
                         }
                         else{
                             if( 1 ){
@@ -418,12 +574,12 @@ $gnrl->check_login();
                                 $row_Data = $dclass->fetchResults($restepm);
 
                                 #USE FOR USER DROPDOWN MENU
-                                $ssql2 = "SELECT id,v_name FROM tbl_user WHERE true AND v_role= 'user' ORDER BY v_name ASC ";
-                                $restepm2 = $dclass->query($ssql2);
-                                $user_Data = $dclass->fetchResults($restepm2);
-                                foreach ($user_Data as $d_key => $d_value) {
-                                    $user_name_arr[$d_value['id']]= $d_value['v_name'];
-                                }
+                                // $ssql2 = "SELECT id,v_name FROM tbl_user WHERE true AND v_role= 'user' ORDER BY v_name ASC ";
+                                // $restepm2 = $dclass->query($ssql2);
+                                // $user_Data = $dclass->fetchResults($restepm2);
+                                // foreach ($user_Data as $d_key => $d_value) {
+                                //     $user_name_arr[$d_value['id']]= $d_value['v_name'];
+                                // }
 
                                 ?>
                                 <div class="content">
@@ -452,18 +608,7 @@ $gnrl->check_login();
                                                         </div>
                                                     </div>
                                                   
-                                                    <label style="margin-left:15px">Driver wise : 
-                                                         <div class="clearfix"></div>
-                                                            <div class="pull-left" style="">
-                                                            <div>
-                                                             <select class="select2" name="driver_sel" id="driver_sel" onChange="searchDriverName(this.options[this.selectedIndex].value)">
-                                                                    <option value="">--Select--</option>
-                                                                     <?php echo $gnrl->get_keyval_drop($user_name_arr,$_GET['driver']); ?>
-                                                                    </select>
-                                                            </div>
-
-                                                        </div>
-                                                    </label>
+                                                    
                                                     <div class="clearfix"></div>
                                                 </div>
                                             </div>
@@ -499,10 +644,20 @@ $gnrl->check_login();
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                            <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['i_user_id'];?>">View Transaction</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                    <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  
+                                                                                }else{ ?>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['i_user_id'];?>">View Transaction</a></li>
+                                                                                     <li><a href="<?php echo $page?>.php?a=2&script=manual&id=<?php echo $row['i_user_id'];?>">Manual adjustment</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
+                                                                            ?>
+                                                                            
                                                                         </ul>
                                                                     </div>
                                                                 </td>
@@ -567,16 +722,7 @@ $gnrl->check_login();
     </div>
     <div class="md-overlay"></div>
 <?php include('_scripts.php');?>
-<script>
-function searchDriverName(val){
-        if(val==''){
-            $str="";
-        }else{
-            $str="?driver="+val+"";
-        }
-        window.document.location.href=window.location.pathname+$str;
-}
-</script>
+
 <?php include('jsfunctions/jsfunctions.php');?>
 </body>
 </html>

@@ -52,7 +52,9 @@ var currentApi = function( req, res, next ){
 		gnrl._api_response( res, 0, _message );
 	}
 	else{
-		
+		var v_ride_code = '';
+		var ride_id = 0;
+		var new_pin = "";
 		var v_pin = Ride.getPin();
 		var i_city_id = 0;
 		var _user = {};
@@ -86,7 +88,6 @@ var currentApi = function( req, res, next ){
 			function( callback ){
 				
 				var _ins = { 
-					'v_ride_code' 		: gnrl._get_random_key( 10 ),
 					'i_user_id' 		: login_id,
 					'i_driver_id' 		: 0,
 					'i_vehicle_id' 		: 0,
@@ -96,7 +97,6 @@ var currentApi = function( req, res, next ){
 					'd_time' 			: ( ride_type == 'ride_later' ) ? ride_time : gnrl._db_datetime(),
 					'e_status' 		    : ( ride_type == 'ride_now' ? 'pending' : 'scheduled' ),
 					'l_data'            : gnrl._json_encode({
-						
 						'round_id'              : 0,
 						'round_order'           : 0,
 						'vehicle_type'          : vehicle_type,
@@ -115,26 +115,44 @@ var currentApi = function( req, res, next ){
 						'i_city_id'       		: i_city_id,
 						'charges'       		: JSON.parse( charges ),
 						'v_gender'       		: v_gender,
-						
 					}),
 				};
 				
 				v_pin = v_pin.toString();
-				
-				var new_pin = v_pin[0]+v_pin[1]+v_pin[2]+v_pin[3]+'-'+v_pin[4]+v_pin[5]+v_pin[6]+v_pin[7];
+				new_pin = v_pin[0]+v_pin[1]+v_pin[2]+v_pin[3]+'-'+v_pin[4]+v_pin[5]+v_pin[6]+v_pin[7];
 				
 				dclass._insert( 'tbl_ride', _ins, function( status, data ){ 
 					if( status ){
-						gnrl._api_response( res, 1, "", { 
-							'i_ride_id' : data.id,
-							'v_pin' : new_pin,
-						});
+						ride_id = data.id;
+						callback( null );
 					}
 					else{
 						gnrl._api_response( res, 0, _message );
 					}
 				});
+			},
+			
+			// Generate ID
+			function( callback ){
+				v_ride_code = 'RD'+gnrl._pad_left( ride_id, "00000000" );
+				var _ins = { 
+					'v_ride_code' : v_ride_code,
+				};
+				dclass._update( 'tbl_ride', _ins, " AND id = '"+ride_id+"' ", function( status, updated ){ 
+					callback( null );
+				});
+			},
+			
+			
+			function( callback ){
+				gnrl._api_response( res, 1, "", { 
+					'i_ride_id' : ride_id,
+					'v_pin' : new_pin,
+					'v_ride_code' : v_ride_code,
+					
+				});
 			}
+			
 		], function( error, results ){
 			
 			gnrl._api_response( res, 0, _message );

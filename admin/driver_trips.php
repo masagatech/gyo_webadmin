@@ -3,6 +3,24 @@ include('includes/configuration.php');
 $gnrl->check_login();
 
 
+function distance($lat1, $lon1, $lat2, $lon2, $unit) {
+
+  $theta = $lon1 - $lon2;
+  $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+  $dist = acos($dist);
+  $dist = rad2deg($dist);
+  $miles = $dist * 60 * 1.1515;
+  $unit = strtoupper($unit);
+
+  if ($unit == "K") {
+    return ($miles * 1.609344);
+  } else if ($unit == "N") {
+      return ($miles * 0.8684);
+    } else {
+        return $miles;
+      }
+}
+
 	extract( $_POST );
 	$page_title = "Manage Rides";
 	$page = "driver_trips";
@@ -12,31 +30,131 @@ $gnrl->check_login();
 	$title2 = 'Rides';
 	$folder = 'vehicle_type';
 	
+	if( $_REQUEST['show_log2'] == 1 ){
+		_p( 'RIDE DATA' );
+		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '".$_REQUEST['id']."' ORDER BY id ASC" );
+		_p( $rideTracking );
+		_p( '------------------------------------------' );
+		
+		_p( 'TRACK DATA' );
+		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'track' AND l_data->>'i_ride_id' = '".$_REQUEST['id']."' ORDER BY id ASC" );
+		_p( $rideTracking );
+		_p( '------------------------------------------' );
+		
+		_p( 'DRY DATA' );
+		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'dry_run' AND l_data->>'i_ride_id' = '".$_REQUEST['id']."' ORDER BY id ASC" );
+		_p( $rideTracking );
+		_p( '------------------------------------------' );
+		exit;
+	}
+	
 	if( $_REQUEST['show_log'] == 1 ){
+		error_reporting( E_ALL );
 		// AND l_data->>'run_type' = 'ride'
-		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'i_ride_id' = '".$_REQUEST['id']."' ORDER BY id ASC" );
+		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '".$_REQUEST['id']."' ORDER BY id ASC" );
 		$totalLats = array();
 		$totalLongs = array();
 		$totalDistance = 0;
 		$totalDistanceArr = array();
-		if( $_REQUEST['D'] ){
+		
+		
+		$distArr = array();
+		$distArrM = array();
+		// waypoints
+		
+		$distArr = array();
+		$distArrAlready = array();
+		
+		$cnt = 10;
+		$address = array();
+		foreach( $rideTracking as $k => $row ){
 			
-			foreach( $rideTracking as $row ){
+			$row['l_data'] = json_decode( $row['l_data'], true );
+			$address[] = $row['l_latitude'].','.$row['l_longitude'];
+			// $address[] = str_replace( ' ', '%2C', $row['l_data']['end_address'] );
+			if( $row['l_data']['distance'] > 0.3 ){
+				$row['l_data']['distance'] = 0.3;
+			}
+			$distArrAlready[] = $row['l_data']['distance'];
+			$cnt--;
+			
+			if( $cnt == 0 || ($k+1) == count($rideTracking) ){
+				
+				_p($address);
+				
+				$url = 'http://maps.googleapis.com/maps/api/directions/json?sensor=false&origin='.$address[0];
+				$url .= '&destination='.$address[(count($address[0])-1)];
+				
+				unset($address[0]);
+				if( count( $address ) >= 9 ){
+					unset($address[count($address)-1]);
+				}
+				
+				
+				$url .= '&waypoints='.implode('|',$address);
+				$url .= '&alternative=true&mode=walking';
+				$temppp = $gnrl->sendSMS( $url );
+				$temppp = json_decode( $temppp, true );
+				
+				if( $temppp['status'] == 'OK' ){
+					foreach( $temppp['routes'][0]['legs'] as $legs ){
+						$xxxxx = explode( ' ', $legs['distance']['text'] );
+						if( $xxxxx[1] == 'm' ){
+							$xxxxx[0] = $xxxxx[0] / 1000;
+						}
+						if( $xxxxx[0] > 0.3 ){
+							$xxxxx[0] = 0.3;
+						}
+						$distArr[] = $xxxxx[0];
+					}
+				}
+				
+				$address = array();
+				$cnt = 10;
+			}
+			
+		}
+		
+		_p(array_sum($distArr));
+		_p($distArr);
+		
+		_p(array_sum($distArrAlready));
+		_p($distArrAlready);
+		
+		
+		
+		_p($rideTracking);
+		_p($temppp);
+		
+		
+		echo ($url);
+		_p($address);
+		
+		exit;
+		
+			
+			foreach( $rideTracking as $k => $row ){
+				$rideTracking[$k]['l_data'] = json_decode( $row['l_data'], true );
+				
 				$xx = "'".$row['l_latitude']."'";
 				$yy = "'".$row['l_longitude']."'";
-				if( !in_array($xx, $totalLats) || !in_array($yy, $totalLongs) ){
+				if( 1 || !in_array($xx, $totalLats) || !in_array($yy, $totalLongs) ){
 					$totalLats[] = $xx;
 					$totalLongs[] = $yy;
 					echo "'".$row['l_latitude'].",".$row['l_longitude']."',<br>";
 					$row['l_data'] = json_decode( $row['l_data'], true );
 					
-					if($row['l_data']['distance'] < 0.25) {
+					if(  $row['l_data']['distance'] > 0.25 ){
+						// $row['l_data']['distance'] = 0.25;
+					}
+					
+					if( 1 || $row['l_data']['distance'] <= 0.5 ) {
 						$totalDistance += $row['l_data']['distance'];
 						$totalDistanceArr[] = $row['l_data']['distance'];
 					}
 				}
 			}
-		}
+		
 		_p( 'totalDistance : '.$totalDistance );
 		_p( $totalDistanceArr );
 		_p( $rideTracking ); exit;
@@ -62,7 +180,7 @@ $gnrl->check_login();
 			$id = $dclass->insert( $table, $ins );
 			$filesArray = array(
 				'list_icon',
-				'active_icon',
+				
 				'plotting_icon',
 			);
 			$keyVal = array();
@@ -100,6 +218,12 @@ $gnrl->check_login();
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
             }
+             // make records restore
+	        if($_REQUEST['chkaction'] == 'restore') {
+	            $ins = array('i_delete'=>'0');
+	            $dclass->update( $table, $ins, " id = '".$id."'");
+	            $gnrl->redirectTo($page.".php?succ=1&msg=del");
+	        }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
                 if(1){
@@ -150,7 +274,7 @@ $gnrl->check_login();
 					$ins = array();
 					$filesArray = array(
 						'list_icon',
-						'active_icon',
+						
 						'plotting_icon',
 					);
 					$keyVal = array();
@@ -228,19 +352,16 @@ $gnrl->check_login();
                         <div class="header">
                             <h3>
                                 View <?php echo $title2;?>
-                                <?php 
-                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''  || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != ''){ ?>
+                              
+                                <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''
+                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != '' || isset($_REQUEST['d_start_date']) && $_REQUEST['d_start_date'] != ''  ){ ?>
                                         <a href="<?php echo $page ?>.php" class="fright" >
                                             <button class="btn btn-primary" type="button">Clear Search</button>
                                         </a>
                                 <?php } ?>
                             </h3>
                         </div>
-                       <!--  <style type="text/css">
-                        	.viewtable tr td{
-                        		text-align:  center !important;
-                        	}
-                        </style> -->
+                       
                         <?php 
                         if( ($script == 'add' || $script == 'edit') && 1 ){?>
                         	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
@@ -321,7 +442,8 @@ $gnrl->check_login();
 	                                   LOWER(u.v_name) like LOWER('%".$keyword."%')  OR
 	                                   LOWER(v.v_type) like LOWER('%".$keyword."%')  OR
 	                                   LOWER(v.v_vehicle_number) like LOWER('%".$keyword."%')  OR
-	                                   LOWER(a.e_status) like LOWER('%".$keyword."%') 
+	                                   LOWER(a.e_status) like LOWER('%".$keyword."%') OR
+									   LOWER(a.v_ride_code) like LOWER('%".$keyword."%') 
 	                                     
 	                                )";
 	                            }
@@ -331,10 +453,13 @@ $gnrl->check_login();
 	                            	if(isset($_REQUEST['d_end_date']) && $_REQUEST['d_end_date']){
 	                            		$end= $_REQUEST['d_end_date'];
 	                            	}else{
-	                            		$end=date('Y-m-d H:i:s');
+	                            		$end=date('Y-m-d');
 	                            	}
 									$start =  trim( $_REQUEST['d_start_date'] );
-									$wh .= " AND  a.d_time BETWEEN  '".$start."' AND  '".$end."' ";
+									// $wh .= " AND  a.d_time BETWEEN  '".$start."' AND  '".$end."' ";
+                                }else{
+                                	$start =  date('Y-m-d');
+                                	$end=date('Y-m-d');
                                 }
 
                                 
@@ -369,8 +494,12 @@ $gnrl->check_login();
                                     $wh .= " AND a.i_delete='0'";
                                 }
 								
+								if( $_REQUEST['col'] == 1 ){
+									$wh .= " AND ( a.l_data->>'actual_distance' )::numeric > 0 AND a.l_data->>'actual_distance' IS NOT NULL ";
+								}
 								
-	                            $ssql = "SELECT 
+								
+								$ssql = "SELECT 
 									a.*,
 									a.l_data->>'vehicle_type' as vehicle_type,
 									a.l_data->>'city' as auto_city_name,
@@ -386,16 +515,24 @@ $gnrl->check_login();
 								LEFT JOIN tbl_city as c ON c.id = COALESCE( a.l_data->>'i_city_id', '0' )::bigint
 								LEFT JOIN tbl_user as u ON a.i_user_id = u.id
 								LEFT JOIN tbl_vehicle as v ON a.i_vehicle_id = v.id
-								WHERE true ".$wh;
+								WHERE true AND  a.d_time >=  '".$start." 00:00:00' AND a.d_time <= '".$end." 23:59:59'".$wh;
 								
 	                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'a.d_time' );
                                 $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );
 	                            
 	                            $nototal = $dclass->numRows( $ssql );
 	                            $pagen = new vmPageNav( $nototal, $limitstart, $limit, $form ,"black" );
+
+	                            if($_REQUEST['D'] == '1'){
+									echo $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;					                            	
+	                            }
+
 	                           	$sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
+								
+								
+	                            
 	                            
 
 	                            #USE FOR DRIVER DROPDOWN MENU
@@ -427,19 +564,11 @@ $gnrl->check_login();
 
 	                                                            <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
 	                                                            <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
-	                                                            <div class="clearfix"></div> 
-	                                                           	<div class="pull-right" style="">
-		                                                            <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
-		                                                            Show Deleted Data
-		                                                        </div>
+	                                                            
+
 	                                                        </label>
 
 	                                                    </div>
-	                                                    <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''
-                                                           || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != '' || isset($_REQUEST['d_start_date']) && $_REQUEST['d_start_date'] != ''  ){ ?>
-                                                                    <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
-                                                                    <h4> Clear Search </h4></a>
-                                                            <?php } ?>
 	                                                </div>
 													
 	                                                <div class="pull-left">
@@ -447,11 +576,15 @@ $gnrl->check_login();
 	                                                        <label><?php $pagen->writeLimitBox(); ?></label>
 	                                                    </div>
 	                                                </div>
-	                                                <label style="margin-left:15px">
+	                                              
+                                                    <label style="margin-left:15px">
 														Start Date
 														<div class="clearfix"></div> 
 														<div class="pull-left" style="">
-															 <input class="form-control datetime"  type="date" id="d_start_date" name="d_start_date" value="<?php echo $_REQUEST['d_start_date']; ?>" data-date-format="yyyy-mm-dd" readonly="" onChange="document.frm.submit();" placeholder="select" />
+															<div class="input-group date datetime" data-min-view="2" data-date-format="yyyy-mm-dd">
+															    <input class="form-control" type="date" id="d_start_date" name="d_start_date" value="<?php echo ($_REQUEST['d_start_date'])?$_REQUEST['d_start_date']:date('Y-m-d'); ?>" data-date-format="yyyy-mm-dd" readonly="" onChange="document.frm.submit();" placeholder="select">
+															    <span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
+															  </div>
                                                         </div>
                                                     </label>
                                                    
@@ -459,7 +592,10 @@ $gnrl->check_login();
 														End Date
 														<div class="clearfix"></div> 
 														<div class="pull-left" style="">
-															<input class="form-control datetime"  type="date" id="d_end_date" name="d_end_date"  value="<?php echo $_REQUEST['d_end_date']; ?>" data-date-format="yyyy-mm-dd" readonly="" onclick="datetimepicker()" onChange="document.frm.submit();" placeholder="select" />
+															<div class="input-group date datetime" data-min-view="2" data-date-format="yyyy-mm-dd">
+															    <input class="form-control" type="date" id="d_end_date" name="d_end_date"  value="<?php echo ($_REQUEST['d_end_date'])?$_REQUEST['d_end_date']:date('Y-m-d'); ?>" data-date-format="yyyy-mm-dd" readonly="" onclick="datetimepicker()" onChange="document.frm.submit();" placeholder="select">
+															    <span class="input-group-addon btn btn-primary"><span class="glyphicon glyphicon-th"></span></span>
+															</div>
                                                         </div>
                                                     </label>
 	                                                <div class="clearfix"></div>
@@ -515,14 +651,26 @@ $gnrl->check_login();
 															</select>
 														</div>
 	                                                </label>
-	                                            </div>
+	                                              
+	                                                <label style="margin:15px 0px" class="pull-right">
+														
+	                                                	<div class="clearfix"></div>
+														<input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
+                                                            Show Deleted Data
+                                                            <div class="clearfix"></div>
+                                                            <div style="margin: 10px 10px 10px 65px;">
+                                                            	<a href="top_drivers.php"> Top Drivers </a>
+                                                            </div>
+	                                                </label>
+	                                                
 	                                            
 	                                        </div>
 	                                        
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
 												
 	                                            <?php 
-                                                echo $gnrl->renderTableHeader(array(
+												$columnArr = array(
+													'a.v_ride_code' => array( 'order' => 1, 'title' => 'Ride Code' ),
 													'c.v_name' => array( 'order' => 1, 'title' => 'City' ),
                                                     'd_name' => array( 'order' => 1, 'title' => 'Driver' ),
                                                     'u_name' => array( 'order' => 1, 'title' => 'User / Gender' ),
@@ -530,16 +678,22 @@ $gnrl->check_login();
                                                     'a.d_time' => array( 'order' => 1, 'title' => 'Trip Date', 'title2' => ' / Start Time / End Time' ),
                                                     'e_status' => array( 'order' => 1, 'title' => 'Status', 'title2' => ' / Track' ),
                                                     'action' => array( 'order' => 0, 'title' => 'Action' ),
-                                                ));
+                                                );
+												if( $_REQUEST['col'] == 1 ){
+													$columnArr['custom'] = array( 'order' => 0, 'title' => 'Custom' );
+												}
+                                                echo $gnrl->renderTableHeader($columnArr);
                                                 ?>
 	                                            <tbody>
 	                                                <?php 
 	                                                if( $nototal > 0 ){
 														$i = 0;
 														foreach( $row_Data as $row ){
-	                                                    	$i++;
+															$row['l_data'] = json_decode( $row['l_data'], true );
+															$i++;
 	                                                    	?>
 	                                                        <tr>
+																<td><?php echo $row['v_ride_code'];?></td>
 																<td><?php echo $row['city_name'] ? $row['city_name'] : $row['auto_city_name'];?></td>
 																<td><?php echo $row['d_name'] ? $row['d_name'] : '-';?></td>
 																<td>
@@ -567,13 +721,93 @@ $gnrl->check_login();
 	                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
 	                                                                    </button>
 	                                                                    <ul role="menu" class="dropdown-menu pull-right">
-	                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">View</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-	                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+	                                                                    <?php
+                                                                           if(isset($_REQUEST['deleted'])){ ?>
+                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                            <?php  
+                                                                            }else{ ?>
+                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">View</a></li>
+	                                                                        	<li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                            <?php }
+                                                                        ?>
+
+	                                                                        
 	                                                                    </ul>
 	                                                                </div>
 	                                                            </td>
+																<?php 
+																if( $_REQUEST['col'] == 1 ){
+																	$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '".$row['id']."' ORDER BY id ASC" );
+																	
+																	?>
+																	 <td class="text-left" width="70%" >
+																	 
+																	 	<?php
+																		if( count( $rideTracking ) ){
+																			$totalDistance = 0;
+																			$totalDistanceArr = array();
+																			$totalActDistanceArr = array();
+																			
+																			$totalFormulaDistanceArr = array();
+																			foreach( $rideTracking as $kkk => $rowTrack ){
+																				$rowTrack['l_data'] = json_decode( $rowTrack['l_data'], true );
+																				
+																				$totalActDistanceArr[] = $rowTrack['l_data']['distance'];
+																				if( $rowTrack['l_data']['distance'] > 0.3 ){
+																					$rowTrack['l_data']['distance'] = 0.3;
+																				}
+																				$totalDistance += $rowTrack['l_data']['distance'];
+																				$totalDistanceArr[] = $rowTrack['l_data']['distance'];
+																				
+																				if( $kkk ){
+																					$xxx = distance( $rideTracking[($kkk-1)]['l_latitude'], $rideTracking[($kkk-1)]['l_longitude'], $rowTrack['l_latitude'], $rowTrack['l_longitude'], "K");
+																					$totalFormulaDistanceArr[] = round($xxx,2);
+																				}
+																				
+																			}
+																			?>
+																		 
+																			<table class="table table-bordered" style="width:100%;" >
+																				<tr>
+																					<td>Start Addr</td>
+																					<td><?php echo $row['l_data']['pickup_address'];?></td>
+																				</tr>
+																				<tr>
+																					<td>End Addr</td>
+																					<td><?php echo $row['l_data']['destination_address'];?></td>
+																				</tr>
+																				<tr>
+																					<td>Estimate Km</td>
+																					<td><?php echo $row['l_data']['estimate_km'];?></td>
+																				</tr>
+																				<tr>
+																					<td>Actual Distance</td>
+																					<td><?php echo $row['l_data']['actual_distance'];?></td>
+																				</tr>
+																				<tr>
+																					<td>Calculated Distance</td>
+																					<td><?php echo $totalDistance;?></td>
+																				</tr>
+																				
+																				<tr>
+																					<td>Calculated Arr</td>
+																					<td><?php _p($totalDistanceArr);?></td>
+																				</tr>
+																				<tr>
+																					<td>Actual Arr</td>
+																					<td><?php _p($totalActDistanceArr);?></td>
+																				</tr>
+																				
+																				
+																			</table>
+																			<?php 
+																		} ?>
+																	</td>
+																	<?php
+																	
+																}?>
+																
 	                                                        </tr><?php 
 	                                                    }
 	                                                }
@@ -600,6 +834,7 @@ $gnrl->check_login();
 	                                        <input type="hidden" name="sb" value="<?php echo @$_REQUEST['sb'];?>" />
 	                                        <input type="hidden" name="np" value="<?php //echo @$_SERVER['HTTP_REFERER'];?>" />
 	                                    </div>
+										</div>
 	                                </form>
 	                            </div>
 							<?php }
@@ -629,14 +864,6 @@ $gnrl->check_login();
         </div>
 </div>
 <div class="md-overlay"></div>
-<script type="text/javascript">
-	function searchDriver(val){
-		window.document.location.href=window.location.pathname+'?status_sel='+val;
-	}
-	function searchDriverName(val){
-		window.document.location.href=window.location.pathname+'?driver='+val;
-	}
-</script>
 <?php include('_scripts.php');?>
 <script>
 

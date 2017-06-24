@@ -7,6 +7,10 @@ $page = "sitesettings";
 $table = 'tbl_sitesetting';
 extract( $_POST );
 
+
+	
+
+
 if( isset( $_REQUEST['act'] ) && $_REQUEST['act'] == 'delimg' && trim( $_REQUEST['img'] ) && trim( $_REQUEST['path'] ) ){
 	@unlink( trim( $_REQUEST['path'] ).trim( $_REQUEST['img'] ) );
 }
@@ -79,11 +83,7 @@ else {
 											<label>Uploads Url</label>
 											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required parsley-type="url" >
 										</div>
-										<div class="form-group ">
-											<?php $key = 'RIDE_TRACK_URL';?>
-											<label>Ride Track Url</label>
-											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required parsley-type="url" >
-										</div>
+										
 										
 										
 										<div class="form-group ">
@@ -105,6 +105,22 @@ else {
 												<?php $gnrl->getLanguageDropdownList($$key); ?>
 											</select>
 										</div>
+										<div class="form-group ">
+											<?php $key = 'RIDE_TRACK_URL';?>
+											<label>Ride Track Url</label>
+											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required parsley-type="url" >
+										</div>
+										
+									</div>
+								</div>
+							</div>
+                        </div>
+						
+						<div class="block-flat">
+                            <div class="header"><h3>Some Configuration</h3></div>
+							<div class="content">
+								<div class="row">
+									<div class="col-sm-6">
 										<div class="form-group">
 											<?php $key = 'DRIVER_SEARCH_QUERY'; ?>
 											<label>Driver Search Query</label>
@@ -113,10 +129,25 @@ else {
 											</select>
 										</div>
 									</div>
+									<div class="col-sm-6">
+										<div class="form-group">
+											<?php $key = 'SHOW_PICKUP_BUTTON'; ?>
+											<label>Show Button For (Have you arrived at pickup location?)</label>
+											<select class="select2" name="<?php echo $key;?>" id="<?php echo $key;?>" >
+												<?php echo $gnrl->get_keyval_drop( array( '1' => 'Yes', '0' => 'No' ) , $$key ); ?>
+											</select>
+										</div>
+									</div>
 								</div>
+								<div class="row">
+									<div class="col-md-12">
+										<div class="form-group">
+											<button class="btn btn-primary" type="submit" name="submit_btn" value="Update">Update</button>
+										</div>
+									</div>
+								</div>	
 							</div>
                         </div>
-						
                         
 						<div class="block-flat">
                             <div class="header"><h3>Referral Program</h3></div>

@@ -31,9 +31,9 @@ var currentApi = function( req, res, next ){
 				var _q = " SELECT a.id, a.v_title, a.v_code, a.d_start_date, a.d_end_date, a.l_description ";
 				_q += " FROM tbl_coupon_code AS a ";
 				_q += " WHERE true ";
-				_q += " AND a.e_status = 'active' ";
+				_q += " AND a.i_delete = '0' AND a.e_status = 'active' ";
 				_q += " AND now() BETWEEN a.d_start_date AND a.d_end_date ";
-				_q += " AND ( SELECT CAST(b.id AS TEXT) from tbl_city as b where lower(b.v_name) = lower('"+city+"') ) = ANY (string_to_array(a.i_city_ids,',')) ";
+				_q += " AND ( SELECT CAST(b.id AS TEXT) from tbl_city as b where b.i_delete = '0' AND lower(b.v_name) = lower('"+city+"') ) = ANY (string_to_array(a.i_city_ids,',')) ";
 				
 				dclass._query( _q, function( status, codes ){
 					if( !status ){

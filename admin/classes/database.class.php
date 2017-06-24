@@ -83,7 +83,7 @@ class database {
 		$val = implode("','",$value);
 		// $q = implode(",",$qmark);
 		$lastid="";
-	 	echo $insertSql = "INSERT INTO $table ($f) VALUES ('$val') RETURNING id ";	
+	 	$insertSql = "INSERT INTO $table ($f) VALUES ('$val') RETURNING id ";	
 	    $ret = pg_query($this->_resource, $insertSql);
 	    $_result=pg_fetch_row($ret);
 		// $stmt = $this->_resource->prepare($insertSql);
@@ -152,35 +152,16 @@ class database {
 			 if (is_array($vars)){
 					$vars = implode(",",$vars);
 			}
-  		}    
-
-		// _P($table);
-		// _P($where);
-		// $orderBy='';
-		// if($orderBy == 'DD'){
-
-      	
-		// }
-  		// if($_REQUEST['J'] == '1'){
-  		// 	echo $selectSql = "SELECT ".$vars." FROM ".$table." WHERE true ".$where." ".$groupBy." ".$orderBy;
-  		// }
+  		}
 		$selectSql = "SELECT ".$vars." FROM ".$table." WHERE true ".$where." ".$groupBy." ".$orderBy;
-		
-		// }
-  		$stmt = pg_query($this->_resource, $selectSql);
+		$stmt = pg_query($this->_resource, $selectSql);
 		$resultSet = $this->fetchResults($stmt,$resultType);
-		
-		//_p($selectSql);
-		//_p($resultSet);
-		
-		
-  		$result = array();
+		$result = array();
 		if( is_array($resultSet) && count( $resultSet ) > 0 ){
 			foreach( $resultSet as $k => $v ){
 				$result[] = $v;
 			}
 		} 
-		//_p($result);
    		return $result;
  	}
  	/**

@@ -4,18 +4,18 @@ $gnrl->check_login();
 
 // _P($_REQUEST);
 // exit;
-	extract( $_POST );
-	$page_title = "Manage Driver Wallets";
-	$page = "driver_wallets";
+    extract( $_POST );
+    $page_title = "Manage Driver Wallets";
+    $page = "driver_wallets";
     $page2 = "settle_wallets";
-	$table = 'tbl_wallet';
-	$title2 = 'Driver Wallet';
-	// $v_role ='user';
-	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' ) ) ? $_REQUEST['script'] : "";
-	
-	## Insert Record in database starts
-	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
-		
+    $table = 'tbl_wallet';
+    $title2 = 'Driver Wallet';
+    // $v_role ='user';
+    $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' ) ) ? $_REQUEST['script'] : "";
+    
+    ## Insert Record in database starts
+    if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
+        
         $email_exit = $dclass->select('*',$table," AND v_email = '".$v_email."'");
         
         if(count($email_exit) && !empty($email_exit)){
@@ -35,14 +35,14 @@ $gnrl->check_login();
             $id = $dclass->insert( $table, $ins );
             $gnrl->redirectTo($page.".php?succ=1&msg=add");
         }
-		
-	}
+        
+    }
 
-	## Delete Record from the database starts
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
-			$id = $_REQUEST['id'];
-			if($_REQUEST['chkaction'] == 'delete') {
+    ## Delete Record from the database starts
+    if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
+        if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+            $id = $_REQUEST['id'];
+            if($_REQUEST['chkaction'] == 'delete') {
                 if(1){
                     $ins = array('i_delete'=>'1');
                     $dclass->update( $table, $ins, " id = '".$id."'");
@@ -50,6 +50,12 @@ $gnrl->check_login();
                 }else{
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
+            }
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
             }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
@@ -77,16 +83,16 @@ $gnrl->check_login();
                 $dclass->update($table,$ins," id='$id'");
                 $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
             }
-			
-		}	
-	}
-	
-	## Edit Process
-	if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
-		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+            
+        }   
+    }
+    
+    ## Edit Process
+    if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
+        if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 
-			$id = $_REQUEST['id'];
-			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
+            $id = $_REQUEST['id'];
+            if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
                 $email_exit = $dclass->select('*',$table," AND id != ".$id." AND v_email = '".$v_email."'");
                
                 if(count($email_exit) && !empty($email_exit)){
@@ -114,18 +120,18 @@ $gnrl->check_login();
                     $dclass->update( $table, $ins, " id = '".$id."' ");
                     $gnrl->redirectTo($page.'.php?succ=1&msg=edit&a=2&script=edit&id='.$_REQUEST['id']);
                 }
-			}
-			else {
-				$row = $dclass->select('*',$table," AND id = '".$id."'");
+            }
+            else {
+                $row = $dclass->select('*',$table," AND id = '".$id."'");
 
-				$row = $row[0];
-				extract( $row );
+                $row = $row[0];
+                extract( $row );
                 // $l_data=json_decode($l_data,true);
-			}
-		}
-	}
+            }
+        }
+    }
 
-	
+    
 
 ?>
 <!DOCTYPE html>
@@ -137,12 +143,12 @@ $gnrl->check_login();
 <!-- Fixed navbar -->
 <?php include('inc/header.php');?>
 <div id="cl-wrapper" class="fixed-menu">
-	<?php include('inc/sidebar.php'); ?>
-	<div class="container-fluid" id="pcont">
-		<?php include('all_page_head.php'); ?>
+    <?php include('inc/sidebar.php'); ?>
+    <div class="container-fluid" id="pcont">
+        <?php include('all_page_head.php'); ?>
 
         <div class="cl-mcont">
-        	<?php include('all_alert_msg.php'); ?>
+            <?php include('all_alert_msg.php'); ?>
             <div class="row">
                 <div class="col-md-12">
                     <div class="block-flat">
@@ -162,21 +168,16 @@ $gnrl->check_login();
                                             <button class="btn btn-primary" type="button">Add</button>
                                         </a>
                                     <?php } ?>  -->
-								
-								<?php } ?>
-                                <?php 
-                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['search_element']) && $_REQUEST['search_element'] != '' || isset($_REQUEST['driver']) && $_REQUEST['driver'] != ''  ){ ?>
-                                        <a href="<?php echo $page ?>.php" class="fright" >
-                                            <button class="btn btn-primary" type="button">Clear Search</button>
-                                        </a>
+                                
                                 <?php } ?>
+                               
                             </h3>
                         </div>
                         <?php 
                         if( ($script == 'add' || $script == 'edit') && 1 ){
                            
                             ?>
-                        	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
+                            <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="content">
@@ -219,8 +220,8 @@ $gnrl->check_login();
                                         </div>
                                     </div>
                                 </div>
-							</form>
-							<?php 
+                            </form>
+                            <?php 
                         }elseif ($script == 'view' && 1) {
                             
                             if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
@@ -371,7 +372,7 @@ $gnrl->check_login();
                             </div> <?php 
                         }
                         else{
-						    if( 1 ){
+                            if( 1 ){
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
                                 }
@@ -400,17 +401,17 @@ $gnrl->check_login();
                                     )";
                                 }
 
-                                if( isset( $_REQUEST['search_element'] ) && $_REQUEST['search_element'] != '' ){
-                                    $keyword =  trim( $_REQUEST['search_element'] );
+                                if( isset( $_REQUEST['payeble'] ) && $_REQUEST['payeble'] != '' ){
+                                    $keyword =  trim( $_REQUEST['payeble'] );
                                     if($keyword=="payeble"){
-                                     $wh =" AND t1.f_amount > 0 ";
+                                     $wh .=" AND t1.f_amount > 0 ";
                                     }else{
                                          $wh =" AND t1.f_amount < 0 ";
                                     }
                                 }
-                                if( isset( $_REQUEST['driver'] ) && $_REQUEST['driver'] != '' ){
-                                    $keyword =  trim( $_REQUEST['driver'] );
-                                    $wh = " AND t1.i_user_id = '".$keyword."'";
+                                if( isset( $_REQUEST['filter_driver'] ) && $_REQUEST['filter_driver'] != '' ){
+                                    $keyword =  trim( $_REQUEST['filter_driver'] );
+                                    $wh .= " AND t1.i_user_id = '".$keyword."'";
                                 }
                                 if( isset( $_REQUEST['deleted'] ) ){
                                     $keyword =  trim( $_REQUEST['keyword'] );
@@ -461,7 +462,14 @@ $gnrl->check_login();
                                                                     <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
                                                                     Show Deleted Data
                                                                 </div>
+                                                                <div class="clearfix"></div> 
+                                                                <?php 
+                                                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['filter_driver']) && $_REQUEST['filter_driver'] != '' || isset($_REQUEST['payeble']) && $_REQUEST['payeble'] != ''  ){ ?>
+                                                                        <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
+                                                                            <h4> Clear Search </h4></a>
+                                                                <?php } ?>
                                                             </label>
+
                                                         </div>
                                                     </div>
                                                     <div class="pull-left">
@@ -472,9 +480,9 @@ $gnrl->check_login();
 
                                                     <div class="pull-left" style="margin: 20px;">
                                                         <div>
-                                                         <select class="select2" name="payeble_dr" id="payeble_dr" onChange="searchDriver('search_element',this.options[this.selectedIndex].value)">
+                                                         <select class="select2" name="payeble" id="payeble" onChange="document.frm.submit();">
                                                          <option value="">-- Select --</option>
-                                                                 <?php  $gnrl->getDropdownList(array('payeble','receivable'),$_GET['search_element']); ?>
+                                                                 <?php  $gnrl->getDropdownList(array('payeble','receivable'),$_GET['payeble']); ?>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -482,9 +490,9 @@ $gnrl->check_login();
                                                          <div class="clearfix"></div>
                                                             <div class="pull-left" style="">
                                                             <div>
-                                                             <select class="select2" name="driver_sel" id="driver_sel" onChange="searchDriverName(this.options[this.selectedIndex].value)">
+                                                             <select class="select2" name="filter_driver" id="filter_driver" onChange="document.frm.submit();">
                                                                     <option value="">--Select--</option>
-                                                                     <?php echo $gnrl->get_keyval_drop($driver_name_arr,$_GET['driver']); ?>
+                                                                     <?php echo $gnrl->get_keyval_drop($driver_name_arr,$_GET['filter_driver']); ?>
                                                                     </select>
                                                             </div>
                                                         </div>
@@ -527,15 +535,21 @@ $gnrl->check_login();
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                             <?php 
-                                                                            if($row['f_amount']!='0'){ ?>
-                                                                                 <li><a href="<?php echo $page2?>.php?a=2&script=settle&id=<?php echo $row['i_user_id'];?>">Settle</a></li>
-                                                                            <?php }
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                    <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  
+                                                                                }else{ ?>
+                                                                                    <?php 
+                                                                                        if($row['f_amount']!='0'){ ?>
+                                                                                             <li><a href="<?php echo $page2?>.php?a=2&script=settle&id=<?php echo $row['i_user_id'];?>">Settle</a></li>
+                                                                                        <?php }
+                                                                                    ?>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
                                                                             ?>
-                                                                           
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
                                                                         </ul>
                                                                     </div>
                                                                 </td>
@@ -577,7 +591,7 @@ $gnrl->check_login();
                 </div>
             </div>
         </div>
-	</div>
+    </div>
 </div>
 <div class="md-modal colored-header  md-effect-9" id="ride-info-modal" >
         <div class="md-content">
@@ -598,14 +612,7 @@ $gnrl->check_login();
     </div>
     <div class="md-overlay"></div>
 <?php include('_scripts.php');?>
-<script type="text/javascript">
-    function searchDriver(slug,val){
-        window.document.location.href=window.location.pathname+'?'+slug+'='+val;
-    }
-    function searchDriverName(val){
-        window.document.location.href=window.location.pathname+'?driver='+val;
-    }
-</script>
+
 <?php include('jsfunctions/jsfunctions.php');?>
 </body>
 </html>

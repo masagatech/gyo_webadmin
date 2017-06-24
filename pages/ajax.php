@@ -10,7 +10,7 @@ extract( $_REQUEST );
 			'last_track_id' => $last_track_id,
 		);
 		
-		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND id > '".$last_track_id."' AND l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '".$ride_id."' ORDER BY id" );
+		$rideTracking = $dclass->select( '*', 'tbl_track_vehicle_location', " AND id > '".$last_track_id."' AND l_data->>'run_type' = 'track' AND l_data->>'i_ride_id' = '".$ride_id."' ORDER BY id" );
 		foreach( $rideTracking as $rowData ){
 			$response['last_track_id'] = $rowData['id'];
 			$response['gps_tracking'][] = array(

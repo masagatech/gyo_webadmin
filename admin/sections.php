@@ -52,6 +52,12 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
                     $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
                 }
             }
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
+            }
             // make records active
             else if($_REQUEST['chkaction'] == 'active'){
                 if(1){
@@ -165,15 +171,15 @@ if( isset( $_REQUEST['deleted'] ) ){
                                     <div class="col-md-12">
                                         <div class="content">
                                             <div class="form-group">
-                                                <label>Title</label>
+                                                <label>Title <span>*</span></label>
                                                 <input type="text" class="form-control" id="v_title" name="v_title" value="<?php echo $v_title; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Name</label>
+                                                <label>Name <span>*</span></label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Key (unique)</label>
+                                                <label>Key (unique) <span>*</span></label>
                                                 <input type="text" class="form-control" id="v_key" name="v_key" value="<?php echo $v_key; ?>" required />
                                             </div>
                                             
@@ -185,16 +191,16 @@ if( isset( $_REQUEST['deleted'] ) ){
                                                 </select>
                                             </div>
                                             <div class="form-group">
-                                                <label>Icon ( favicon / glyphicon icon )</label>
-                                                <input type="text" class="form-control" id="v_icon" name="v_icon" value="<?php echo $v_icon; ?>"  />
+                                                <label>Icon ( favicon / glyphicon icon ) <span>*</span></label>
+                                                <input type="text" class="form-control" id="v_icon" name="v_icon" value="<?php echo $v_icon; ?>"  required=""/>
                                             </div>
                                             <div class="form-group">
-                                                <label>Order</label>
-                                                <input type="number"  class="form-control" id="i_order" name="i_order" value="<?php echo $i_order; ?>" min="1"  />
+                                                <label>Order <span>*</span></label>
+                                                <input type="number"  class="form-control" id="i_order" name="i_order" value="<?php echo $i_order; ?>" min="1"  required="" />
                                             </div>
                                             <div class="form-group">
-                                                <label>Status</label>
-                                                <select class="select2" name="e_status" id="e_status">
+                                                <label>Status <span>*</span></label>
+                                                <select class="select2" name="e_status" id="e_status" required="">
                                                     <?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
                                                 </select>
                                             </div>
@@ -258,10 +264,18 @@ if( isset( $_REQUEST['deleted'] ) ){
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                         </button>
                                                                         <ul role="menu" class="dropdown-menu pull-right">
-                                                                            <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                            <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                            <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+                                                                            <?php
+                                                                               if(isset($_REQUEST['deleted'])){ ?>
+                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                <?php  }else{ ?>
+                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                                <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php }
+                                                                            ?>
+                                                                            
                                                                         </ul>
                                                                     </div>
                                                                     <?php } ?>

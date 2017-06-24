@@ -11,11 +11,11 @@ $gnrl->check_login();
     $title2 = 'Admin';
     // $v_role ='user';
     $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' ) ) ? $_REQUEST['script'] : "";
+        // _P($_REQUEST);
+        // exit;
     
     ## Insert Record in database starts
     if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
-        // _P($_REQUEST);
-        // exit;
         $email_exit = $dclass->select('*',$table," AND v_email = '".$v_email."'");
         
         if(count($email_exit) && !empty($email_exit)){
@@ -55,6 +55,13 @@ $gnrl->check_login();
                 $dclass->update( $table, $ins, " id = '".$id."'");
 				$gnrl->redirectTo($page.".php?succ=1&msg=del");
 			}
+            // make records restore
+            if($_REQUEST['chkaction'] == 'restore') {
+                $ins = array('i_delete'=>'0');
+                $dclass->update( $table, $ins, " id = '".$id."'");
+                $gnrl->redirectTo($page.".php?succ=1&msg=del");
+            }
+
 			// make records active
 			else if($_REQUEST['chkaction'] == 'active'){
 				$ins = array('e_status'=>'active');
@@ -183,40 +190,42 @@ $gnrl->check_login();
                                     <div class="col-md-12">
                                         <div class="content">
                                             <div class="form-group">
-                                                <label>Name</label>
+                                                <label>Name <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Email</label>
+                                                <label>Email <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="email" class="form-control" id="v_email" name="v_email" value="<?php echo $v_email; ?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Username</label>
+                                                <label>Username <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_username" name="v_username" value="<?php echo $v_username; ?>" required />
                                             </div>
                                             <div class="form-group">
                                                 <label>Password</label>
                                                 <?php 
-                                                $required="";
-                                                if($script=='add'){
-                                                    $required='required';
-                                                } ?>
-                                                <input type="password" class="form-control" id="v_password" name="v_password" value="" <?php echo $required ?> />
+                                                if($script=='add'){ ?>
+                                                    <input type="password" class="form-control" id="v_password" name="v_password" value="" required="" />
+                                                <?php }else{ ?>
+                                                    <input type="password" class="form-control" id="v_password" name="v_password" value=""  />
+                                                <?php } ?>
                                             </div>
                                             <div class="form-group">
-                                                <label>Phone</label>
-                                                <input type="text" class="form-control" id="v_phone" name="v_phone" value="<?php echo $v_phone; ?>" required />
+                                                <label>Phone <?php echo $gnrl->getAstric(); ?> (only 10 digit)</label>
+                                                <input type="text" pattern="[0-9]{10}" class="form-control" id="v_phone" name="v_phone" value="<?php echo $v_phone; ?>" required />
                                             </div>
                                              <div class="form-group">
-                                                <label>City</label>
-                                                <select class="select2" name="i_city_id" id="i_city_id">
+                                                <label>City <?php echo $gnrl->getAstric(); ?></label>
+                                                <select class="select2 required" name="i_city_id" id="i_city_id">
+                                                    <option value="">--Select--</option>
                                                     <?php $gnrl->getCityDropdownList($i_city_id); ?>
                                                 </select>
                                             </div>
 
                                              <div class="form-group">
-                                                <label>Role</label>
-                                                <select class="select2" name="v_role" id="v_role">
+                                                <label>Role <?php echo $gnrl->getAstric(); ?></label>
+                                                <select class="select2 required" name="v_role" id="v_role">
+                                                    <option value="">--Select--</option>
                                                     <?php echo $gnrl->get_keyval_drop($globalAdminRole,$v_role); ?>
                                                 </select>
                                             </div>
@@ -298,7 +307,7 @@ $gnrl->check_login();
 																			<?php foreach( $globalUserAction as $actionKey => $actionTitle ){ ?>
 																			<td width="10%" >
 																				<label>
-																					<input class="all_access" name="l_data[pages][<?php echo $page_key;?>][]" value="<?php echo $actionKey;?>" type="checkbox" <?php echo in_array( $actionKey, $page_access[$page_key] ) ? 'checked' : ''?> />
+																					<input class="all_access parsley-validated" data-required="true" name="l_data[pages][<?php echo $page_key;?>][]" value="<?php echo $actionKey;?>" type="checkbox" <?php echo in_array( $actionKey, $page_access[$page_key] ) ? 'checked' : ''?> />
 																					<?php echo $actionTitle;?>
 																				</label>
 																			</td>
@@ -446,10 +455,19 @@ $gnrl->check_login();
                                                                         <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                     </button>
                                                                     <ul role="menu" class="dropdown-menu pull-right">
-                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+
+                                                                        <?php
+                                                                           if(isset($_REQUEST['deleted'])){ ?>
+                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                            <?php  
+                                                                            }else{ ?>
+                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                                <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                            <?php }
+                                                                        ?>
+                                                                        
                                                                     </ul>
                                                                 </div>
                                                             </td>

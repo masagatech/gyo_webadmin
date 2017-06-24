@@ -26,6 +26,10 @@ var currentApi = function( req, res, next ){
 	var run_type = gnrl._is_undf( params.run_type, '' );
 	var speed = gnrl._is_undf( params.speed, '0.0 m/s' );
 	
+	var start_address = gnrl._is_undf( params.start_address, '' );
+	var end_address = gnrl._is_undf( params.end_address, '' );
+	
+	
 	if( !i_vehicle_id ){ _status = 0; _message = 'err_req_vehicle_id'; }
 	if( _status && !l_latitude ){ _status = 0; _message = 'err_req_latitude'; }
 	if( _status && !l_longitude ){ _status = 0; _message = 'err_req_longitude'; } 
@@ -70,7 +74,7 @@ var currentApi = function( req, res, next ){
 				if( i_ride_id == 0 ){
 					callback( null );
 				}
-				else if( distance < 0.25 ){
+				else{
 					var _ins = {
 						'i_driver_id' 	: login_id,
 						'i_vehicle_id' 	: i_vehicle_id,
@@ -85,14 +89,13 @@ var currentApi = function( req, res, next ){
 							'original_speed' : original_speed,
 							'speed' : speed[0],
 							'speed_type' : speed[1],
+							'start_address' : start_address,
+							'end_address' : end_address,
 						}),
 					};
 					dclass._insert( 'tbl_track_vehicle_location', _ins, function( status, data ){
 						callback( null );
 					});
-				}
-				else {
-					callback( null );
 				}
 			},
 			

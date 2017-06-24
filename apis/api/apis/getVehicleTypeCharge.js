@@ -56,7 +56,7 @@ var currentApi = function( req, res, next ){
 			
 			// Get Vehicle Types
 			function( callback ){
-				dclass._select( '*', 'tbl_vehicle_type', " AND v_type = '"+vehicle_type+"' AND e_status = 'active' ", function( status, data ){ 
+				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = '"+vehicle_type+"' AND e_status = 'active' ", function( status, data ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, '', {} );
 					}
@@ -68,7 +68,6 @@ var currentApi = function( req, res, next ){
 						
 						var temp = newData;
 						if( temp.l_data.list_icon ){ temp.l_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.list_icon ); }
-						if( temp.l_data.active_icon ){ temp.l_data.active_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.active_icon ); }
 						if( temp.l_data.plotting_icon ){ temp.l_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.plotting_icon ); }
 						newData = temp;
 						
@@ -99,9 +98,9 @@ var currentApi = function( req, res, next ){
 				_q += " FROM ";
 				_q += " tbl_vehicle_fairs ";
 				_q += " WHERE i_city_id IN ( ";
-					_q += " SELECT c.id FROM tbl_city c WHERE lower( v_name ) = '"+( city.toLowerCase() )+"' LIMIT 1 ";
+					_q += " SELECT c.id FROM tbl_city c WHERE c.i_delete = '0' AND lower( v_name ) = '"+( city.toLowerCase() )+"' LIMIT 1 ";
 				_q += "  ) ";
-				_q += "  AND v_type = 'city_wise' ";
+				_q += " AND i_delete = '0' AND v_type = 'city_wise' ";
 				
 				dclass._query( _q, function( status, data ){
 					if( !status ){
@@ -136,9 +135,9 @@ var currentApi = function( req, res, next ){
 				_q += " FROM ";
 				_q += " ( SELECT *, ("+gnrl._distQuery( latitude, longitude, "( l_data->'geo'->>'latitude' )::double precision", "( l_data->'geo'->>'longitude' )::double precision" )+") AS distance, l_data->'hours'->>'start_hour' AS start_hour, l_data->'hours'->>'end_hour' AS end_hour FROM tbl_vehicle_fairs ) AS a ";
 				_q += " WHERE i_city_id IN ( ";
-					_q += " SELECT c.id FROM tbl_city c WHERE lower( v_name ) = '"+( city.toLowerCase() )+"' LIMIT 1 ";
+					_q += " SELECT c.id FROM tbl_city c WHERE c.i_delete = '0' AND lower( v_name ) = '"+( city.toLowerCase() )+"' LIMIT 1 ";
 				_q += "  ) ";
-				_q += "  AND v_type = 'area_wise' ";
+				_q += " AND a.i_delete = '0' AND v_type = 'area_wise' ";
 				_q += " AND ( l_data->'days' )::jsonb ? '"+currDay+"' ";
 				_q += " AND ( l_data->'dates'->>'start_date' <= '"+currDate+"' AND l_data->'dates'->>'end_date' >= '"+currDate+"' ) ";
 				_q += " AND distance < ( l_data->'geo'->>'cover_area' )::numeric ";

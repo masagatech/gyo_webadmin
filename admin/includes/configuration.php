@@ -1,7 +1,6 @@
 <?php 
 session_start();
 date_default_timezone_set('Asia/Kolkata');
-
 ini_set('display_errors',1);
 ob_start("ob_gzhandler");
 @ob_gzhandler();
@@ -70,8 +69,8 @@ error_reporting( E_ERROR );
 		echo '<pre>'; print_r( $str ); echo '</pre>';
 	}
 
-	function lang( $data, $field ){
-		return $data[ $field.'_'.LANG ];
+	function lang( $data, $lang ){
+		return ( isset( $data[ $lang ] ) && $data[ $lang ] ) ? $data[ $lang ] : $data[ DEFAULT_LANGUAGE ];
 	}
 	
 	function _is_file( $folder = '', $file = '' ){
@@ -129,7 +128,7 @@ error_reporting( E_ERROR );
 	}
 	
 	
-	global $globalCharges, $globalTrip, $globEmailTypes,$globSmsTypes,$globalRideStatus,$globalShowEstimateCharge,$globalDriverSearchQuery,$globalUserAction,$globalAdminRole,$globNotificationTypes,$globalParentChild,$globalPromotionType;
+	global $globalCharges, $globalTrip, $globEmailTypes,$globSmsTypes,$globalRideStatus,$globalShowEstimateCharge,$globalDriverSearchQuery,$globalUserAction,$globalAdminRole,$globNotificationTypes,$globalParentChild,$globalPromotionType,$globalBankInfoArr;
 
 	// {"day_km_end": "", "day_km_start": "", "night_km_end": "", "": "", "day_km_charges": "", "": "", "night_km_start": "", "": "", "": "", "night_km_charges": "", "": "", "": "", "day_km_after_charge": "", "night_km_after_charge": ""}
 	$globalPromotionType=array(
@@ -194,7 +193,7 @@ error_reporting( E_ERROR );
 		'user_otp_verified' 			=> 'User : OTP Verified',
 		'user_forgot_password' 			=> 'User : Forgot Password',
 		'user_reset_password' 			=> 'User : Reset Password',
-		
+		'user_manual_update' 			=> 'User : Manual Update',
 		'user_add_money' 				=> 'User : Add Money To Wallet',
 		
 		'driver_ride_complete' 	=> 'Driver : Ride Complete',
@@ -205,6 +204,10 @@ error_reporting( E_ERROR );
 		'driver_ride_cancel_charge' => 'Driver : Ride Cancellation Charge',
 		
 		'user_ride_cancel_charge' 	=> 'User : Ride Cancellation Charge',
+		
+		'user_submit_support_inquiry' 	=> 'User : Submit Support Inquiry',
+		
+		'ticket_resolved' 				=> 'Ticket Resolved',
 
 	);
 	$globSmsTypes = array(
@@ -217,7 +220,7 @@ error_reporting( E_ERROR );
 		'user_otp_verified' 			=> 'User : OTP Verified',
 		'user_forgot_password' 			=> 'User : Forgot Password',
 		'user_reset_password' 			=> 'User : Reset Password',
-		
+		'user_manual_update' 			=> 'User : Manual Update',
 		'user_add_money' 				=> 'User : Add Money To Wallet',
 		
 		'user_ride_complete' => 'User Complete Ride',
@@ -227,8 +230,11 @@ error_reporting( E_ERROR );
 		
 		'driver_ride_cancel_charge' => 'Driver : Ride Cancellation Charge',
 		'user_ride_cancel_charge' 	=> 'User : Ride Cancellation Charge',
+		'user_submit_support_inquiry' 	=> 'User : Submit Support Inquiry',
 		
 		'resend_otp' 	=> 'Resend OTP',
+		
+		'ticket_resolved' 				=> 'Ticket Resolved',
 		
 	); 
 	
@@ -247,12 +253,14 @@ error_reporting( E_ERROR );
 		'driver_ride_get_dry_run' 	=> 'Driver : Ride Get Dry Run',
 		'driver_ride_get_payment' 	=> 'Driver : Ride Get Payment',
 		'driver_ride_cancel_charge' => 'Driver : Ride Cancellation Charge',
-		
+		'user_manual_update' 	    => 'User : Manual Update',
 		'user_ride_start' 			=> 'User : Ride Start',
 		'user_ride_cancel' 			=> 'User : Ride Cancel',
 		'user_ride_complete' 		=> 'User : Ride Complete',
 		'user_ride_wallet_payment' 	=> 'User : Ride Wallet Payment',
 		'user_ride_cancel_charge' 	=> 'User : Ride Cancellation Charge',
+		
+		'user_driver_arrived' 		=> 'User : Driver Arrived at Location',
 		
 		
 		// Pending
@@ -267,6 +275,8 @@ error_reporting( E_ERROR );
 		'complete' => 'Complete',
 		'cancel' => 'Cancel'
 	);
+
+	
 	global $globLangArr;
 	$temp = $dclass->select( '*', 'tbl_language', " ORDER BY v_name" );
 	foreach( $temp as $rowTemp ){

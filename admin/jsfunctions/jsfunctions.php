@@ -31,6 +31,12 @@
 		}
 		return false;
 	}
+	function confirm_restore(label, id) {
+		if(confirm("Are you sure you want to restore this Record?")) {
+			document.location.href = label+".php?a=3&chkaction=restore&id="+id;
+		}
+		return false;
+	}
 	function confirm_delete_image(label, id) {
 		if(confirm("Are you sure you want to delete this Image?")) {
 			document.location.href = label+".php?a=3&chkaction=deleteimage&id="+id;
@@ -171,6 +177,9 @@
 			},
 		});
 	}
+
+	
+	
 	function doLogout(){
 		showLoder();
 		jQuery.ajax({

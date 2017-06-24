@@ -12,7 +12,7 @@
 <script type="text/javascript" src="js/behaviour/general.js"></script>
 <script type="text/javascript" src="js/jquery.ui/jquery-ui.js" ></script>
 <script type="text/javascript" src="js/bootstrap.switch/bootstrap-switch.min.js"></script>
-<script type="text/javascript" src="js/bootstrap.datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="js/bootstrap.datetimepicker/js/bootstrap-datetimepicker.js"></script>
 
 <script type="text/javascript" src="js/jquery.sparkline/jquery.sparkline.min.js"></script> 
 <script type="text/javascript" src="js/jquery.easypiechart/jquery.easy-pie-chart.js"></script> 
@@ -23,7 +23,10 @@
 <script type="text/javascript" src="js/jquery.icheck/icheck.min.js"></script>
 <script type="text/javascript" src="js/dropzone/dropzone.js"></script>
 <script type="text/javascript" src="js/bootstrap.colorpicker/dist/js/bootstrap-colorpicker.js"></script>
-<script type="text/javascript" src="js/jquery.niftymodals/js/jquery.modalEffects.js"></script> <script>
+<script type="text/javascript" src="js/jquery.niftymodals/js/jquery.modalEffects.js"></script> 
+<script type="text/javascript" src="js/imageviewer.js"></script> 
+
+<script>
     $(function () {
         // add multiple select / deselect functionality
         $("#selectall").click(function () {

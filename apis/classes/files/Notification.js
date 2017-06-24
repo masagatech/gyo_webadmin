@@ -75,7 +75,7 @@ var currClass = function( params ){
 					_q += " FROM ";
 					_q += ""+table+" a";
 					_q += " WHERE v_type = '"+_key+"' ";
-					_q += " AND e_status = 'active' ";
+					_q += " AND i_delete = '0' AND e_status = 'active' ";
 					
 					
 					dclass._query( _q, function( status, data ){

@@ -1,9 +1,14 @@
 <?php
 $mess=array(
+	"imagetype" => "<span style='color:green;'>Sorry, only JPG, JPEG, PNG & GIF files are allowed.</span>",
+	"select_msg"=>"<span style='color:green;'>Please select city.</span>",
 	"add_settle"=>"<span style='color:green;'>Record has been settled successfully.</span>",
+	"wallet_upd"=>"<span style='color:green;'>Wallet updated successfully.</span>",
+	"wallet_error"=>"<span style='color:green;'>Invalid Amount.</span>",
 	"not_auth"=>"<span style='color:green;'>You are not authorized to do this action.</span>",
 	"login"=>"<span style='color:green;'>You are logged in successfully.</span>",
 	"del"=>"<span style='color:green;'>Record has been deleted successfully.</span>",
+	"restore"=>"<span style='color:green;'>Record has been restored successfully.</span>",
 	"delete_attr"=>"<span style='color:green;'>Attribute has been deleted successfully.</span>",
 	"multidel"=>"<span style='color:green;'>Selected records has been deleted successfully.</span>",
 	"multiact"=>"<span style='color:green;'>Selected records has been activated successfully.</span>",
@@ -16,6 +21,7 @@ $mess=array(
 	"success_push"=>"<span style='color:green;'>Push notification successfully send.</span>",
 	"success_msg"=>"<span style='color:green;'>Message successfully send.</span>",
 	"cityexit"=>"<span style='color:green;'>Record has been already exist.</span>",
+	"vihicleexist"=>"<span style='color:green;'>Vihicle has been already exist.</span>",
 	"email_exit"=>"<span style='color:green;'>Email has been already exist.</span>",
 	"insertcomment"=>"<span style='color:green;'>Comment has been inserted successfully.</span>",
 	"edit"=>"<span style='color:green;'>Record has been updated successfully.</span>",
@@ -28,6 +34,8 @@ $mess=array(
 	"nameexists"=>"Entered Name already exists.",
 	"urlexists"=>"Entered Url already exists.",
 	"emailexists"=>"Entered Email already exists.",
+	"codeexists"=>"Entered Code already exists.",
+	"bankexists"=>"Entered Bank name already exists.",
 	"phoneexists"=>"Entered Phone already exists.",
 	"couponexists"=>"Entered Coupon already exists.",
 	"passwordmismatch"=>"Password fields are not matching.",
@@ -117,13 +125,6 @@ $mess=array(
 	"backup_created"=>"Backup created successfully!!.",
 	"backup_not_found"=>"Database backup file not found!!.",
 	"backup_restored"=>"Database restored successfully!!.",
-	
-	"already_on_ebay" 		=> "Item already exists on eBay!!.",
-	"added_on_ebay" 		=> "Item added on eBay successfully!!.",
-	"cant_add_on_ebay" 		=> "Error occured!! Item can't add on eBay!!.",
-	"revise_on_ebay" 		=> "Item Revised on eBay successfully!!.",
-	"cant_revise_on_ebay" 	=> "Error occured!! Item can't revised on eBay!!.",
-	"ebaysunc" 				=> "All Items are syncronized successfully on eBay!!.",
 	
 	
 );

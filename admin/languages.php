@@ -46,12 +46,6 @@ $gnrl->check_login();
 				$dclass->update( $table, $ins, " id = '".$id."'");
 				$gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
 			}
-			// make records active
-			else if($_REQUEST['chkaction'] == 'delete_image'){
-				$ins = array('v_image'=>'');
-				$dclass->update($table,$ins," id='$id'");
-				$gnrl->redirectTo($page.".php?succ=1&msg=multiact");
-			}
 			
 		}	
 	}
@@ -112,16 +106,16 @@ $gnrl->check_login();
                                     <div class="col-md-12">
                                         <div class="content">
                                             <div class="form-group">
-                                                <label>Name</label>
+                                                <label>Name  <span>*</span></label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required  />
                                             </div>
 											<div class="form-group">
-                                                <label>Key</label>
+                                                <label>Key <span>*</span></label>
                                                 <input type="text" class="form-control" id="v_key" name="v_key" value="<?php echo $v_key; ?>" required <?php echo $script == 'edit' ? 'readonly' : '' ?> />
                                             </div>
                                             <div class="form-group">
-                                                <label>Status</label>
-                                                <select class="select2" name="e_status" id="e_status">
+                                                <label>Status <span>*</span></label>
+                                                <select class="select2" name="e_status" id="e_status" required="">
                                                     <?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
                                                 </select>
                                             </div>
@@ -189,9 +183,9 @@ $gnrl->check_login();
                                                             </label>
                                                         </div>
                                                        <?php 
-                                                            if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
-                                                                <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" > Clear Search </a>
-                                                        <?php } ?>
+                                                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != ''){ ?>
+                                                                            <a href="<?php echo $page ?>.php" class="fright" > Clear Search </a>
+                                                                <?php } ?>
                                                     </div>
                                                     <div class="pull-left">
                                                         <div id="datatable_length" class="dataTables_length">

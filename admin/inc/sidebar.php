@@ -21,11 +21,16 @@
 				<ul class="cl-vnavigation">
 					<?php 
 					function put_active( $data = '' ){
+						$BASE_FILE=BASE_FILE;
+						if(BASE_FILE == 'log.php') {
+							$BASE_FILE='driver.php';
+							
+						}
 						if( is_array( $data ) ){
-							return in_array( BASE_FILE, $data ) ? "active" : "";
+							return in_array( $BASE_FILE, $data ) ? "active" : "";
 						}
 						else{ 
-							return BASE_FILE == $data ? "active" : "";
+							return $BASE_FILE == $data ? "active" : "";
 						}
 					}
 					

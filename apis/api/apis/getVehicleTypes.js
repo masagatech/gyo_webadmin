@@ -26,7 +26,7 @@ var currentApi = function( req, res, next ){
 		
 		// Get Vehicle Types
 		function( callback ){
-			dclass._select( '*', 'tbl_vehicle_type', " AND e_status = 'active' ORDER BY id ", function( status, data ){ 
+			dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND e_status = 'active' ORDER BY id ", function( status, data ){ 
 				if( !status ){
 					gnrl._api_response( res, 0, '', {} );
 				}
@@ -37,7 +37,7 @@ var currentApi = function( req, res, next ){
 					for( var k in data ){
 						var temp = data[k];
 						if( temp.l_data.list_icon ){ temp.l_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.list_icon ); }
-						if( temp.l_data.active_icon ){ temp.l_data.active_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.active_icon ); }
+
 						if( temp.l_data.plotting_icon ){ temp.l_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.plotting_icon ); }
 						
 						delete temp.l_data.charges;

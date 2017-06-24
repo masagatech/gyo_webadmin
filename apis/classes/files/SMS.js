@@ -52,7 +52,7 @@ var currClass = function( params ){
 					_q += " , ( SELECT l_value FROM tbl_sitesetting WHERE v_key = 'SMS_SENDERNAME' ) AS sms_sendername";
 					_q += " FROM tbl_sms a ";
 					_q += " WHERE v_key = '"+_key+"' ";
-					_q += " AND e_status = 'active' ";
+					_q += " AND i_delete = '0' AND e_status = 'active' ";
 					
 					dclass._query( _q, function( status, data ){
 						if( !status ){

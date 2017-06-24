@@ -62,7 +62,6 @@ var currentApi = function( req, res, next ){
 		var v_phone 			= gnrl._is_undf( params.v_phone ).trim();
 		var v_gender 			= gnrl._is_undf( params.v_gender, 'male' );
 		var v_vehicle_type 		= gnrl._is_undf( params.v_vehicle_type ).trim();
-		var v_imei_number 		= gnrl._is_undf( params.v_imei_number ).trim();
 		var v_vehicle_number 	= gnrl._is_undf( params.v_vehicle_number ).trim();
 		var i_city_id 			= gnrl._is_undf( params.i_city_id );
 		var l_data 				= gnrl._is_undf( params.l_data );
@@ -76,7 +75,6 @@ var currentApi = function( req, res, next ){
 		if( _status && !validator.isEmail( v_email ) ){ _status = 0; _message = 'err_invalid_email'; }
 		if( _status && !v_vehicle_number.trim() ){ _status = 0; _message = 'err_req_vehicle_number'; }
 		if( _status && !v_vehicle_type.trim() ){ _status = 0; _message = 'err_req_vehicle_type'; }
-		if( _status && !v_imei_number.trim() ){ _status = 0; _message = 'err_req_imei_number'; }
 		if( _status && !i_city_id ){ _status = 0; _message = 'err_req_city'; }
 		
 		var folder = 'drivers';
@@ -137,7 +135,6 @@ var currentApi = function( req, res, next ){
 										'v_email'    	: v_email,
 										'v_phone'    	: v_phone,
 										'v_gender' 	 	: v_gender,
-										'v_imei_number' : v_imei_number,
 										'i_city_id' 	: i_city_id,
 										'v_image'    	: fileArr['v_image'].name ? fileArr['v_image'].name : _row.v_image,
 										'd_modified' 	: gnrl._db_datetime(),

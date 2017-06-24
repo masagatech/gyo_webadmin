@@ -67,7 +67,7 @@ var currentApi = function( req, res, next ){
 			
 			// Get Tracking Data
 			function( callback ){
-				dclass._select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '"+_ride_id+"' ORDER BY id DESC ", function( status, track ){
+				dclass._select( '*', 'tbl_track_vehicle_location', " AND l_data->>'run_type' = 'track' AND l_data->>'i_ride_id' = '"+_ride_id+"' ORDER BY id DESC ", function( status, track ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}

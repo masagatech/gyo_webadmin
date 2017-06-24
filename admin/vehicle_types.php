@@ -1,7 +1,8 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-
+//error_reporting( E_ALL );
+// _P($_FILES);
 // _P($_REQUEST);exit;
 	extract( $_POST );
 	$page_title = "Manage Vehicle Types";
@@ -30,7 +31,6 @@ $gnrl->check_login();
 			$id = $dclass->insert( $table, $ins );
 			$filesArray = array(
 				'list_icon',
-				'active_icon',
 				'plotting_icon',
 			);
 			$keyVal = array();
@@ -38,20 +38,31 @@ $gnrl->check_login();
 				if( isset( $_FILES['l_data']['name'][$imgKey] ) && $_FILES['l_data']['name'][$imgKey] != "" ) {
 					$dest = UPLOAD_PATH.$folder."/";
 					$file_name = $gnrl->removeChars( time().'-'.$_FILES['l_data']['name'][$imgKey] ); 
-					if( move_uploaded_file( $_FILES['l_data']['tmp_name'][$imgKey], $dest.$file_name ) ){
-						$keyVal[$imgKey] = $file_name;
-						// @unlink( $dest.$OLDNAME );
+					$imageFileType = pathinfo($file_name,PATHINFO_EXTENSION);
+					
+					if($imageFileType == "jpg" && $imageFileType == "png" && $imageFileType == "jpeg"
+					&& $imageFileType == "gif" ) {
+						if( move_uploaded_file( $_FILES['l_data']['tmp_name'][$imgKey], $dest.$file_name ) ){
+							$keyVal[$imgKey] = $file_name;
+							// @unlink( $dest.$OLDNAME );
+						}
+					}else{
+						
+						$dclass->delete( $table ," id = '".$id[0]."'");
+						$gnrl->redirectTo($page.".php?script=add&succ=0&msg=imagetype");
 					}
+
 				}
 			}
 			if( count( $keyVal ) ){
+				$ins = array();
 				$ins[] = "l_data = l_data || '".json_encode($keyVal)."'";
 				$dclass->updateJsonb( $table, $ins, " id = '".$id."' ");	
 			}
 					
 			$gnrl->redirectTo($page.".php?succ=1&msg=add");
 		}else{
-			$gnrl->redirectTo($page.".php?succ=0&msg=cityexit");
+			$gnrl->redirectTo($page.".php?succ=0&msg=vihicleexist");
 		}
 		
 	}
@@ -69,6 +80,12 @@ $gnrl->check_login();
 					$gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
 				}
 			}
+			// make records restore
+	        if($_REQUEST['chkaction'] == 'restore') {
+	            $ins = array('i_delete'=>'0');
+	            $dclass->update( $table, $ins, " id = '".$id."'");
+	            $gnrl->redirectTo($page.".php?succ=1&msg=del");
+	        }
 			// make records active
 			else if($_REQUEST['chkaction'] == 'active'){
 				if(1){
@@ -104,45 +121,56 @@ $gnrl->check_login();
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 			$id = $_REQUEST['id'];
 			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
-
 				
 				$if_exist = $dclass->select('*',$table," AND v_type = '".$v_type."' AND v_name = '".$v_name."' AND id !=".$id." ");
 				if(empty($if_exist)){
 					$ins = array(
 						" v_name = '".$v_name."' ",
 						" v_type = '".$v_type."' ",
-						" l_data = l_data || '".json_encode($l_data)."' ",
 						" d_modified = '".date('Y-m-d H:i:s')."' ",
 						" e_status =	'".$e_status."'	",
 					);
 					$dclass->updateJsonb( $table, $ins, " id = '".$id."' ");
-					$ins = array();
+					
+					
 					$filesArray = array(
 						'list_icon',
-						'active_icon',
 						'plotting_icon',
 					);
 					$keyVal = array();
+					
 					foreach( $filesArray as $imgKey ){
 						if( isset( $_FILES['l_data']['name'][$imgKey] ) && $_FILES['l_data']['name'][$imgKey] != "" ) {
 							$dest = UPLOAD_PATH.$folder."/";
 							$file_name = $gnrl->removeChars( time().'-'.$_FILES['l_data']['name'][$imgKey] ); 
-							if( move_uploaded_file( $_FILES['l_data']['tmp_name'][$imgKey], $dest.$file_name ) ){
-								$keyVal[$imgKey] = $file_name;
-								if($imgKey=='list_icon'){
-									$OLDNAME= $oldname_list;
+							
+							//_p( 'D : '.$dest.$file_name );
+							
+							//_p( 'D : '.move_uploaded_file( $_FILES['l_data']['tmp_name'][$imgKey], $dest.$file_name ) );
+							$imageFileType = pathinfo($file_name,PATHINFO_EXTENSION);
+							
+							if($imageFileType == "jpg" || $imageFileType == "png" || $imageFileType == "jpeg"
+							|| $imageFileType == "gif" ) {
+								if( move_uploaded_file( $_FILES['l_data']['tmp_name'][$imgKey], $dest.$file_name ) ){
+									$keyVal[$imgKey] = $file_name;
+									if($imgKey=='list_icon'){
+										$OLDNAME= $oldname_list;
+									}
+									if($imgKey=='plotting_icon'){
+										$OLDNAME= $oldname_plotting;
+									}
+									@unlink( $dest.$OLDNAME );
 								}
-								if($imgKey=='active_icon'){
-									$OLDNAME= $oldname_active;
-								}
-								if($imgKey=='plotting_icon'){
-									$OLDNAME= $oldname_plotting;
-								}
-								@unlink( $dest.$OLDNAME );
+							}else{
+								$gnrl->redirectTo($page.'.php?succ=0&msg=imagetype&a=2&script=edit&id='.$_REQUEST['id']);
 							}
+
+							
 						}
 					}
+					
 					if( count( $keyVal ) ){
+						$ins = array();
 						$ins[] = "l_data = l_data || '".json_encode($keyVal)."'";
 						$dclass->updateJsonb( $table, $ins, " id = '".$id."' ");	
 					}
@@ -204,21 +232,21 @@ $gnrl->check_login();
                                     <div class="col-md-12">
                                         <div class="content">
                                             <div class="form-group">
-                                                <label>Vehicle Type Name</label>
+                                                <label>Vehicle Type Name <?php echo $gnrl->getAstric(); ?></label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name;?>" required />
                                             </div>
                                             <div class="form-group">
-                                                <label>Vehicle Type</label>
-                                                <input type="text" class="form-control" id="v_type" name="v_type" value="<?php echo $v_type;?>" required />
+                                                <label>Vehicle Type <?php echo $gnrl->getAstric(); ?></label>
+                                                <input type="text" class="form-control" id="v_type" name="v_type" value="<?php echo $v_type;?>" required <?php echo $script == 'edit' ? 'readonly' : ''?> />
                                             </div>
 											
 											<div class="row">
 												<div class="col-md-12">
 													<h3>Icons</h3>
 													<div class="row" >
-														<div class="col-md-4">
+														<div class="col-md-6">
 															<div class="form-group">
-																<label>List Icon</label>
+																<label>List Icon [70*70]</label>
 																<input class="form-control" type="file" name="l_data[list_icon]" style="height:auto;"  >
 																<?php 
 																if( $putFile = _is_file( $folder, $l_data['list_icon'] ) ){ //echo $putFile; ?>
@@ -227,20 +255,10 @@ $gnrl->check_login();
 																<?php } ?>
 															</div>
 														</div>
-														<div class="col-md-4">
+														
+														<div class="col-md-6">
 															<div class="form-group">
-																<label>Active Icon</label>
-																<input class="form-control" type="file" name="l_data[active_icon]" style="height:auto;"  >
-																<?php 
-																if( $putFile = _is_file( $folder, $l_data['active_icon'] ) ){ ?>
-																<img class="edit_img" src="<?php echo $putFile;?>" >
-																<?php } ?>
-																<input type="hidden" name="oldname_active" value="<?php echo $l_data['active_icon']; ?>">
-															</div>
-														</div>
-														<div class="col-md-4">
-															<div class="form-group">
-																<label>Plotting Icon</label>
+																<label>Plotting Icon [70*70]</label>
 																<input class="form-control" type="file" name="l_data[plotting_icon]" style="height:auto;"  >
 																<?php 
 																if( $putFile = _is_file( $folder, $l_data['plotting_icon'] ) ){ ?>
@@ -272,8 +290,8 @@ $gnrl->check_login();
 															<?php 
 															foreach( $globalCharges as $chargeKey => $chargeVal ) { ?>
 																<div class="form-group">
-																	<label><?php echo $chargeVal;?></label>
-																	<input type="text" class="form-control" name="l_data[charges][<?php echo $chargeKey;?>]" value="<?php echo $l_data['charges'][$chargeKey];?>"  />
+																	<label><?php echo $chargeVal;?> <?php echo $gnrl->getAstric(); ?></label>
+																	<input type="text" class="form-control" name="l_data[charges][<?php echo $chargeKey;?>]" value="<?php echo $l_data['charges'][$chargeKey];?>"  required/>
 																</div> <?php 
 															}?>		
 														</div>
@@ -289,8 +307,8 @@ $gnrl->check_login();
 															<?php 
 															foreach( $globalVehicleOtherSettings as $rowK => $rowV ) { ?>
 																<div class="form-group">
-																	<label><?php echo $rowV;?></label>
-																	<input type="text" class="form-control" name="l_data[other][<?php echo $rowK;?>]" value="<?php echo $l_data['other'][$rowK];?>"  />
+																	<label><?php echo $rowV;?> <?php echo $gnrl->getAstric(); ?></label>
+																	<input type="text" class="form-control" name="l_data[other][<?php echo $rowK;?>]" value="<?php echo $l_data['other'][$rowK];?>" required/>
 																</div> <?php 
 															}?>		
 														</div>
@@ -394,7 +412,8 @@ $gnrl->check_login();
 	                                        <table class="table table-bordered" id="datatable" style="width:100%;" >
 	                                        	<?php
 				                                    echo $gnrl->renderTableHeader(array(
-				                                        'v_name' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+				                                    	'v_type' => array( 'order' => 1, 'title' => 'Vehicle Type' ),
+				                                        'v_name' => array( 'order' => 1, 'title' => 'Vehicle Name' ),
 				                                        'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
 				                                        'e_status' => array( 'order' => 1, 'title' => 'Status' ),
 				                                        'action' => array( 'order' => 0, 'title' => 'Action' ),
@@ -409,12 +428,13 @@ $gnrl->check_login();
 	                                                    	?>
 	                                                        <tr>
 																<td>
-																	<?php echo $row['v_name']; ?>
-																	<br>
-																	(<?php echo $row['v_type'];?>)
+																	<?php echo $row['v_type']; ?>
 																</td>
-																<td><?php echo $row['e_status'];?></td>
+																<td>
+																	<?php echo $row['v_name'];?>
+																</td>
 																<td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
+																<td><?php echo $row['e_status'];?></td>
 	                                                            <td class="text-right" >
 	                                                                <div class="btn-group">
 	                                                                    <button class="btn btn-default btn-xs" type="button">Actions</button>
@@ -422,11 +442,18 @@ $gnrl->check_login();
 	                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
 	                                                                    </button>
 	                                                                    <ul role="menu" class="dropdown-menu pull-right">
-																			
-	                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-	                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-	                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+																			<?php
+	                                                                           if(isset($_REQUEST['deleted'])){ ?>
+	                                                                                <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+	                                                                            <?php  
+	                                                                            }else{ ?>
+	                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+			                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+			                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+			                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+	                                                                            <?php }
+	                                                                        ?>
+	                                                                       
 	                                    									
 	                                                                    </ul>
 	                                                                </div>

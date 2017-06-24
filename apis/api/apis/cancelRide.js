@@ -142,7 +142,7 @@ var currentApi = function( req, res, next ){
 					callback( null );
 				}
 				else{
-					dclass._select( '*', 'tbl_ride_cancel_reason', " AND id = '"+_data.reason_id+"' ", function( status, data ){
+					dclass._select( '*', 'tbl_ride_cancel_reason', " AND i_delete = '0' AND id = '"+_data.reason_id+"' ", function( status, data ){
 						if( !status ){
 							gnrl._api_response( res, 0, 'error', {} );
 						}
@@ -279,6 +279,7 @@ var currentApi = function( req, res, next ){
 									_keywords 	: {
 										'[user_name]' : _data.user.v_name,
 										'[amount]' : _data.deductAmount,
+										'[ride_code]' : _data.ride.v_ride_code,
 									},
 								};
 								SMS.send( params, function( error_mail, error_info ){
@@ -295,6 +296,7 @@ var currentApi = function( req, res, next ){
 									_keywords 	: {
 										'[user_name]' : _data.user.v_name,
 										'[amount]' : _data.deductAmount,
+										'[ride_code]' : _data.ride.v_ride_code,
 									},
 								};
 								Email.send( params, function( error_mail, error_info ){

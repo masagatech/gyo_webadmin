@@ -12,11 +12,19 @@ $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_
 ## Insert Record in database starts
 if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
 	$temp="";
+	
+	$is_exists = $dclass->select( '*', $table, " AND v_code = '".$v_code."' " );
+
+	if( count( $is_exists ) ){
+		$gnrl->redirectTo($page.'.php?script=add&succ=0&msg=codeexists');
+	}
 	$ins = array(
 		'v_name'  => $v_name,
+		'v_code'  => $v_code,
         'd_added' => date('Y-m-d H:i:s'),
         'd_modified' => date('Y-m-d H:i:s'),
         'l_data' => json_encode($temp),
+        'e_status'  => $e_status,
 	);
     $id = $dclass->insert( $table, $ins );
 	
@@ -27,11 +35,18 @@ if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
 if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
 	if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 		$id = $_REQUEST['id'];
+        // make records delete
 		if($_REQUEST['chkaction'] == 'delete') {
             $ins = array('i_delete'=>'1');
             $dclass->update( $table, $ins, " id = '".$id."'");
 			$gnrl->redirectTo($page.".php?succ=1&msg=del");
 		}
+        // make records restore
+        if($_REQUEST['chkaction'] == 'restore') {
+            $ins = array('i_delete'=>'0');
+            $dclass->update( $table, $ins, " id = '".$id."'");
+            $gnrl->redirectTo($page.".php?succ=1&msg=del");
+        }
 		// make records active
 		else if($_REQUEST['chkaction'] == 'active'){
 			$ins = array('e_status'=>'active');
@@ -60,8 +75,16 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
 
 		$id = $_REQUEST['id'];
 		if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
+			$is_exists = $dclass->select( '*', $table, " AND id != '".$id."' AND v_code = '".$v_code."' " );
+
+	
+			if( count( $is_exists ) ){
+				$gnrl->redirectTo($page.'.php?succ=0&msg=codeexists&a=2&script=edit&id='.$_REQUEST['id']);
+			}
 			$ins = array(
                 'v_name'  => $v_name,
+				'v_code'  => $v_code,
+                'e_status'  => $e_status,
                 'd_modified' => date('Y-m-d H:i:s')
             );
 			$dclass->update( $table, $ins, " id = '".$id."' ");
@@ -118,8 +141,18 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                     <div class="col-md-12">
                                         <div class="content">
                                             <div class="form-group">
-                                                <label>Name</label>
+                                                <label>Name <span>*</span></label>
                                                 <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
+                                            </div>
+											<div class="form-group">
+                                                <label>Code <span>*</span></label>
+                                                <input type="text" class="form-control" id="v_code" name="v_code" value="<?php echo $v_code; ?>" required />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Status</label>
+                                                <select class="select2" name="e_status" id="e_status">
+                                                    <?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
+                                                </select>
                                             </div>
                                             <div class="form-group">
                                                 <button class="btn btn-primary" type="submit" name="submit_btn" value="<?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?>"><?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?></button>
@@ -157,8 +190,8 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                          LOWER(e_status) like LOWER('%".$keyword."%')
                                     )";
                                 }
-                                if( isset( $_REQUEST['filter'] ) && $_REQUEST['filter'] != '' ){
-                                    $keyword =  trim( $_REQUEST['filter'] );
+                                if( isset( $_REQUEST['city_sel'] ) && $_REQUEST['city_sel'] != '' ){
+                                    $keyword =  trim( $_REQUEST['city_sel'] );
                                     $wh .= " AND id =".$keyword."";
                                 }
 
@@ -197,6 +230,11 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                                  <div class="pull-right" style="">
                                                                     <input class="all_access" name="deleted" value=""  type="checkbox"  onclick="document.frm.submit();" <?php echo $checked; ?>>
                                                                     Show Deleted Data
+                                                                    <div class="clearfix"></div>
+                                                                <?php 
+                                                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['city_sel']) && $_REQUEST['city_sel'] != ''){ ?>
+                                                                            <a href="<?php echo $page ?>.php" class="fright" style="" > Clear Search </a>
+                                                                <?php } ?>
                                                                 </div>
                                                             </label>
                                                         </div>
@@ -209,9 +247,9 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                     <label class="pull-left" style="margin: 5px 0px 5px 10px !important;"> </label>
                                                     <div class="pull-left" style="margin: 20px !important;">
                                                         <div>
-                                                         <select class="select2" name="city_sel" id="city_sel" onChange="searchCity(this.options[this.selectedIndex].value)">
+                                                         <select class="select2" name="city_sel" id="city_sel" onChange="document.frm.submit();">
                                                                 <option value="">--Select--</option>
-                                                                 <?php echo $gnrl->getCityDropdownList($_GET['filter']); ?>
+                                                                 <?php echo $gnrl->getCityDropdownList($_GET['city_sel']); ?>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -224,6 +262,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                 <?php
                                                 echo $gnrl->renderTableHeader(array(
                                                     'v_name' => array( 'order' => 1, 'title' => 'Name' ),
+													'v_code' => array( 'order' => 1, 'title' => 'Code' ),
                                                     'd_added' => array( 'order' => 1, 'title' => 'Added Date' ),
                                                     'e_status' => array( 'order' => 1, 'title' => 'Status' ),
                                                     'action' => array( 'order' => 0, 'title' => 'Action' ),
@@ -237,9 +276,8 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                             $i++;
                                                             ?>
                                                             <tr>
-                                                                <td>
-                                                                    <?php echo $row['v_name']; ?>
-                                                                </td>
+                                                                <td><?php echo $row['v_name']; ?></td>
+																<td><?php echo $row['v_code']; ?></td>
                                                                 <?php 
                                                                 $d_added = substr($row['d_added'], 0, strpos($row['d_added'], "+"));
                                                                 ?>
@@ -254,10 +292,17 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                                                 <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                             </button>
                                                                             <ul role="menu" class="dropdown-menu pull-right">
-                                                                                <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                                <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                                <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                <?php
+                                                                                   if(isset($_REQUEST['deleted'])){ ?>
+                                                                                    <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
+                                                                                   <?php  }else{ ?>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
+                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
+                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
+                                                                                    <?php }
+                                                                                 ?>
+                                                                                
                                                                             </ul>
                                                                         </div>
                                                                         <?php }

@@ -18,7 +18,7 @@ var currentApi = function( req, res, next ){
 	var _response = {};
 	
 	
-	var key = gnrl._is_undf( params.key ).trim();
+	var key = gnrl._is_undf( params.key );
 	if( !key ){ _status = 0; _message = 'err_req_key'; }
 	
 	if( !_status ){

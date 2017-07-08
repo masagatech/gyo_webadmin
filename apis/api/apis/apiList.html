@@ -16,6 +16,7 @@
 	.trbg2{ background:#555; color:#FFF; font-size:18px; }
 	.api_ul li{ margin:3px 0; float:left; width:100%; }
 	.li_br{ float:left; width:100%; padding:5px 5px; background:#555; list-style:none; border-top:1px dashed #444; border-bottom:1px dashed #FFF; color:#FFF; margin:10px 0 !important; font-weight:bold; font-size:16px; }
+	*{ word-break: break-all; }
 </style>
 
 
@@ -29,6 +30,7 @@
 		
 		var BR = '<br />';
 		var apiList = [
+			
 			{ id : 'br', name : 'General APIs', },
 			
 			{
@@ -58,7 +60,21 @@
 					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_type', required : true, info : '[driver / user]' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : (
+						JSON.stringify([
+							{
+								"id": "1",
+								"j_title": "Reason 1"
+							},
+							{
+								"id": "2",
+								"j_title": "Reason 2"
+							}
+						])
+					) }
+					
+				],
 			},
 			{
 				id 		: 'getBestSarathi',
@@ -103,6 +119,33 @@
 					{ name : 'key[]', required : true, info : 'Array of Keys' },
 				],
 				response   : [],
+			},
+			
+			{
+				id 		: 'getPaymentMethods',
+				url 	: 'getPaymentMethods',
+				name 	: 'Get Payment Methods',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : false, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+				],
+				response   : [
+					{ 
+						name : 'data', 
+						info : JSON.stringify([
+							{
+								"id": "1",
+								"v_name": "Payment Method Name",
+								"v_type": "Payment Method Type",
+								"v_mode": "sandbox OR live",
+								"v_image": "Payment Method Icon",
+								"l_data": "{}, Object with different payment configuration"
+							}
+						])
+					}
+				],
+				
 			},
 			
 						
@@ -192,6 +235,7 @@
 					
 					{ name : 'l_latitude', required : true, info : 'Latitude' },
 					{ name : 'l_longitude', required : true, info : 'Longitude' },
+					{ name : 'refferal_code', required : false, info : 'Refferal Code' },
 					{ name : 'lang', required : false, info : 'Language' },
 				],
 				response   : [],
@@ -372,8 +416,6 @@
 				params 	: [
 					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
-					
-					{ name : 'id', required : true, info : 'Driver ID' },
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_old_password', required : true, info : 'must be 6 to 10 characters' },
 				],
@@ -404,7 +446,24 @@
 					{ name : 'sort_by', required : true, info : '[today / weekly / monthly]' },
 				],
 				response   : [
-					
+					{ 
+						name : 'data', 
+						info : (
+							JSON.stringify([
+								{
+									"id": "Ride ID [111]",
+									"d_time": "Ride Time Stamp [1499245061000]",
+									"v_ride_code": "Ride Code [RD00000000]",
+									"final_amount": "Ride Amount [100.00]",
+									"payment_mode": "Ride Payment Mode",
+									"e_status": "Ride Amount",
+									"user_v_id": "User ID",
+									"user_v_name": "User Name",
+									"user_v_image": "User Image"
+								}
+							])
+						) 
+					}
 				]
 			},
 			
@@ -416,28 +475,24 @@
 				params 	: [
 					{ name : 'login_id', required : true, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'wallet_type', required : true, info : 'money (default) / coupon' },
 				],
 				response   : [
-					{ name : 'data.wallet_amount', info : ('Wallet Amount') },
-					{ name : 'data.wallet_history', info : (
-						'['
-							+BR+'{'
-								+BR+'id : 1,'
-								+BR+'message : Message,'
-								+BR+'from : Wallet etc,'
-								+BR+'amount : Transaction amount,'
-								+BR+'d_added : 2017-04-11T08:20:18.000Z,'
-							+BR+'},'
-							+BR+'{'
-								+BR+'id : 2,'
-								+BR+'message : Message,'
-								+BR+'from : Wallet etc,'
-								+BR+'amount : Transaction amount,'
-								+BR+'d_added : 2017-04-11T08:20:18.000Z,'
-							+BR+'}'
-						+BR+
-						']'
-					) }
+					{ 
+						name : 'data', 
+						info : (
+							JSON.stringify({
+								"wallet_amount": "587.43",
+								"wallet_history": [{
+									"from": "Trasaction Type",
+									"message": "Message"
+								},{
+									"from": "Trasaction Type",
+									"message": "Message"
+								}]
+							})
+						) 
+					}
 				]
 			},		
 			{
@@ -482,28 +537,28 @@
 					{ name : 'to_date', required : true, info : 'To date timestamp' },
 				],
 				response   : [
-					{ name : 'data.wallet_amount', info : ('Wallet Amount') },
-					{ name : 'data.wallet_history', info : (
-						'['
-							+BR+'{'
-								+BR+'id : 1,'
-								+BR+'message : Message,'
-								+BR+'from : Wallet etc,'
-								+BR+'amount : Amount,'
-								+BR+'d_added : 2017-04-11T08:20:18.000Z,'
-								+BR+'details : {}'
-							+BR+'},'
-							+BR+'{'
-								+BR+'id : 2,'
-								+BR+'message : Message,'
-								+BR+'from : Wallet etc,'
-								+BR+'amount : Amount,'
-								+BR+'d_added : 2017-04-11T08:20:18.000Z,'
-								+BR+'details : {}'
-							+BR+'}'
-						+BR+
-						']'
-					) }
+					{ 
+						name : 'data', 
+						info : (
+							JSON.stringify({
+								"wallet_history": [{
+									"from": "Wallet Trasaction Type",
+									"message": "Message",
+									"details": {
+										"i_ride_id": "Ride Code",
+										"ride_date": "Ride Timestamp",
+										"vehicle_type": "Ride Vehicle Type [Not Used]",
+										"action": "Wallet Trasaction Type",
+										"action_amount": "Wallet Trasaction Amount",
+										"balance": "Wallet Balance"
+									}
+								},{
+									"from": "Trasaction Type",
+									"message": "Message"
+								}]
+							})
+						) 
+					}
 				]
 			},	
 			{
@@ -650,8 +705,6 @@
 				params 	: [
 					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
-					
-					{ name : 'id', required : true, info : 'User ID' },
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_old_password', required : true, info : 'must be 6 to 10 characters' },
 				],
@@ -687,6 +740,21 @@
 				]
 			},
 			{
+				id 		: 'userLocationUpdate',
+				url 	: 'userLocationUpdate',
+				name 	: 'User Location Update',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : false, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'l_latitude', required : true, info : 'Latitude' },
+					{ name : 'l_longitude', required : true, info : 'Longitude' },
+				],
+				response   : []
+			},
+			
+			
+			{
 				id 		: 'getUserWallet',
 				url 	: 'getUserWallet',
 				name 	: 'User My Wallet',
@@ -694,6 +762,7 @@
 				params 	: [
 					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'wallet_type', required : true, info : 'money (default) / coupon' },
 				],
 				response   : [
 					{ name : 'data.wallet_amount', info : ('Wallet Amount') },
@@ -808,9 +877,10 @@
 				params 	: [
 					{ name : 'login_id', required : true, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
-					{ name : 'f_amount', required : true, info : 'City Name' },	
-					{ name : 'v_payment_mode', required : true, info : '[ payu ]' },
-					{ name : 'transaction_id', required : false, info : 'Transaction ID' },
+					{ name : 'v_payment_type', required : true, info : 'Payment Method Type' },
+					{ name : 'f_amount', required : true, info : 'City Name' },
+					
+					{ name : 'transaction_id', required : false, info : 'Transaction ID [Mandatory for PayUmoney]' },
 				],
 				response   : []
 			},
@@ -911,14 +981,15 @@
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'promocode_id : Code ID,'
-							+BR+'promocode_code : Code,'
-							+BR+'promocode_code_discount : (Flat) OR (In %)'
-							+BR+'promocode_code_discount_upto : Max Discount'
-						+BR+'},'
-					) }
+					{ 
+						name : 'data', 
+						info : JSON.stringify({
+							"promocode_id" : "Code ID",
+							"promocode_code" : "Code",
+							"promocode_code_discount" : "(Flat) OR (In %)",
+							"promocode_code_discount_upto" : "Max Discount"
+						})
+					}
 				]
 			},
 			{
@@ -1056,6 +1127,11 @@
 					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_token', required : false, info : 'Auth Token' },
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
+					
+					{ name : 'force_close', required : false, info : '0(default) / 1' },
+					{ name : 'estimate_km', required : false, info : 'Estimate Distance [in Kilometer] [Required if Force Close = 1]' },
+					{ name : 'estimate_dry_run', required : false, info : 'Estimate Driver Dry Run' },
+					
 				],
 				response   : [],
 			},
@@ -1194,35 +1270,6 @@
 				response   : [],
 			},
 			
-			{
-				id 		: 'sendNotification',
-				url 	: 'sendNotification',
-				name 	: 'Sent Test Notification',
-				method 	: 'GET / POST',
-				params 	: [
-					{ name : 'login_id', required : true, info : 'Login ID' },
-					{ name : 'v_token', required : true, info : 'Auth Token' },
-					{ name : 'title', info : 'Notification Title' },
-					{ name : 'body', info : 'Notification Body' },
-					{ name : 'v_device_token', required : true, info : 'Device Token' },
-				],
-				response   : []
-			},
-			{
-				id 		: 'sendEmail',
-				url 	: 'sendEmail',
-				name 	: 'Sent Test Email',
-				method 	: 'GET / POST',
-				params 	: [
-					{ name : 'login_id', required : true, info : 'Login ID' },
-					{ name : 'v_token', required : true, info : 'Auth Token' },
-					{ name : 'subject', info : 'Email Subject' },
-					{ name : 'to', info : 'send to comm saperated emauils' },
-					{ name : 'text', info : 'email text' },
-					{ name : 'html', info : 'email html' },
-				],
-				response   : []
-			},
 			{
 				id 		: 'verifyAccount',
 				url 	: 'verifyAccount',

@@ -42,24 +42,21 @@ var currentApi = function( req, res, next ){
 		
 			// Parse Tracking Code
 			function( callback ){
-				v_track_code = v_track_code.split('-');
-				if( v_track_code.length ){
-					_ride_code = v_track_code[0] ? v_track_code[0] : '';
-					_ride_id = v_track_code[1] ? v_track_code[1] : 0;
-				}
+				_ride_code = v_track_code;
 				callback( null );
 			},
 			
 			// Check Ride
 			function( callback ){
-				dclass._select( '*', 'tbl_ride', " AND v_ride_code = '"+_ride_code+"' AND id = '"+_ride_id+"' ", function( status, ride ){
+				dclass._select( 'id', 'tbl_ride', " AND v_ride_code = '"+_ride_code+"' ", function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
-					else if( !ride.length ){
+					else if( !data.length ){
 						gnrl._api_response( res, 0, 'err_no_ride', {} );
 					}
 					else{
+						_ride_id = data[0].id;
 						callback( null );
 					}
 				});

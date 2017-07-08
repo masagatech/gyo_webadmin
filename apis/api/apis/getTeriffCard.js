@@ -18,10 +18,9 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var i_city_id = gnrl._is_undf( params.i_city_id ).trim();
-	var i_vehicle_type_id = gnrl._is_undf( params.i_vehicle_type_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var i_city_id = gnrl._is_undf( params.i_city_id );
+	var i_vehicle_type_id = gnrl._is_undf( params.i_vehicle_type_id );
 	
 	if( !i_city_id ){ _status = 0; _message = 'err_req_city'; }
 	if( _status && !i_vehicle_type_id ){ _status = 0; _message = 'err_req_vehicle_type'; }

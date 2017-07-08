@@ -18,9 +18,10 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var i_ride_id = gnrl._is_undf( params.i_ride_id ).trim();
-	var v_code = gnrl._is_undf( params.v_code ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var i_ride_id = gnrl._is_undf( params.i_ride_id );
+	var v_code = gnrl._is_undf( params.v_code );
+	var dtest = gnrl._is_undf( params.dtest, 0 );
 	
 	if( _status && !v_code ){ _status = 0; _message = 'err_req_promo_code'; }
 	if( _status && !i_ride_id ){ _status = 0; _message = 'err_req_ride_id'; }
@@ -28,9 +29,9 @@ var currentApi = function( req, res, next ){
 	
 	/*
 	STEPS
+		>> Check if Already Used
 		>> Get Coupon Code
 		>> Get Ride
-		>> Check if Already Used
 		>> Check Other Validation
 		>> Update Ride Table
 	*/
@@ -48,10 +49,35 @@ var currentApi = function( req, res, next ){
 		};
 		
 		async.series([
+		
+			// Check if Already Used
+			function( callback ){
+				var _q = " SELECT ";
+					_q += " 1 ";
+					_q += " FROM tbl_ride WHERE true ";
+					_q += " AND i_user_id = '"+login_id+"' ";
+					_q += " AND e_status = 'complete' ";
+					_q += " AND LOWER( l_data->'charges'->>'promocode_code' ) = '"+v_code.toLowerCase()+"' ";
+					_q += " AND LOWER( l_data->'charges'->>'promocode_code' ) IS NOT NULL ";
+					
+				dclass._query( _q, function( status, data ){
+					if( status && data.length ){
+						gnrl._api_response( res, 0, 'err_promotion_code_redeemed', {} );
+					}
+					else{
+						callback( null );
+					}
+				});
+			},
 			
 			// Get Coupon Code
 			function( callback ){
-				PromotionCode.getByCode( v_code, function( status, data ){
+				
+				var _q = " SELECT ";
+				_q += " id, i_user_ids, i_city_ids, v_code, discount_amount, upto_amount, d_start_date, d_end_date, v_type, e_status ";
+				_q += " FROM tbl_coupon_code WHERE i_delete = '0' AND LOWER( v_code ) = '"+v_code.toLowerCase()+"'; ";
+				
+				dclass._query( _q, function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
@@ -73,7 +99,12 @@ var currentApi = function( req, res, next ){
 			
 			// Get Ride
 			function( callback ){
-				Ride.get( i_ride_id, function( status, data ){
+				
+				var _q = " SELECT ";
+					_q += " id, i_user_id, l_data ";
+					_q += " FROM tbl_ride WHERE id = '"+i_ride_id+"'; ";
+					
+				dclass._query( _q, function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
@@ -90,22 +121,6 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
-			// Check if Already Used
-			function( callback ){
-				var wh = "";
-				wh += " AND id != '"+i_ride_id+"' ";
-				wh += " AND e_status = 'complete' ";
-				wh += " AND LOWER( l_data->'charges'->>'promocode_code' ) = '"+v_code.toLowerCase()+"' ";
-				wh += " AND LOWER( l_data->'charges'->>'promocode_code' ) IS NOT NULL ";
-				Ride.getWh( wh, function( status, data ){
-					if( status && data.length ){
-						gnrl._api_response( res, 0, 'err_promotion_code_redeemed', {} );
-					}
-					else{
-						callback( null );
-					}
-				});
-			},
 			
 			// Check Other Validation
 			function( callback ){
@@ -124,7 +139,6 @@ var currentApi = function( req, res, next ){
 				else{
 					callback( null );
 				}
-				
 			},
 			
 			
@@ -154,6 +168,7 @@ var currentApi = function( req, res, next ){
 			},
 			
 		], 
+		
 		
 		function( error, results ){
 			gnrl._api_response( res, 1, 'succ_promotion_code_avail', {

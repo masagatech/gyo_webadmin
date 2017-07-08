@@ -70,6 +70,35 @@ module.exports = {
 		
 	},
 	
+	// Insert Query
+	_insertMulti : function( _insArr, _callback ){
+		
+		var keyArr = [];
+		var valArr = [];
+		var numArr = [];
+		
+		// _insArr
+		
+		var i = 1;
+		for( var key in _ins ){
+			keyArr.push( key );
+			numArr.push( '$'+i );
+			valArr.push( _ins[ key ] );
+			i++;
+		}
+		
+		var _q = "INSERT INTO "+_table+" ("+keyArr.join(',')+") VALUES ("+numArr.join(',')+") RETURNING id";
+		//console.log(_q);
+		dclass.one( _q, valArr )
+		.then( data => { 
+			return _callback( 1, data ); 
+		})
+		.catch( error => { 
+			return _callback( 0, "ERROR: "+( error.message || error ) ); 
+		});
+		
+	},
+	
 	// Update Query
 	_update : function( _table, _ins, _wh, _callback ){
 		var setArr = [];

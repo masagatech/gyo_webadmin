@@ -16,7 +16,7 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
 	
 	if( !_status ){
 		gnrl._api_response( res, 0, _message );
@@ -35,15 +35,23 @@ var currentApi = function( req, res, next ){
 		
 			// Get User
 			function( callback ){
-				User.get( login_id, function( status, user ){
+				
+				var _q = " SELECT ";
+				_q += " id, v_role";
+				_q += " FROM ";
+				_q += " tbl_user ";
+				_q += " WHERE true ";
+				_q += " AND id = '"+login_id+"' ";
+				
+				dclass._query( _q, function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
-					else if( !user.length ){
+					else if( !data.length ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else{
-						_user = user[0];
+						_user = data[0];
 						callback( null );
 					}
 				});

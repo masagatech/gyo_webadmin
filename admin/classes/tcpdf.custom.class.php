@@ -6,7 +6,7 @@
 			//$image_file = K_PATH_IMAGES.'logo_example.jpg';
 			//$this->Image($image_file, 10, 10, 15, '', 'JPG', '', 'T', false, 300, '', false, false, 0, false, false, false);
 					
-			$headerData = 'GOYO ('.date('Y-m-d').')';
+			$headerData = 'GOYO ('.date('d/m/Y h:i A').')';
 			
 			
 			
@@ -25,7 +25,7 @@
 			$this->SetTextColor( 0, 0, 0 );
 			$this->SetFont('helvetica', 'N', 9 );
 			$this->SetAlpha( 1 );
-			$footerData = '_______________________________________________________________________________________________________________';
+			$footerData = '_________________________________________________________________________________________________________________';
 			$this->Cell(0, 10, $footerData , 0, false, 'C', 0, '', 0, false, 'T', 'M');
 			
 			
@@ -37,7 +37,7 @@
 			
 			
 			$footerData = array(
-				'GOYO ('.date('Y-m-d').')',
+				'GOYO ('.date('d/m/Y h:i A').')',
 			
 			);
 			

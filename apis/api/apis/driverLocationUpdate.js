@@ -17,10 +17,10 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var i_vehicle_id = gnrl._is_undf( params.i_vehicle_id ).trim();
-	var l_latitude = gnrl._is_undf( params.l_latitude, 0 ).trim();
-	var l_longitude = gnrl._is_undf( params.l_longitude, 0 ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var i_vehicle_id = gnrl._is_undf( params.i_vehicle_id );
+	var l_latitude = gnrl._is_undf( params.l_latitude, 0 );
+	var l_longitude = gnrl._is_undf( params.l_longitude, 0 );
 	var i_ride_id = gnrl._is_undf( params.i_ride_id, 0 );
 	var distance = gnrl._is_undf( params.distance, '' );
 	var run_type = gnrl._is_undf( params.run_type, '' );

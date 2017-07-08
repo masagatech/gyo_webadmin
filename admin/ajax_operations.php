@@ -177,10 +177,8 @@ extract( $_REQUEST );
 				$keyword =  trim( $srch_on_ride );
 				$wh .= " AND ( u.is_onride = ".$keyword." )";
 			}
-			
+
 			$data = array();
-			
-			
 			
 			if( !$srch_filter_city ){
 			
@@ -279,6 +277,119 @@ extract( $_REQUEST );
 			exit;
 			
 		}
+
+		if( $mode == "load_customer_warroom" ){
+
+			if( isset( $srch_filter_city ) && $srch_filter_city != '' ){
+				$wh .= " AND i_city_id = '".$srch_filter_city."' ";
+			}
+			
+			$data = array();
+			
+			if( !$srch_filter_city ){
+			
+				$msg = 'Please Select City.';
+			
+			}
+			else{
+				
+				$now = date("Y-m-d H:i:s");
+				// COALESCE( ( l_data->>'lang' )::text, '"+_lang+"' ) AS lang
+				
+				// end_time - start_time > interval '2 minutes'
+				
+				$ssql = 
+				" SELECT
+						*,
+						( curr_date - last_date ) as diff
+				FROM (
+					SELECT 
+						v_id,
+						v_name,
+						l_latitude,
+						l_longitude,
+						COALESCE( ( l_data->>'last_location_update' )::timestamp with time zone, null ) AS last_date,
+						now() AS curr_date,
+						date_part( 'day', ( now() - ( l_data->>'last_location_update' )::timestamp ) ) AS diff_day
+					FROM
+						tbl_user
+					WHERE 
+						true 
+						AND l_latitude IS NOT NULL 
+						AND l_longitude IS NOT NULL 
+						AND v_role = 'user' 
+						AND v_token != ''
+						AND COALESCE( ( l_data->>'last_location_update' )::timestamp with time zone, null ) IS NOT NULL 
+						".$wh."
+				) a
+				WHERE true 
+				AND ( ( curr_date - last_date ) < interval '15 minutes' )";
+				$restepm = $dclass->query( $ssql );
+				$data = $dclass->fetchResults( $restepm );
+				
+				if( count( $data ) && !empty($data) ){
+					
+					$_SESSION['report_query']['warroom']= $ssql;
+					$rowData = array();
+					
+					foreach( $data as $k => $row ){
+						
+						$row['icon'] = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+						
+						$row['str'] = array(
+							( $k + 1 ),
+							$row['v_id'],
+							$row['v_name'],
+						);
+						
+						$row['str'] = implode( ' | ', $row['str'] );
+						
+						unset( $row['v_id'] );
+						unset( $row['v_name'] );
+						$data[$k] = $row;
+					}
+				}
+				
+			}
+			
+			if( !$msg ){
+				$msg = !empty($data) ? '' : 'No records found.';
+			}
+			
+			// count( $data )
+			echo json_encode( array(
+				'status' => !empty($data) ? 1 : 0,
+				'count' => !empty($data) ? count( $data ) : 0,
+				'data' => $data,
+				'msg' => ( $msg ? ( '<h3 style="color:#F00; text-align:center;" >'.$msg.'</h3>' ) : '' ),
+			) ); 
+			exit;
+			
+		}
+		
+		
+		if( $mode == "script_move_lang" ){
+			
+			/*$ssql = 
+			"SELECT 
+					id,
+					COALESCE( ( l_data->>'lang' )::text, 'en' ) AS lang
+				FROM
+					tbl_user
+				WHERE 
+					true 
+					";
+			$restepm = $dclass->query( $ssql );
+			$data = $dclass->fetchResults( $restepm );
+			_p( $data );
+			foreach( $data as $row ){
+				$ins = array(
+					'v_lang' => $row['lang'],
+				);
+				$dclass->update( 'tbl_user', $ins, " id = '".$row['id']."' " );
+			}*/
+		}
+		
 		
 		exit;
 	}

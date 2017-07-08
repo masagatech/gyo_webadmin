@@ -17,42 +17,58 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();	
+	var login_id = gnrl._is_undf( params.login_id );	
 	
 	if( _status ){	
 	
-		var data = {
+		var _data = {
 			'earn_money' : 0,
 			'v_referral_code' : gnrl._lbl('msg_refer_code'),
 			'message' : gnrl._lbl('msg_refer_code_string_off'),
 		};
 		
+		var _user = {};
+		var _settings = {};
+		
 		async.series([
 			
-			// Get Amount
+			// Get User
 			function( callback ){
-				Settings.get( 'REFER_AMOUNT', function( val ){
-					data.earn_money = parseFloat( val ? val : 0 );
-					data.message = gnrl._lbl('msg_refer_code_string_on').split('[amount]').join( data.earn_money );
+				dclass._select( 'id, v_phone, v_role', 'tbl_user', " AND id = '"+login_id+"' ", function( status, data ){
+					_user = data[0];
+					_data.v_referral_code = _user.v_phone;
 					callback( null );
 				});
 			},
 			
-			// Get User
+			// Get Settings
 			function( callback ){
-				if( data.earn_money > 0 ){
-					User.getMyReferralCode( login_id, data.earn_money, function( v_referral_code ){
-						data.v_referral_code = v_referral_code;
-						callback( null );
-					});
+				
+				if( _user.v_role == 'user' ){
+					var keyArr = [ 'REFERRAL_USER_MONEY', 'REFERRAL_USER_COUPON' ];
 				}
 				else{
-					callback( null );
+					var keyArr = [ 'REFERRAL_DRIVER_MONEY', 'REFERRAL_DRIVER_COUPON' ];
 				}
+				Settings.getMulti( keyArr, function( status, data ){
+					if( _user.v_role == 'user' ){
+						_settings.money 	= parseFloat( data.REFERRAL_USER_MONEY );
+						_settings.coupon 	= parseFloat( data.REFERRAL_USER_COUPON );
+					}
+					else{
+						_settings.money 	= parseFloat( data.REFERRAL_DRIVER_MONEY );
+						_settings.coupon	= parseFloat( data.REFERRAL_DRIVER_COUPON );
+					}
+					_data.earn_money = parseFloat( _settings.money ? _settings.money : _settings.coupon );
+					_data.message = gnrl._lbl('msg_refer_code_string_on').split('[amount]').join( _data.earn_money );
+					callback( null );
+				})
 			},
 			
 		], function( error, results ){
-			gnrl._api_response( res, 1, '', data );
+			
+			gnrl._api_response( res, 1, '', _data );
+			
 		});
 	}
 	else{

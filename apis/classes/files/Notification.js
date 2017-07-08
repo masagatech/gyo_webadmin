@@ -10,6 +10,8 @@ var currClass = function( params ){
 	var table = 'tbl_push_notification';
 	var table2 = 'tbl_track_push_notification';
 	
+	// https://firebase.google.com/docs/cloud-messaging/http-server-ref#notification-payload-support
+	
 	return {
 		
 		send : function( params, cb ){
@@ -144,8 +146,9 @@ var currClass = function( params ){
 							var fcm_parmas = {
 								registration_ids : temp.tokens,
 								notification : {
-									title : _template.j_title[k],
-									body : _template.j_content[k],
+									title 	: _template.j_title[k],
+									body 	: _template.j_content[k],
+									sound	: ( _key == "driver_ride_buzz" ) ? "notification_tone" : "notification_tone_2",
 								},
 								data : _custom_params
 							};

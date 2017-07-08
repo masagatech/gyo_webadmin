@@ -28,10 +28,10 @@ var currClass = function( params ){
 				// Check Requirnments
 				function( callback ){
 					if( !_to ){
-						cb( 0, 'err_req_email' );
+						return cb( 0, 'err_req_email' );
 					}
 					else if( _key == '' ){
-						cb( 0, 'err_invalid_key' );
+						return cb( 0, 'err_invalid_key' );
 					}
 					else{
 						callback( null );
@@ -45,10 +45,10 @@ var currClass = function( params ){
 					
 					dclass._query( _q, function( status, data ){
 						if( !status ){
-							cb( 0, 'err_msg_no_notification_template' );
+							return cb( 0, 'err_msg_no_notification_template' );
 						}
 						else if( !data.length ){
-							cb( 0, 'err_msg_no_notification_template' );
+							return cb( 0, 'err_msg_no_notification_template' );
 						}
 						else{
 							data[0] = gnrl._getLangWiseData( data[0], _lang, [
@@ -75,7 +75,7 @@ var currClass = function( params ){
 						'MAIL_SMTP_USERNAME',
 						'MAIL_SMTP_PASSWORD',
 					];
-					Settings.getMulti( keys, function( val ){
+					Settings.getMulti( keys, function( status, val ){
 						_result.settings = val;
 						_result.settings.email_template = val[email_template];
 						callback( null );
@@ -125,19 +125,20 @@ var currClass = function( params ){
 					// send mail with defined transport object
 					transporter.sendMail( mailOptions, function( error, info ){
 						if( error ){
-							cb( 0, error );
+							return cb( 0, error );
 						}
 						else{
-							cb( 1, info );
+							return cb( 1, info );
 						}
-						callback( null );
 					});
 					
 					
 				},
 				
 			],  function( error, results ){
-				cb( 0, 'err_msg_email_not_sent' );
+				
+				return cb( 0, 'err_msg_email_not_sent' );
+				
 			});
 			
 		},

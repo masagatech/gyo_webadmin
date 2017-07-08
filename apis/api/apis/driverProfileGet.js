@@ -17,8 +17,8 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var id = gnrl._is_undf( params.id ).trim();
-	var v_token = gnrl._is_undf( params.v_token ).trim();
+	var id = gnrl._is_undf( params.id );
+	var v_token = gnrl._is_undf( params.v_token );
 	
 	if( !id ){ _status = 0; _message = 'err_req_user_id'; }
 	if( _status && !v_token ){ _status = 0; _message = 'err_req_auth_token'; }

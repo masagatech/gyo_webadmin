@@ -18,7 +18,7 @@ var currentApi = function( req, res, next ){
 	var _response = {};
 	
 	if( _status ){
-		dclass._select( '*', 'tbl_language', " AND i_delete = '0' AND e_status = 'active' ORDER BY v_name ", function( status, data ){ 
+		dclass._select( 'id, v_key, v_name', 'tbl_language', " AND i_delete = '0' AND e_status = 'active' ORDER BY v_name ", function( status, data ){ 
 			if( status && !data.length ){
 				gnrl._api_response( res, 0, 'err_no_records', {} );
 			}

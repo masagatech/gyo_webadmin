@@ -413,6 +413,10 @@ $gnrl->check_login();
                                     $keyword =  trim( $_REQUEST['filter_driver'] );
                                     $wh .= " AND t1.i_user_id = '".$keyword."'";
                                 }
+                                if( isset( $_REQUEST['filter_wallet_type'] ) && $_REQUEST['filter_wallet_type'] != '' ){
+                                    $keyword =  trim( $_REQUEST['filter_wallet_type'] );
+                                    $wh .= " AND t1.v_wallet_type = '".$keyword."'";
+                                }
                                 if( isset( $_REQUEST['deleted'] ) ){
                                     $keyword =  trim( $_REQUEST['keyword'] );
                                     $wh .= " AND t1.i_delete='1'";
@@ -441,8 +445,18 @@ $gnrl->check_login();
                                 $ssql2 = "SELECT id,v_name FROM tbl_user WHERE true AND v_role= 'driver' ORDER BY v_name ASC ";
                                 $restepm2 = $dclass->query($ssql2);
                                 $driver_Data = $dclass->fetchResults($restepm2);
+                                $driver_name_arr=array();
                                 foreach ($driver_Data as $d_key => $d_value) {
                                     $driver_name_arr[$d_value['id']]= $d_value['v_name'];
+                                }
+
+                                #USE FOR WALLET TYPE DROPDOWN MENU
+                                $ssql3 = "SELECT id,v_name,v_key FROM tbl_wallet_types WHERE true AND i_delete = '0' ORDER BY v_name ASC ";
+                                $restepm3 = $dclass->query($ssql3);
+                                $wallet_type_Data = $dclass->fetchResults($restepm3);
+                                $wallet_type_arr=array();
+                                foreach ($wallet_type_Data as $w_key => $w_value) {
+                                    $wallet_type_arr[$w_value['v_key']]= $w_value['v_name'];
                                 }
                                
                                 ?>
@@ -497,6 +511,17 @@ $gnrl->check_login();
                                                             </div>
                                                         </div>
                                                     </label>
+                                                    <label style="margin-left:15px">Wallet Type : 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                             <select class="select2" name="filter_wallet_type" id="filter_wallet_type" onChange="document.frm.submit();">
+                                                                    <option value="">--Select--</option>
+                                                                     <?php echo $gnrl->get_keyval_drop($wallet_type_arr,$_GET['filter_wallet_type']); ?>
+                                                                    </select>
+                                                            </div>
+                                                        </div>
+                                                    </label>
                                                     <div class="clearfix"></div>
                                                 </div>
                                             </div>
@@ -507,7 +532,7 @@ $gnrl->check_login();
                                                 
                                                 echo $gnrl->renderTableHeader(array(
                                                     't2.v_name' => array( 'order' => 1, 'title' => 'Name' ),
-                                                    't1.v_type' => array( 'order' => 1, 'title' => 'Type' ),
+                                                    't1.v_wallet_type' => array( 'order' => 1, 'title' => 'Wallet Type' ),
                                                     't1.f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
                                                     'action' => array( 'order' => 0, 'title' => 'Action' ),
                                                 ));
@@ -525,7 +550,7 @@ $gnrl->check_login();
                                                                 <td>
                                                                     <?php echo $row['user_name']; ?>
                                                                 </td>
-                                                                <td><?php echo $row['v_type'];?></td>
+                                                                <td><?php echo $row['v_wallet_type'];?></td>
                                                                 <td><?php echo $row['f_amount'];?></td>
                                                                 
                                                                 <td>
@@ -542,7 +567,7 @@ $gnrl->check_login();
                                                                                 }else{ ?>
                                                                                     <?php 
                                                                                         if($row['f_amount']!='0'){ ?>
-                                                                                             <li><a href="<?php echo $page2?>.php?a=2&script=settle&id=<?php echo $row['i_user_id'];?>">Settle</a></li>
+                                                                                             <li><a href="<?php echo $page2?>.php?a=2&script=settle&id=<?php echo $row['id'];?>">Settle</a></li>
                                                                                         <?php }
                                                                                     ?>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>

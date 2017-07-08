@@ -15,79 +15,10 @@ var currClass = function( params ){
 		get : function( param, cb ){
 			var _self = this;
 			dclass._select( '*', table, " AND id = '"+param+"' ", function( status, data ){
-				data = _self.set_lang( status, data );
 				cb( status, data );
 			});
 		},
 		
-		getByEmail : function( param, cb ){
-			var _self = this;
-			dclass._select( '*', table, " AND v_email = '"+param+"' ", function( status, data ){
-				data = _self.set_lang( status, data );
-				cb( status, data );
-			});
-		},
-		
-		getByPhone : function( param, cb ){
-			var _self = this;
-			dclass._select( '*', table, " AND v_phone = '"+param+"' ", function( status, data ){
-				data = _self.set_lang( status, data );
-				cb( status, data );
-			});
-		},
-		
-		getByUsername : function( param, cb ){
-			var _self = this;
-			dclass._select( '*', table, " AND ( LOWER( v_email ) = '"+param.toLowerCase()+"' OR v_phone = '"+param+"' ) ", function( status, data ){
-				data = _self.set_lang( status, data );
-				cb( status, data );
-			});
-		},
-		
-		isVerified : function( data ){
-			if( !data.l_data ){ 
-				return 0;
-			}
-			else if( !data.l_data.is_otp_verified ){ 
-				return 0;
-			}
-			else if( data.l_data.is_otp_verified != 1 ){ 
-				return 0;
-			}
-			else{
-				return 1;
-			}
-		},
-		
-		isUser : function( data ){
-			return data.v_role == 'user' ? 1 : 0;
-		},
-		
-		isDriver : function( data ){
-			return data.v_role == 'driver' ? 1 : 0;
-		},
-		
-		lang : function( data ){
-			var _self = this;
-			return gnrl._getLang( data.l_data ? data.l_data : {} );
-		},
-		
-		set_lang : function( status, data ){
-			var _self = this;
-			if( status && data.length ){
-				for( var k in data ){
-					if( data[k].l_data ){
-						data[k].l_data.lang = _self.lang( data[k] );
-					}
-					else{
-						data[k].l_data = {
-							lang : _self.lang( data[k] )
-						};
-					}
-				}
-			}
-			return data;
-		},
 		
 		startLog : function( user_id, role, type, cb ){
 			var _self = this;
@@ -114,57 +45,160 @@ var currClass = function( params ){
 			});
 		},
 		
-		getNewReferralCode : function( user_id, cb ){
-			var _self = this;
-			/*
-			_self.get( user_id, function( status, data ){
-				cb( data[0].v_phone );
-			});*/
-			var v_referral_code = gnrl._get_random_key( 8 );
-			dclass._select( '*', 'tbl_referral_codes', " AND v_referral_code = '"+v_referral_code+"' ", function( status, data ){
-				if( !status ){
-					cb( '' );
-				}
-				else if( !data.length ){
-					cb( v_referral_code );
-				}
-				else{
-					_self.getNewReferralCode( cb );
-				}
-			});
-		},
-		
-		getMyReferralCode : function( user_id, amount, cb ){
-			var _self = this;
-			var today = gnrl._db_period_time('today');
-			dclass._select( '*', 'tbl_referral_codes', " AND i_user_id = '"+user_id+"' AND d_date >= '"+today.start+"' AND d_date <= '"+today.end+"' ", function( status, data ){
-				if( !status ){
-					cb( '' );
-				}
-				else if( data.length ){
-					cb( data[0].v_referral_code );
-				}
-				else{
-					_self.getNewReferralCode( user_id, function( code ){
-						if( code ){
-							var _ins = {
-								'i_user_id' : user_id,
-								'v_referral_code' : code,
-								'f_amount' : amount,
-								'd_date' : gnrl._db_ymd(),
-							};
-							dclass._insert( 'tbl_referral_codes', _ins, function( status, data ){
-								cb( status ? code : '' );
-							});
-						}
-						else{
-							cb( code );
-						}
+		runReferralModule : function( params, cb ){
+			
+			var user_id					= params.user_id;
+			var user_name				= params.user_name;
+			
+			var referral_user 			= {};
+			var referral_code 			= params.referral_code;
+			var referral_amount 		= parseFloat( params.referral_amount );
+			var referral_user_id 		= parseInt( params.referral_user_id );
+			var referral_wallet_type 	= params.referral_wallet_type;
+			
+			if( !( referral_code && referral_user_id && referral_amount ) ){
+				return cb( 0, {} );
+			}
+			
+			async.series([
+				
+				// Get Referral User
+				function( callback ){
+					var _selection = "v_name, v_email, v_phone, v_role, lang";
+					dclass._select( _selection, 'tbl_user', " AND id = '"+referral_user_id+"' ", function( status, data ){
+						referral_user = data[0];
+						callback( null );
 					});
-				}
+				},
+				
+				
+				// Get Referral Wallet
+				function( callback ){
+					Wallet.get({
+						'selection'		: 'id',
+						'user_id' 		: referral_user_id,
+						'role' 			: referral_user.v_role,
+						'wallet_type' 	: referral_wallet_type,
+					}, function( status, wallet ){
+						referral_user.wallet_id = wallet.id;
+						callback( null );
+					});
+				},
+				
+				
+				// Add To Referral Wallet
+				function( callback ){
+					
+					if( referral_user.v_role == 'driver' && referral_wallet_type == 'money' ){
+						
+						var _ins = {
+							'i_wallet_id' 		: referral_user.wallet_id,
+							'i_user_id' 		: referral_user_id,
+							'v_type' 			: 'referral',
+							'v_action' 			: 'plus',
+							
+							'f_receivable' 		: gnrl._round( referral_amount ),
+							'f_payable' 		: 0,
+							'f_received' 		: gnrl._round( referral_amount ),
+							'f_running_balance' : 0,
+							'f_amount' 			: gnrl._round( referral_amount ),
+							
+							'd_added' 			: gnrl._db_datetime(),
+							'l_data' 			: {
+								'referred_user_id' 		: user_id,
+								'referred_user_name' 	: user_name,
+							},
+						};
+						
+					}
+					else{
+						
+						var _ins = {
+							'i_wallet_id' 		: referral_user.wallet_id,
+							'i_user_id' 		: referral_user_id,
+							'v_type' 			: 'referral',
+							'v_action' 			: 'plus',
+							'f_amount' 			: referral_amount,
+							'd_added' 			: gnrl._db_datetime(),
+							'l_data' 			: {
+								'referred_user_id' 		: user_id,
+								'referred_user_name' 	: user_name,
+							},
+						};
+					}
+					
+					Wallet.addTransaction( _ins, function( status, data ){ 
+						callback( null );
+					});
+					
+				},
+				
+				
+				
+				// Refresh Wallet
+				function( callback ){
+					Wallet.refreshWallet({
+						wallet_id 	: referral_user.wallet_id,
+						special 	: ( referral_user.v_role == 'driver' && referral_wallet_type == 'money' ? 1 : 0 ),
+					}, function( status, data ){ 
+						callback( null );
+					});
+				},
+				
+				
+				// Send SMS 
+				function( callback ){
+					SMS.send({
+						_to : referral_user.v_phone,
+						_lang : referral_user.lang,
+						_key : 'user_add_money',
+						_keywords : {
+							'[user_name]' : referral_user.v_name,
+							'[amount]' 	: referral_amount,
+							'[from]' : Wallet.getPaymentModeName( 'referral' ),
+						},
+					}, function( error_sms, error_info ){
+						callback( null );
+					});
+				},
+				
+				// Send Email 
+				function( callback ){
+					Email.send({
+						_to : referral_user.v_email,
+						_lang : referral_user.lang,
+						_key : 'user_add_money',
+						_keywords : {
+							'[user_name]' : referral_user.v_name,
+							'[amount]' 	: referral_amount,
+							'[from]' : Wallet.getPaymentModeName( 'referral' ),
+						},
+					}, function( error_mail, error_info ){
+						callback( null );
+					});
+				},
+				
+				// Update Current User
+				function( callback ){
+					var _ins = [
+						" l_data = l_data || '"+gnrl._json_encode({
+							'referral_code' : '',
+						})+"' "
+					];
+					dclass._updateJsonb( 'tbl_user', _ins, " AND id = '"+user_id+"' ", function( status, data ){ 
+					
+						callback( null );
+						
+					});
+				},
+				
+			], function( error, results ){
+				
+				return cb( 1, {} );
+				
 			});
+			
 		},
-		
 		
 	}
 };

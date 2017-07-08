@@ -36,6 +36,7 @@ $mess=array(
 	"emailexists"=>"Entered Email already exists.",
 	"codeexists"=>"Entered Code already exists.",
 	"bankexists"=>"Entered Bank name already exists.",
+	"keyexists"=>"Key name already exists.",
 	"phoneexists"=>"Entered Phone already exists.",
 	"couponexists"=>"Entered Coupon already exists.",
 	"passwordmismatch"=>"Password fields are not matching.",

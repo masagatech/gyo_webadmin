@@ -18,14 +18,14 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var v_username 		= gnrl._is_undf( params.v_username ).trim();
-	var v_password 		= gnrl._is_undf( params.v_password ).trim();
-	var v_otp 			= gnrl._is_undf( params.v_otp ).trim();
+	var v_username = gnrl._is_undf( params.v_username );
+	var v_password = gnrl._is_undf( params.v_password );
+	var v_otp = gnrl._is_undf( params.v_otp );
 	
-	if( !v_username ){ _status = 0; _message = 'err_req_email_or_phone'; }
+	if( !v_username.trim() ){ _status = 0; _message = 'err_req_email_or_phone'; }
 	if( _status && !v_password.trim() ){ _status = 0; _message = 'err_req_password'; }
-	if( _status && !v_password.trim() ){ _status = 0; _message = 'err_req_otp'; }
-	if( _status && !validator.isLength( v_password, { min : 6, max : 10 } ) ){ _status = 0; _message = 'err_validation_password'; }
+	if( _status && !validator.isLength( v_password.trim(), { min : 6, max : 10 } ) ){ _status = 0; _message = 'err_validation_password'; }
+	if( _status && !v_otp.trim() ){ _status = 0; _message = 'err_req_otp'; }
 	
 	if( !_status ){
 		gnrl._api_response( res, 0, _message, {} );
@@ -35,10 +35,23 @@ var currentApi = function( req, res, next ){
 		var _user = {};
 		
 		async.series([
+		
 			// Check otp is correct
 			function( callback ){
-				dclass._select( '*', 'tbl_user', " AND v_role = 'driver' AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' )", function( status, user ){ 
-					if( status && !user.length ){
+				
+				var _q = " SELECT ";
+				_q += " id, v_name, v_email, v_phone, v_otp, lang ";
+				_q += " FROM ";
+				_q += " tbl_user ";
+				_q += " WHERE true ";
+				_q += " AND v_role = 'driver' ";
+				_q += " AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' ); ";
+				
+				dclass._query( _q, function( status, user ){ 
+					if( !status ){
+						gnrl._api_response( res, 0, 'error', {} );
+					}
+					else if( !user.length ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else{
@@ -52,13 +65,14 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
+			
 			// Update password
 			function( callback ){
 				var _ins = {
 					'v_otp' 		: '',
 					'v_password' 	: md5( v_password ),
 				};
-				dclass._update( 'tbl_user', _ins, " AND v_role = 'driver' AND id = '"+( _user.id )+"' ", function( status, data ){ 
+				dclass._update( 'tbl_user', _ins, " AND id = '"+( _user.id )+"' ", function( status, data ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, _message );
 					}
@@ -70,30 +84,28 @@ var currentApi = function( req, res, next ){
 
 			// Send SMS
 			function( callback ){
-				var params = {
+				SMS.send({
 					_to      	: _user.v_phone,
-					_lang 		: _lang,
+					_lang 		: _user.lang,
 					_key 		: 'driver_reset_password',
 					_keywords 	: {
 						'[user_name]' : _user.v_name,
 					},
-				};
-				SMS.send( params, function( error_mail, error_info ){
+				}, function( error_mail, error_info ){
 					callback( null );
 				});
 			},
 			
 			// Send Email
 			function( callback ){
-				var params = {
+				Email.send({
 					_to      	: _user.v_email,
-					_lang 		: _lang,
+					_lang 		: _user.lang,
 					_key 		: 'driver_reset_password',
 					_keywords 	: {
 						'[user_name]' : _user.v_name,
 					},
-				};
-				Email.send( params, function( error_mail, error_info ){
+				}, function( error_mail, error_info ){
 					callback( null );
 				});
 			},

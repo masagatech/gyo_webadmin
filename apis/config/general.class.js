@@ -72,7 +72,7 @@ var gnrl = {
 			return ( data ? data : ( deafaultVal != undefined ? deafaultVal : '' ) );
 		}
 		else{
-			return ( deafaultVal != undefined ? deafaultVal : '' );
+			return ( deafaultVal != undefined ? ( deafaultVal != undefined ? deafaultVal : '' ) : '' );
 		}
 	},
 	

@@ -46,7 +46,7 @@ var currentApi = function( req, res, next ){
 
 			// Get Ride
 			function( callback ){
-				dclass._select( '*', 'tbl_ride', " AND id = '"+i_ride_id+"' AND i_user_id = '"+login_id+"' ", function( status, ride ){
+				dclass._select( 'id,v_ride_code', 'tbl_ride', " AND id = '"+i_ride_id+"' AND i_user_id = '"+login_id+"' ", function( status, ride ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
@@ -55,7 +55,7 @@ var currentApi = function( req, res, next ){
 					}
 					else{
 						_ride = ride[0];
-						_data._track_code = _ride.v_ride_code+'-'+_ride.id;
+						_data._track_code = _ride.v_ride_code;
 						callback( null );
 					}
 				});

@@ -16,9 +16,9 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var id = gnrl._is_undf( params.id ).trim();
-	var v_phone = gnrl._is_undf( params.v_phone ).trim();
-	var type = gnrl._is_undf( params.type ).trim();
+	var id = gnrl._is_undf( params.id );
+	var v_phone = gnrl._is_undf( params.v_phone );
+	var type = gnrl._is_undf( params.type );
 	
 	if( !id ){ _status = 0; _message = 'err_req_id'; }
 	if( _status && !v_phone ){ _status = 0; _message = 'err_req_phone'; }
@@ -44,24 +44,34 @@ var currentApi = function( req, res, next ){
 			
 			// Get User
 			function( callback ){
-				User.get( id, function( status, user ){
+				
+				
+				var _q = " SELECT ";
+				_q += " id, v_name, v_role, v_phone, lang ";
+				_q += " FROM ";
+				_q += " tbl_user ";
+				_q += " WHERE true ";
+				_q += " AND id = '"+id+"' ";
+				
+				dclass._query( _q, function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 1, 'error', {} );
 					}
-					else if( !user.length ){
+					else if( !data.length ){
 						gnrl._api_response( res, 1, 'err_msg_no_account', {} );
 					}
-					else if( user[0].v_role != type ){
+					else if( data[0].v_role != type ){
 						gnrl._api_response( res, 1, 'err_msg_no_account', {} );
 					}
-					else if( user[0].v_phone != v_phone ){
+					else if( data[0].v_phone != v_phone ){
 						gnrl._api_response( res, 1, 'err_invalid_phone', {} );
 					}
 					else{
-						_data.user = user[0];
+						_data.user = data[0];
 						callback( null );
 					}
 				});
+				
 			},
 			
 			// Update OTP
@@ -84,7 +94,7 @@ var currentApi = function( req, res, next ){
 				var params = {
 					_key : 'resend_otp',
 					_to : v_phone,
-					_lang : _data.user.l_data.lang,
+					_lang : _data.user.lang,
 					_keywords : {
 						'[user_name]' : _data.user.v_name,
 						'[otp]' : _data.v_otp,
@@ -100,8 +110,6 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
-			
-			
 			
 		], 
 		function( error, results ){

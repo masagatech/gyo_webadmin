@@ -11,15 +11,12 @@
 		$msg = isset( $_REQUEST['msg'] ) ? $_REQUEST['msg'] : ( isset( $_SESSION['msg'] ) ? $_SESSION['msg'] : "" );
 		$succ = isset( $_REQUEST['succ'] ) ? $_REQUEST['succ'] : ( isset( $_SESSION['succ'] ) ? $_SESSION['succ'] : "" );
 		
-
-        if( $msg != "" && isset( $mess[ $msg ] ) && trim( $mess[ $msg ] ) ){
+        if( $msg != "" ){
             if( $succ == 1 ){
-               
-                echo $gnrl->getSuccessMsg( $mess[ $msg ] );
+               	echo $gnrl->getSuccessMsg( $mess[ $msg ] ? $mess[ $msg ] : $msg );
             } 
 			else if( $succ == 0 ){
-               
-                echo $gnrl->getErrorMsg( $mess[ $msg ] );
+                echo $gnrl->getErrorMsg( $mess[ $msg ] ? $mess[ $msg ] : $msg );
             }
 			$_SESSION['msg'] = "";
 			$_SESSION['succ'] = "";

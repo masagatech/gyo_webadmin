@@ -19,10 +19,10 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var v_username = gnrl._is_undf( params.v_username ).trim();
-	var v_password = gnrl._is_undf( params.v_password ).trim();
-	var v_device_token = gnrl._is_undf( params.v_device_token ).trim();
-	var v_imei_number = gnrl._is_undf( params.v_imei_number ).trim();
+	var v_username = gnrl._is_undf( params.v_username );
+	var v_password = gnrl._is_undf( params.v_password );
+	var v_device_token = gnrl._is_undf( params.v_device_token );
+	var v_imei_number = gnrl._is_undf( params.v_imei_number );
 	
 	if( !v_username ){ _status = 0; _message = 'err_req_email_or_phone'; }
 	if( _status && !v_password ){ _status = 0; _message = 'err_req_password'; }
@@ -35,35 +35,37 @@ var currentApi = function( req, res, next ){
 	else{
 		
 		/*
-			>> Get User
-			>> Check Verified OR Not
-				>> Check Verified And Inactive
-			>> If not verified
-				>> Update OTP
-				>> Resend OTP
-			>> If verified 
-				>> Make Login
-				>> Take Login Log
+		// Get User
+		// Check Verified OR Not
+			// If not verified
+				// Update OTP
+				// Resend OTP
+			// else
+				// Make Login
+				// Take Login Log
 		*/
 		
 		var _user = {};
 		var v_token = '';
 		var v_otp = gnrl._get_otp();
 		var d_last_login = gnrl._db_datetime();
-		var isVerified = 1;
 		
 		async.series([
 		
 			// Get User
 			function( callback ){
-				User.getByUsername( v_username, function( status, user ){
+				
+				var _q = " SELECT ";
+					_q += " id ";
+					_q += " , v_id, v_name, v_phone, v_role, v_imei_number, v_password, v_token, e_status, lang ";
+					_q += " , COALESCE( ( l_data->>'is_otp_verified' )::numeric, 0 ) AS is_otp_verified ";
+					_q += " FROM tbl_user WHERE v_role = 'user' AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' ) ";
+				
+				dclass._query( _q, function( status, user ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
 					else if( !user.length ){
-						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
-					}
-					else if( !User.isUser( user[0] ) ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else if( user[0].v_imei_number != null && user[0].v_imei_number != '' && user[0].v_imei_number != v_imei_number ){ 
@@ -77,6 +79,7 @@ var currentApi = function( req, res, next ){
 					}
 					else{
 						_user = user[0];
+						_user.is_otp_verified = parseInt( _user.is_otp_verified );
 						callback( null );
 					}
 				});
@@ -86,23 +89,7 @@ var currentApi = function( req, res, next ){
 			// Check Verified OR Not
 			function( callback ){
 				
-				isVerified = User.isVerified( _user );
-				
-				// Check Verified And Inactive
-				if( isVerified && _user.e_status == 'inactive' ){
-					gnrl._api_response( res, 0, 'err_acc_inactive', {} ); 
-				}
-				else{
-					callback( null );
-				}
-				
-			},
-			
-			
-			// If not verified
-			function( callback ){
-				
-				if( !isVerified ){
+				if( _user.is_otp_verified != 1 ){
 					
 					async.series([
 						
@@ -121,7 +108,7 @@ var currentApi = function( req, res, next ){
 							SMS.send({
 								_key : 'resend_otp',
 								_to : _user.v_phone,
-								_lang : User.lang( _user ),
+								_lang : _user.lang,
 								_keywords : {
 									'[user_name]' : _user.v_name,
 									'[otp]' : v_otp,
@@ -132,70 +119,56 @@ var currentApi = function( req, res, next ){
 						},
 						
 					], function( error, results ){
-						
 						gnrl._api_response( res, 2, 'err_not_verified', {
 							'id' 		: _user.id,
 							'phone' 	: _user.v_phone,
 						});
-						
 					});
-					
+				}
+				else if( _user.e_status == 'inactive' ){
+					gnrl._api_response( res, 0, 'err_acc_inactive', {} ); 
 				}
 				else{
-					
 					callback( null );
-					
 				}
 				
 			},
 			
-			// If verified 
+			
+			// Make Login
 			function( callback ){
 				
-				async.series([
-						
-					// Make Login
-					function( callback ){
-						
-						if( _user.v_imei_number == null || _user.v_imei_number == '' ){ 
-							_user.v_imei_number = v_imei_number;
-						}
-						
-						v_token = _user.v_imei_number;
-						var _ins = {
-							'v_token' 		 : v_token,
-							'v_device_token' : v_device_token,
-							'd_last_login' 	 : d_last_login,
-							'v_imei_number' : _user.v_imei_number,
-						};
-						
-						if( _user.v_imei_number == null || _user.v_imei_number == '' ){ 
-							_ins.v_imei_number = v_imei_number;
-						}
-						
-						dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){ 
-							if( !status ){
-								gnrl._api_response( res, 0, _message, {} );
-							}
-							else{
-								callback( null );
-							}
-						});
-					},
-					
-					// Take Login Log
-					function( callback ){
-						User.startLog( _user.id, _user.v_role, 'login', function( status, data ){
-							callback( null );
-						});
-					},
-					
-				], function( error, results ){
-					
-					callback( null );
-					
-				});
+				if( _user.v_imei_number == null || _user.v_imei_number == '' ){ 
+					_user.v_imei_number = v_imei_number;
+				}
 				
+				v_token = _user.v_imei_number;
+				var _ins = {
+					'v_token' 		 : v_token,
+					'v_device_token' : v_device_token,
+					'd_last_login' 	 : d_last_login,
+					'v_imei_number' : _user.v_imei_number,
+				};
+				
+				if( _user.v_imei_number == null || _user.v_imei_number == '' ){ 
+					_ins.v_imei_number = v_imei_number;
+				}
+				
+				dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){ 
+					if( !status ){
+						gnrl._api_response( res, 0, _message, {} );
+					}
+					else{
+						callback( null );
+					}
+				});
+			},
+			
+			// Take Login Log
+			function( callback ){
+				User.startLog( _user.id, _user.v_role, 'login', function( status, data ){
+					callback( null );
+				});
 			},
 			
 		], 
@@ -203,7 +176,6 @@ var currentApi = function( req, res, next ){
 		function( error, results ){
 			delete _user.v_password;
 			_user.v_token = v_token;
-			_user.lang = User.lang( _user );
 			gnrl._api_response( res, 1, 'succ_login_successfully', _user );
 		});
 

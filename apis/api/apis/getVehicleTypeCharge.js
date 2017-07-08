@@ -18,7 +18,7 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var city = gnrl._is_undf( params.city ).trim();
+	var city = gnrl._is_undf( params.city );
 	var latitude = gnrl._is_undf( params.latitude, 0 );
 	var longitude = gnrl._is_undf( params.longitude, 0 );
 	var vehicle_type = gnrl._is_undf( params.vehicle_type );
@@ -82,7 +82,6 @@ var currentApi = function( req, res, next ){
 						newData.l_data.charges.promocode_code_discount = 0;
 						newData.l_data.charges.promocode_code_discount_amount = 0;
 						newData.l_data.charges.promocode_code_discount_upto = 0;
-						
 						
 						newData.subCharges = [];
 						callback( null );

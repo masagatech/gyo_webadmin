@@ -201,6 +201,7 @@ $gnrl->check_login();
 						'v_phone' => $v_phone,
 						'e_status' => $e_status,
 						'l_latitude' => $l_latitude,
+						'v_imei_number' => $v_imei_number,
 						'l_longitude' => $l_longitude,
 						'is_premium' => $is_premium,
 						'v_token' => $v_token,
@@ -370,7 +371,7 @@ $gnrl->check_login();
 													<input type="password" class="form-control" id="v_password" name="v_password" value="" required="" />
 												<?php }else{ ?>
 													<label>Password </label>
-													<input type="password" class="form-control" id="v_password" name="v_password" value="" required="" />
+													<input type="password" class="form-control" id="v_password" name="v_password" value="" />
 												<?php } ?>
 											</div>
 										</div>

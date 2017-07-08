@@ -50,11 +50,11 @@ var currentApi = function( req, res, next ){
 				}
 			}
 			
-			var login_id 		= gnrl._is_undf( params.login_id ).trim();
-			var v_token 		= gnrl._is_undf( params.v_token ).trim();
-			var v_name 			= gnrl._is_undf( params.v_name ).trim();
-			var v_email 		= gnrl._is_undf( params.v_email ).trim();
-			var v_phone 		= gnrl._is_undf( params.v_phone ).trim();
+			var login_id 		= gnrl._is_undf( params.login_id );
+			var v_token 		= gnrl._is_undf( params.v_token );
+			var v_name 			= gnrl._is_undf( params.v_name );
+			var v_email 		= gnrl._is_undf( params.v_email );
+			var v_phone 		= gnrl._is_undf( params.v_phone );
 			var v_gender 		= gnrl._is_undf( params.v_gender, 'male' );
 			var i_city_id 		= gnrl._is_undf( params.i_city_id, 0 );
 			

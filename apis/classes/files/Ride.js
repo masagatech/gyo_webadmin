@@ -138,7 +138,6 @@ var currClass = function( params ){
 				if( status && data.length ){
 					_result.actual_dry_run = parseFloat( data[0].actual_dry_run );
 					_result.actual_distance = parseFloat( data[0].actual_distance );
-					_result.actual_distance_new = 0;
 					cb( status, _result );
 				}
 				else{
@@ -294,22 +293,29 @@ var currClass = function( params ){
 		},
 		
 		getChargesTableStr : function( ride_id, cb ){
+			
 			var _self = this;
-			_self.getCharges( ride_id, function( status, data ){
+			
+			dclass._select( 'f_amount, v_charge_type', 'tbl_ride_charges', " AND i_ride_id = '"+ride_id+"' ORDER BY id ASC", function( status, data ){ 
 				var str = [];
+				
 				if( status && data.length ){
+					
 					str.push('<table border="0" width="100%" cellpadding="5" cellspacing="0" >');
+						
 						str.push('<tr>');
 							str.push('<td colspan="2" align="center" ><strong>Ride Bill</strong></td>');
 						str.push('</tr>');
 						
 						var total = 0;
 						for( var k in data ){
+							
+							data[k].display_charge_type = _self.getAllChargeTypes( data[k]['v_charge_type'] );
+							
 							str.push('<tr>');
 								str.push('<td align="left" >'+data[k].display_charge_type+'</td>');
 								str.push('<td align="right" > ₹'+data[k].f_amount+'</td>');
 							str.push('</tr>');
-							
 							total += data[k].f_amount;
 						}
 						
@@ -320,9 +326,13 @@ var currClass = function( params ){
 						
 					str.push('</table>');
 				}
+				
 				str = str.join( '' );
-				cb( str );
+				
+				return cb( str );
+				
 			});
+			
 		},
 		
 	}

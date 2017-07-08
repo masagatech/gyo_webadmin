@@ -17,9 +17,9 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var v_token = gnrl._is_undf( params.v_token ).trim();
-	var i_ride_id = gnrl._is_undf( params.i_ride_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var v_token = gnrl._is_undf( params.v_token );
+	var i_ride_id = gnrl._is_undf( params.i_ride_id );
 	
 	if( !i_ride_id ){ _status = 0; _message = 'err_req_ride_id'; }
 	
@@ -42,7 +42,7 @@ var currentApi = function( req, res, next ){
 			
 			// Get Ride
 			function( callback ){
-				var _q = " SELECT id, i_user_id, v_ride_code FROM tbl_ride WHERE true AND i_driver_id = '"+login_id+"' ";
+				var _q = " SELECT id, i_user_id, v_ride_code FROM tbl_ride WHERE true AND id = '"+i_ride_id+"' AND i_driver_id = '"+login_id+"' ";
 				dclass._query( _q, function( status, ride ){
 					if( !status ){
 						gnrl._api_response( res, 0, _message );
@@ -61,7 +61,9 @@ var currentApi = function( req, res, next ){
 			
 			// Get User
 			function( callback ){
-				User.get( _data.user_id, function( status, data ){
+				
+				var _q = " SELECT id, v_name, v_device_token, lang FROM tbl_user WHERE true AND id = '"+_data.user_id+"' ";
+				dclass._query( _q, function( status, data ){
 					if( status, data.length ){
 						_data.user = data[0];
 						callback( null );
@@ -79,8 +81,8 @@ var currentApi = function( req, res, next ){
 				if( parseInt( _data.user_id ) > 0 ){
 					
 					var tokens = [{
-						'id' : _data.user_id,
-						'lang' : _data.user.l_data.lang,
+						'id' : _data.user.id,
+						'lang' : _data.user.lang,
 						'token' : _data.user.v_device_token,
 					}];
 					var params = {
@@ -98,8 +100,6 @@ var currentApi = function( req, res, next ){
 						_need_log : 0,
 					};
 					Notification.send( params, function( err, response ){
-						_data.err = err;
-						_data.response = response;
 						callback( null );
 					});
 					
@@ -113,7 +113,7 @@ var currentApi = function( req, res, next ){
 		], 
 		function( error, results ){
 			
-			gnrl._api_response( res, 1, '', _data );
+			gnrl._api_response( res, 1, '', {} );
 		});
 	}
 	

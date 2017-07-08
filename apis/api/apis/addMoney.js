@@ -18,107 +18,103 @@ var currentApi = function( req, res, next ){
 	
 	var login_id = gnrl._is_undf( params.login_id );
 	var f_amount = gnrl._is_undf( params.f_amount );
-	var v_payment_mode = gnrl._is_undf( params.v_payment_mode );
+	var v_payment_type = gnrl._is_undf( params.v_payment_type );
 	var transaction_id = gnrl._is_undf( params.transaction_id );
 	
-	//var v_card_no = gnrl._is_undf( params.v_card_no );
-	//var v_expiry_date = gnrl._is_undf( params.v_expiry_date );
-	//var v_cvv = gnrl._is_undf( params.v_cvv );
-	//var v_name_on_card = gnrl._is_undf( params.v_name_on_card );
-	
-	
 	if( !f_amount.trim() ){ _status = 0; _message = 'err_req_amount'; }
-	if( _status && !v_payment_mode.trim() ){ _status = 0; _message = 'err_req_payment_mode'; }
+	if( _status && !v_payment_type.trim() ){ _status = 0; _message = 'err_req_payment_mode'; }
 
-	if( _status && [ 'payu' ].indexOf( v_payment_mode ) >= 0 ){ 
-		//if( _status && !v_card_no.trim() ){ _status = 0; _message = 'err_req_card_no'; }
-		//if( _status && !gnrl._cardValidation(v_card_no) ){ _status = 0; _message = 'err_invalid_card_no'; }
-		//if( _status && !v_expiry_date.trim() ){ _status = 0; _message = 'err_req_expiry_date'; }
-		//if( _status && !v_cvv.trim() ){ _status = 0; _message = 'err_req_cvv'; }
-		//if( _status && !v_name_on_card.trim() ){ _status = 0; _message = 'err_req_name_on_card'; }
-		if( _status && !transaction_id.trim() ){ _status = 0; _message = 'err_req_transaction_id'; }
-		
+	if( v_payment_type == 'payu' && !transaction_id.trim() ){
+		_status = 0; _message = 'err_req_transaction_id';
 	}
 	
 	if( _status ){
 
-		var _user_insert = [];
-		var _user = [];
+		var _user = {};
+		var _wallet = {};
+		var _payment_method = {};
 		
-		var _data = {
-			user : {},
-			wallet : {},
-		};
-		
-		/*
-			>> Get User
-			>> Get Wallet
-			>> Check Validations
-			>> Add Money To Wallet
-			>> Refresh Wallet
-			>> Send 
-				>> Email 
-				>> SMS 
-				>> Push Notification
-		*/
+		// Get Payment Method
+		// Get User
+		// Get Wallet
+		// Add Money To Wallet
+		// Refresh Wallet
+		// Send 
+			// Email 
+			// SMS 
+			// Push Notification
 		
 		async.series([
 			
+			// Get Payment Method
+			function( callback ){
+				dclass._select( "*", "tbl_payment_methods", " AND v_type = '"+v_payment_type+"' ", function( status, data ){
+					if( !status ){
+						gnrl._api_response( res, 0, 'error' );
+					}
+					else if( !data.length ){
+						gnrl._api_response( res, 0, 'err_invalid_payment_method', [] );
+					}
+					else{
+						_payment_method = data[0];
+						callback( null );
+					}		
+				});
+			},
+			
+			
+			
 			// Get User
 			function( callback ){
-				User.get( login_id, function( status, user ){
+				dclass._select( "id, v_name, v_email, v_phone, v_device_token, lang", "tbl_user", " AND id = '"+login_id+"' ", function( status, data ){	
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
-					else if( !user.length ){
+					else if( !data.length ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else{
-						_data.user = user[0];
+						_user = data[0];
 						callback( null );
 					}
 				});
 			},
 			
+			
+			
 			// Get Wallet
 			function( callback ){
-				Wallet.get( login_id, 'user', function( status, wallet ){
+				Wallet.get({
+					user_id : login_id,
+					role : 'user',
+					wallet_type : 'money'
+				}, function( status, wallet ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
 					else{
-						_data.wallet = wallet;
+						_wallet = wallet;
 						callback( null );
 					}
 				});
 			},
 			
-			// Check Validations
-			function( callback ){
-				if( [ 'payu' ].indexOf( v_payment_mode ) >= 0 ){
-					callback( null );
-				}
-				else{
-					callback( null );
-				}
-			},
+			
 			
 			// Add Money To Wallet
 			function( callback ){
 				var _ins = {
-					'i_wallet_id' : _data.wallet.id,
-					'i_user_id' : login_id,
-					'v_type' : v_payment_mode,
-					'v_action' : 'plus',
-					'f_amount' : f_amount,
-					'd_added' : gnrl._db_datetime(),
-					'l_data' : {
-						//'v_payment_mode' : Crypt.encrypt( v_payment_mode ),
-						//'v_card_no' : Crypt.encrypt( v_card_no ),
-						//'v_expiry_date' : Crypt.encrypt( v_expiry_date ),
-						//'v_cvv' : Crypt.encrypt( v_cvv ),
-						//'v_name_on_card' : Crypt.encrypt( v_name_on_card ),
-						'transaction_id' : Crypt.encrypt( transaction_id ),
+					'i_wallet_id' 	: _wallet.id,
+					'i_user_id' 	: login_id,
+					'v_type' 		: 'payment_method',
+					'v_action' 		: 'plus',
+					'f_amount' 		: f_amount,
+					'd_added' 		: gnrl._db_datetime(),
+					'l_data' 		: {
+						'v_payment_type' : v_payment_type,
+						'v_payment_name' : _payment_method.v_name,
+						'v_payment_mode' : _payment_method.v_mode,
+						'transaction_id' : transaction_id,
 					},
 				};
 				Wallet.addTransaction( _ins, function( status, data ){ 
@@ -131,9 +127,13 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
+			
 			// Refresh Wallet
 			function( callback ){
-				Wallet.refreshUserWallet( _data.user.id, function( status, data ){ 
+				Wallet.refreshWallet({
+					wallet_id 	: _wallet.id,
+					special 	: 0,
+				}, function( status, data ){ 
 					callback( null );
 				});
 			},
@@ -145,74 +145,56 @@ var currentApi = function( req, res, next ){
 					
 					// Email
 					function( callback ){
-						var params = {
-							_to      	: _data.user.v_email,
-							_lang 		: User.lang( _data.user ),
+						Email.send({
+							_to      	: _user.v_email,
+							_lang 		: _user.lang,
 							_key 		: 'user_add_money',
 							_keywords 	: {
-								'[user_name]' : _data.user.v_name,
+								'[user_name]' : _user.v_name,
 								'[amount]' : f_amount,
-								'[from]' : Wallet.getPaymentModeName( v_payment_mode ),
+								'[from]' : _payment_method.v_name,
 							},
-						};
-						Email.send( params, function( error_mail, error_info ){
-							_data.email = {
-								error_mail : error_mail, 
-								error_info : error_info
-							};
+						}, function( error_mail, error_info ){
 							callback( null );
 						});
 					},
 					
 					// SMS
 					function( callback ){
-						var params = {
-							_to      	: _data.user.v_phone,
-							_lang 		: User.lang( _data.user ),
+						SMS.send({
+							_to      	: _user.v_phone,
+							_lang 		: _user.lang,
 							_key 		: 'user_add_money',
 							_keywords 	: {
-								'[user_name]' : _data.user.v_name,
+								'[user_name]' : _user.v_name,
 								'[amount]' : f_amount,
-								'[from]' : Wallet.getPaymentModeName( v_payment_mode ),
+								'[from]' : _payment_method.v_name,
 							},
-						};
-						SMS.send( params, function( error_sms, error_info ){
-							_data.sms = {
-								error_sms : error_sms, 
-								error_info : error_info
-							};
+						}, function( error_sms, error_info ){
 							callback( null );
 						});
 					},
 					
 					// Push Notification
 					function( callback ){
-						
-						var params = {
+						Notification.send({
 							_key : 'user_add_money',
 							_role : 'user',
 							_tokens : [{ 
-								id : _data.user.id, 
-								lang : _data.user.l_data.lang,
-								token : _data.user.v_device_token 
+								id : _user.id, 
+								lang : _user.lang,
+								token : _user.v_device_token 
 							}],
 							_keywords : {
-								'[user_name]' : _data.user.v_name,
+								'[user_name]' : _user.v_name,
 								'[amount]' : f_amount,
-								'[from]' : Wallet.getPaymentModeName( v_payment_mode ),
+								'[from]' : _payment_method.v_name,
 							},
 							_custom_params : {},
 							_need_log : 1,
-						};
-						
-						Notification.send( params, function( err, response ){
-							_data.noti = {
-								err : err, 
-								response : response
-							};
+						}, function( err, response ){
 							callback( null );
 						});
-						
 					},
 				
 				], function( error, results ){
@@ -226,7 +208,13 @@ var currentApi = function( req, res, next ){
 
 		], 
 		function( error, results ){
-			gnrl._api_response( res, 1, 'succ_money_added', {} );
+			var _data = {};
+			_data._payment_method = _payment_method;
+			_data._user = _user;
+			_data._wallet = _wallet;
+			
+			gnrl._api_response( res, 1, 'succ_money_added', _data );
+			
 		});
 	}
 	else{

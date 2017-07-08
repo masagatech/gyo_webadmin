@@ -2,6 +2,13 @@
 	function redirectTo(path){
 		window.location.href=path;
 	}
+	function export_reports(nototal){
+		if(nototal >0){
+			jQuery(".btn_reports").css('display','block' );
+		}else{
+			jQuery(".btn_reports").css('display','none' );
+		}
+	}
 	function showLoder(){
 		
 		jQuery("#mainLoader").css('display','block' );

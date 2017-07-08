@@ -17,15 +17,15 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var period = gnrl._is_undf( params.period, 'daily' ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var period = gnrl._is_undf( params.period, 'daily' );
 	
 	if( _status ){
 		
 		var dates = gnrl._db_period_time( period );
 		
 		var _q = " SELECT ";
-		_q += " COUNT(*) as my_trips ";
+		_q += " COUNT(id) as my_trips ";
 		_q += " , COALESCE( SUM( ( l_data->>'ride_driver_receivable' )::double precision ), 0 ) as ride_driver_receivable ";
 		_q += " , COALESCE( SUM( ( l_data->>'ride_driver_payable' )::double precision ), 0 ) as ride_driver_payable ";
 		
@@ -33,6 +33,7 @@ var currentApi = function( req, res, next ){
 		_q += " WHERE true  ";
 		_q += " AND i_driver_id = '"+login_id+"' ";
 		_q += " AND ( d_time >= '"+dates.start+"' AND d_time <= '"+dates.end+"' ) ";
+		_q += " AND e_status = 'complete' ";
 		_q += " GROUP BY i_driver_id ";
 		
 		dclass._query( _q, function( status, data ){

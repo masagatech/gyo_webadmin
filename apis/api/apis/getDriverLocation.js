@@ -18,7 +18,7 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var i_driver_id = gnrl._is_undf( params.i_driver_id ).trim();
+	var i_driver_id = gnrl._is_undf( params.i_driver_id );
 	if( !i_driver_id ){ _status = 0; _message = 'err_req_driver_id'; }
 	
 	if( _status ){
@@ -27,7 +27,6 @@ var currentApi = function( req, res, next ){
 			l_latitude : 0,
 			l_longitude : 0,
 			list_icon : '',
-		
 			plotting_icon : '',
 		};
 		
@@ -49,12 +48,11 @@ var currentApi = function( req, res, next ){
 			},
 			
 			function( callback ){
-				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = ( SELECT v_type FROM tbl_vehicle WHERE i_driver_id = '"+i_driver_id+"'  )", function( status, vehicle_type ){ 
+				dclass._select( "l_data->>'list_icon' AS list_icon, l_data->>'plotting_icon' AS plotting_icon", 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = ( SELECT v_type FROM tbl_vehicle WHERE i_driver_id = '"+i_driver_id+"'  )", function( status, vehicle_type ){ 
 					if( status && vehicle_type.length ){
 						vehicle_type = vehicle_type[0];
-						if( vehicle_type.l_data.list_icon ){ _driver.list_icon = gnrl._uploads( 'vehicle_type/'+vehicle_type.l_data.list_icon ); }
-
-						if( vehicle_type.l_data.plotting_icon ){ _driver.plotting_icon = gnrl._uploads( 'vehicle_type/'+vehicle_type.l_data.plotting_icon ); }
+						if( vehicle_type.list_icon ){ _driver.list_icon = gnrl._uploads( 'vehicle_type/'+vehicle_type.list_icon ); }
+						if( vehicle_type.plotting_icon ){ _driver.plotting_icon = gnrl._uploads( 'vehicle_type/'+vehicle_type.plotting_icon ); }
 						callback( null );
 					}
 					else{

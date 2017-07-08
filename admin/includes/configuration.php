@@ -184,37 +184,44 @@ error_reporting( E_ERROR );
 	
 	$globEmailTypes = array(
 		
+		## Common
 		'driver_registration' 			=> 'Driver : Registration',
 		'driver_otp_verified' 			=> 'Driver : OTP Verified',
 		'driver_forgot_password'		=> 'Driver : Forgot Password',
 		'driver_reset_password' 		=> 'Driver : Reset Password',
-		
+		'driver_ride_cancel_charge' 	=> 'Driver : Ride Cancellation Charge',
+				
+		'user_registration' 			=> 'User : Registration',
+		'user_otp_verified' 			=> 'User : OTP Verified',
+		'user_forgot_password' 			=> 'User : Forgot Password',
+		'user_reset_password' 			=> 'User : Reset Password',
+		'user_manual_update' 			=> 'User : Manual Update',
 		'user_registration' 			=> 'User : Registration',
 		'user_otp_verified' 			=> 'User : OTP Verified',
 		'user_forgot_password' 			=> 'User : Forgot Password',
 		'user_reset_password' 			=> 'User : Reset Password',
 		'user_manual_update' 			=> 'User : Manual Update',
 		'user_add_money' 				=> 'User : Add Money To Wallet',
-		
-		'driver_ride_complete' 	=> 'Driver : Ride Complete',
-		'user_ride_complete' => 'User Complete Ride',
-		'ride_alert_sos' => 'Ride Alert SOS',
-		
-		
-		'driver_ride_cancel_charge' => 'Driver : Ride Cancellation Charge',
-		
-		'user_ride_cancel_charge' 	=> 'User : Ride Cancellation Charge',
-		
+		'user_ride_complete' 			=> 'User : Complete Ride',
+		'user_ride_cancel_charge' 		=> 'User : Ride Cancellation Charge',
 		'user_submit_support_inquiry' 	=> 'User : Submit Support Inquiry',
 		
+		'ride_alert_sos' 				=> 'Ride Alert SOS',
 		'ticket_resolved' 				=> 'Ticket Resolved',
-
+		
+		## Saperate
+		'driver_ride_complete' 			=> 'Driver : Ride Complete',
+		
 	);
+	
 	$globSmsTypes = array(
+		
+		## Common
 		'driver_registration' 			=> 'Driver : Registration',
 		'driver_otp_verified' 			=> 'Driver : OTP Verified',
 		'driver_forgot_password'		=> 'Driver : Forgot Password',
 		'driver_reset_password' 		=> 'Driver : Reset Password',
+		'driver_ride_cancel_charge' 	=> 'Driver : Ride Cancellation Charge',
 		
 		'user_registration' 			=> 'User : Registration',
 		'user_otp_verified' 			=> 'User : OTP Verified',
@@ -222,19 +229,16 @@ error_reporting( E_ERROR );
 		'user_reset_password' 			=> 'User : Reset Password',
 		'user_manual_update' 			=> 'User : Manual Update',
 		'user_add_money' 				=> 'User : Add Money To Wallet',
-		
-		'user_ride_complete' => 'User Complete Ride',
-		'ride_alert_sos' => 'Ride Alert SOS',
-		
-		'ride_track_sms' => 'Ride Track SMS',
-		
-		'driver_ride_cancel_charge' => 'Driver : Ride Cancellation Charge',
-		'user_ride_cancel_charge' 	=> 'User : Ride Cancellation Charge',
+		'user_ride_complete' 			=> 'User : Complete Ride',
+		'user_ride_cancel_charge' 		=> 'User : Ride Cancellation Charge',
 		'user_submit_support_inquiry' 	=> 'User : Submit Support Inquiry',
 		
-		'resend_otp' 	=> 'Resend OTP',
-		
+		'ride_alert_sos' 				=> 'Ride Alert SOS',
 		'ticket_resolved' 				=> 'Ticket Resolved',
+		
+		## Saperate
+		'ride_track_sms' 				=> 'Ride Track SMS',
+		'resend_otp' 					=> 'Resend OTP',
 		
 	); 
 	
@@ -242,9 +246,15 @@ error_reporting( E_ERROR );
 
 	$globNotificationTypes = array(
 		
+		## Common
+		'driver_ride_cancel_charge' => 'Driver : Ride Cancellation Charge',
+		
 		'user_add_money' 			=> 'User : Add Money To Wallet',
+		'user_ride_cancel_charge' 	=> 'User : Ride Cancellation Charge',
+		'user_ride_complete' 		=> 'User : Ride Complete',
 		
 		
+		## Saperate
 		'driver_ride_buzz' 			=> 'Driver : Ride New Buzz',
 		'driver_ride_assign' 		=> 'Driver : Ride Assign',
 		'driver_ride_other_assign' 	=> 'Driver : Ride Assign To Other',
@@ -252,18 +262,13 @@ error_reporting( E_ERROR );
 		'driver_ride_complete' 		=> 'Driver : Ride Complete',
 		'driver_ride_get_dry_run' 	=> 'Driver : Ride Get Dry Run',
 		'driver_ride_get_payment' 	=> 'Driver : Ride Get Payment',
-		'driver_ride_cancel_charge' => 'Driver : Ride Cancellation Charge',
+		
 		'user_manual_update' 	    => 'User : Manual Update',
 		'user_ride_start' 			=> 'User : Ride Start',
 		'user_ride_cancel' 			=> 'User : Ride Cancel',
-		'user_ride_complete' 		=> 'User : Ride Complete',
+		
 		'user_ride_wallet_payment' 	=> 'User : Ride Wallet Payment',
-		'user_ride_cancel_charge' 	=> 'User : Ride Cancellation Charge',
-		
 		'user_driver_arrived' 		=> 'User : Driver Arrived at Location',
-		
-		
-		// Pending
 		
 	); 
 	

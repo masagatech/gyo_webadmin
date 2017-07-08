@@ -1,7 +1,7 @@
 <?php 
 include('../admin/includes/configuration.php');
 
-$rideInfo = $dclass->select( '*', 'tbl_ride', " AND id = '".$_GET['ride_id']."' AND v_ride_code = '".$_GET['ride_code']."' " );
+$rideInfo = $dclass->select( '*', 'tbl_ride', " AND v_ride_code = '".$_GET['ride_code']."' " );
 if( !$_SESSION['adminid'] && !count( $rideInfo ) ){
 	echo '<h2 style="color:#F00;">Invalid Ride Tracking</h2>'; exit;
 }

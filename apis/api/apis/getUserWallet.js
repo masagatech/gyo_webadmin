@@ -19,7 +19,10 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var wallet_type = gnrl._is_undf( params.wallet_type );
+	
+	wallet_type = wallet_type ? wallet_type : 'money';
 	
 	if( _status ){	
 		
@@ -29,16 +32,18 @@ var currentApi = function( req, res, next ){
 			'wallet_history' : [],
 		};
 		
-		/*
-			>> Get Wallet
-			>> Get Wallet History
-		*/
-
+		// Get Wallet
+		// Get Wallet History
+		
 		async.series([
 		
 			// Get Wallet
 			function( callback ){
-				Wallet.get( login_id, 'user', function( status, wallet ){
+				Wallet.get({
+					user_id : login_id,
+					role : 'user',
+					wallet_type : wallet_type
+				}, function( status, wallet ){
 					_wh.wallet = wallet;
 					_wh.wallet_amount = wallet.f_amount;
 					callback( null );
@@ -49,7 +54,8 @@ var currentApi = function( req, res, next ){
 			function( callback ){
 				Wallet.getWalletHistory( login_id, {
 					role : 'user',
-					lang : _lang
+					lang : _lang,
+					wallet_type : wallet_type
 				}, function( status, wallet_history ){
 					_wh.wallet_history = wallet_history;
 					callback( null );

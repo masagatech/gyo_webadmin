@@ -18,20 +18,6 @@ var currClass = function( params ){
 			});
 		},
 		
-		getByCode : function( param, cb ){
-			var _self = this;
-			dclass._select( '*', table, " AND i_delete = '0' AND LOWER( v_code ) LIKE '%"+( param.toLowerCase() )+"%' ", function( status, data ){
-				cb( status, data );
-			});
-		},
-		
-		getActiveList : function( cb ){
-			var _self = this;
-			dclass._select( '*', table, " AND i_delete = '0' AND e_status = 'active' ORDER BY v_name ", function( status, data ){
-				cb( status, data );
-			});
-		},
-		
 	}
 };
 

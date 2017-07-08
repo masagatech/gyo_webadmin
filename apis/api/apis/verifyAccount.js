@@ -46,12 +46,25 @@ var currentApi = function( req, res, next ){
 		
 			// Get User
 			function( callback ){
-				User.getByPhone( v_username, function( status, data ){
+				var _q = " SELECT ";
+					_q += " id, v_id, v_name, v_email, v_phone, v_role, e_status, v_otp, lang, l_data ";
+					_q += " , COALESCE( ( l_data->>'is_otp_verified' )::numeric, 0 ) AS is_otp_verified ";
+					_q += " FROM tbl_user WHERE v_role = 'user' AND v_phone = '"+v_username+"'; ";
+				dclass._query( _q, function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
 					else if( !data.length ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
+					}
+					else if( data[0].is_otp_verified == 1 ){
+						gnrl._api_response( res, 0, 'err_already_verified', {} );
+					}
+					else if( data[0].is_otp_verified == 1 && data[0].e_status == 'inactive' ){
+						gnrl._api_response( res, 0, 'err_acc_inactive', {} );
+					}
+					else if( !validator.equals( v_otp, data[0].v_otp ) ){
+						gnrl._api_response( res, 0, 'err_invalid_otp', {} );
 					}
 					else{
 						_user = data[0];
@@ -60,21 +73,6 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
-			// Check Validation
-			function( callback ){
-				if( User.isVerified( _user ) && _user.e_status == 'inactive' ){
-					gnrl._api_response( res, 0, 'err_acc_inactive', {} );
-				}
-				else if( User.isVerified( _user ) ){
-					gnrl._api_response( res, 0, 'err_already_verified', {} );
-				}
-				else if( !validator.equals( v_otp, _user.v_otp ) ){
-					gnrl._api_response( res, 0, 'err_invalid_otp', {} );
-				}
-				else{
-					callback( null );
-				}
-			},
 			
 			
 			// Update User
@@ -87,8 +85,8 @@ var currentApi = function( req, res, next ){
 					" l_data = '"+gnrl._json_encode( _user.l_data )+"' "
 				];
 				
-				// Check, if customer
-				if( User.isUser( _user ) ){
+				// Check, If Customer
+				if( _user.v_role == "user" ){
 					_ins.push( " e_status = 'active' " );
 				}
 				
@@ -103,12 +101,11 @@ var currentApi = function( req, res, next ){
 			},
 			
 			
-			
 			// Send SMS & Email
 			function( callback ){
 				
-				// Check, if customer
-				if( User.isUser( _user ) ){
+				// Check, If Customer
+				if( _user.v_role == "user" ){
 					
 					async.series([
 						
@@ -116,7 +113,7 @@ var currentApi = function( req, res, next ){
 						function( callback ){
 							SMS.send({
 								_to : _user.v_phone,
-								_lang : User.lang( _user ),
+								_lang : _user.lang,
 								_key : 'user_otp_verified',
 								_keywords : {
 									'[user_name]' : _user.v_name,
@@ -131,7 +128,7 @@ var currentApi = function( req, res, next ){
 						function( callback ){
 							Email.send({
 								_to : _user.v_email,
-								_lang : User.lang( _user ),
+								_lang : _user.lang,
 								_key : 'user_otp_verified',
 								_keywords : {
 									'[user_name]' : _user.v_name,
@@ -155,7 +152,7 @@ var currentApi = function( req, res, next ){
 						function( callback ){
 							SMS.send({
 								_to : _user.v_phone,
-								_lang : User.lang( _user ),
+								_lang : _user.lang,
 								_key : 'driver_otp_verified',
 								_keywords : {
 									'[user_name]' : _user.v_name,
@@ -170,7 +167,7 @@ var currentApi = function( req, res, next ){
 						function( callback ){
 							Email.send({
 								_to : _user.v_email,
-								_lang : User.lang( _user ),
+								_lang : _user.lang,
 								_key : 'driver_otp_verified',
 								_keywords : {
 									'[user_name]' : _user.v_name,

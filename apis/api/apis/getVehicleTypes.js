@@ -17,7 +17,7 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var city = gnrl._is_undf( params.city ).trim();
+	var city = gnrl._is_undf( params.city );
 	if( !city.trim() ){ _status = 0; _message = 'err_req_city'; }
 	
 	var newData = {};
@@ -37,11 +37,8 @@ var currentApi = function( req, res, next ){
 					for( var k in data ){
 						var temp = data[k];
 						if( temp.l_data.list_icon ){ temp.l_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.list_icon ); }
-
 						if( temp.l_data.plotting_icon ){ temp.l_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.plotting_icon ); }
-						
 						delete temp.l_data.charges;
-						
 						newData[temp.id] = temp;
 					}
 					callback( null );

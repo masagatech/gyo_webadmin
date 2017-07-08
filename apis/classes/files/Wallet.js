@@ -12,13 +12,6 @@ var currClass = function( params ){
 	
 	return {
 		
-		getPaymentModes : function(){
-			var _self = this;
-			return {
-				'payu' : 'PayUmoney',
-			};
-		},
-		
 		getPaymentModeName : function( type ){
 			var types = {
 				'payu' 			: 'PayUmoney',
@@ -30,11 +23,16 @@ var currClass = function( params ){
 			return types[type];
 		},
 		
-		get : function( user_id, type, cb ){
+		get : function( params, cb ){
 			
 			var _self = this;
 			
-			dclass._select( '*', table, " AND i_user_id = '"+user_id+"' ", function( status, data ){
+			var selection 	= params.selection ? params.selection : '*';
+			var user_id 	= params.user_id;
+			var role 		= params.role;
+			var wallet_type = params.wallet_type;
+			
+			dclass._select( selection, table, " AND v_wallet_type = '"+wallet_type+"' AND i_user_id = '"+user_id+"' ", function( status, data ){
 				if( !status ){
 					cb( status, data );
 				}
@@ -43,12 +41,13 @@ var currClass = function( params ){
 				}
 				else if( !data.length ){
 					var _ins = {
-						'i_user_id' : user_id,
-						'v_type' : type,
-						'f_amount' : 0,
+						'i_user_id' 	: user_id,
+						'v_type' 		: role,
+						'v_wallet_type' : wallet_type,
+						'f_amount' 		: 0,
 					};
 					dclass._insert( table, _ins, function( status, temp ){
-						dclass._select( '*', table, " AND i_user_id = '"+user_id+"' ", function( status, data ){
+						dclass._select( selection, table, " AND i_user_id = '"+user_id+"' ", function( status, data ){
 							cb( status, data[0] );
 						});
 					});
@@ -56,59 +55,36 @@ var currClass = function( params ){
 			});
 		},
 		
+		
 		addTransaction : function( _ins, cb ){
-			
 			var _self = this;
-			
 			dclass._insert( table2, _ins, function( status, data ){ 
 				cb( status, data );
 			});
 		},
 		
-		refreshUserWallet : function( user_id, cb ){
-			
-			var _self = this;
-			
-			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS total', table2, " AND i_user_id = '"+user_id+"' ", function( status, wallet ){
-				if( !status ){
-					cb( status, 0 );
-				}
-				else{
-					var f_amount = gnrl._round( wallet[0].total );
-					var _ins = {
-						'f_amount' : f_amount,
-					};
-					dclass._update( table, _ins, " AND i_user_id = '"+user_id+"' ", function( status, data ){
-						cb( status, f_amount );
-					});
-				}
-			});
-		},
 		
-		refreshDriverWallet : function( user_id, cb ){
-			
+		refreshWallet : function( params, cb ){
+		
 			var _self = this;
 			
-			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS total', table2, " AND i_user_id = '"+user_id+"' ", function( status, wallet ){
-				if( !status ){
-					cb( status, 0 );
-				}
-				else{
+			var wallet_id 	= params.wallet_id;
+			var special 	= params.special ? 1 : 0;
+			
+			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS total', table2, " AND i_wallet_id = '"+wallet_id+"' ", function( status, wallet ){
+				if( status && wallet.length ){
 					var f_amount = gnrl._round( wallet[0].total );
 					var _q = [];
-					_q.push( " UPDATE "+table+" SET f_amount = "+f_amount+" "+" WHERE i_user_id = '"+user_id+"'; " );
-					_q.push(
-						" UPDATE "
-							+table2
-						+" SET f_running_balance = "+f_amount+" "
-						+" WHERE i_user_id = '"+user_id+"' "
-						+" AND id = ( "
-							+"( SELECT id FROM "+table2+" WHERE i_user_id = '"+user_id+"' ORDER BY id DESC LIMIT 1 )"
-						+" ); "
-					);
+					_q.push( " UPDATE "+table+" SET f_amount = "+f_amount+" "+" WHERE id = '"+wallet_id+"'; " );
+					if( special ){
+						_q.push( " UPDATE "+table2+" SET f_running_balance = "+f_amount+" WHERE id = ( SELECT id FROM "+table2+" WHERE i_wallet_id = '"+wallet_id+"' ORDER BY id DESC LIMIT 1 ); ");
+					}
 					dclass._query( _q.join(';'), function( status, data ){
-						cb( status, f_amount );
+						return cb( f_amount );
 					});
+				}
+				else{
+					return cb( 0 );
 				}
 			});
 		},
@@ -116,6 +92,8 @@ var currClass = function( params ){
 		getWalletHistory : function( user_id, params, cb ){
 			
 			var _self = this;
+			
+			var wallet_type = params.wallet_type;
 			
 			var wh = "";
 			wh += " AND i_user_id = '"+user_id+"' ";
@@ -125,6 +103,9 @@ var currClass = function( params ){
 			}
 			if( params.to_date ){
 				wh += " AND d_added <= '"+params.to_date+"' ";
+			}
+			if( wallet_type ){
+				wh += ( " AND i_wallet_id IN ( SELECT id FROM "+table+" WHERE v_wallet_type = '"+wallet_type+"' AND i_user_id = '"+user_id+"' ) " );
 			}
 			wh += " ORDER BY id DESC ";
 			
@@ -138,18 +119,26 @@ var currClass = function( params ){
 						data[k].d_date = gnrl._timestamp( data[k].d_added );
 						data[k].reason = _self.getPaymentModeName( data[k].v_type );
 						
-						
 						var msg = 'msg_wallet_'+params.role+'_'+data[k].v_type;
 						
-						if( params.role == 'user' ){
+						if( data[k].v_type == 'payment_method' ){
+							msg = 'msg_wallet_payment_method';
+							data[k].reason = data[k].l_data.v_payment_name;
+						}
+						
+						if( params.role == 'user' || wallet_type == 'coupon' ){
+							
 							data[k].amount = data[k].f_amount;
 							if( data[k].l_data.transaction_id ){
-								data[k].l_data.transaction_id = Crypt.decrypt( data[k].l_data.transaction_id );
+								data[k].l_data.transaction_id = data[k].l_data.transaction_id;
 							}
 							var s = gnrl._lbl( msg );
 							s = s.split('[amount]').join( data[k].amount > 0 ? data[k].amount : ( data[k].amount * -1 ) );
 							if( data[k].l_data.ride_code ){
 								s = s.split('[ride_code]').join( data[k].l_data.ride_code );
+							}
+							if( data[k].v_type == 'payment_method' ){
+								s = s.split('[payment_method]').join( data[k].l_data.v_payment_name );
 							}
 							
 							data[k].message = s;
@@ -168,6 +157,9 @@ var currClass = function( params ){
 							if( data[k].l_data.ride_code ){
 								s = s.split('[ride_code]').join( data[k].l_data.ride_code );
 							}
+							if( data[k].v_type == 'payment_method' ){
+								s = s.split('[payment_method]').join( data[k].l_data.v_payment_name );
+							}
 							
 							data[k].message = s;
 							
@@ -175,7 +167,6 @@ var currClass = function( params ){
 						
 						data[k].msg = msg;
 						data[k].from = data[k].reason;
-						
 						
 					}
 					

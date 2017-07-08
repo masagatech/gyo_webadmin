@@ -2,7 +2,6 @@
 include('includes/configuration.php');
 $gnrl->check_login();
 
-
 function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 
   $theta = $lon1 - $lon2;
@@ -20,6 +19,7 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
         return $miles;
       }
 }
+
 
 	extract( $_POST );
 	$page_title = "Manage Rides";
@@ -160,7 +160,7 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 		_p( $rideTracking ); exit;
 	}
 	
-	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'citywise' ) ) ? $_REQUEST['script'] : "";
+	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'force_close' || $_REQUEST['script'] == 'citywise' ) ) ? $_REQUEST['script'] : "";
 	## Insert Record in database starts
 	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
 
@@ -326,6 +326,64 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 			}
 		}
 	}
+	## Force Close Process
+	if(isset($_REQUEST['a']) && $_REQUEST['a']==4) {
+		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
+
+			
+			$ride_id = $_REQUEST['id'];
+
+			if( isset( $_REQUEST['force_close_btn'] ) && $_REQUEST['force_close_btn'] == 'Submit' ){
+				
+				$sql = "SELECT 
+					a.*,
+					b.v_token as v_token
+					FROM 
+						tbl_ride a
+						LEFT JOIN tbl_user b ON a.i_driver_id = b.id 
+						WHERE true
+						AND v_role = 'driver' AND a.id =".$ride_id."  ";
+						
+				$restepm = $dclass->query($sql);
+				$row_Data = $dclass->fetchResults($restepm);
+				$row_Data = $row_Data[0];
+				
+				$url = API_URL.'rideComplete'; // rideComplete
+	            $fields = array(
+	            	'v_token' =>$row_Data['v_token'],
+	            	'login_id' =>$row_Data['i_driver_id'],
+	                'i_ride_id' => $ride_id,
+	                'force_close' => 1,
+	                'estimate_km' => $estimate_km,
+	                'estimate_dry_run' => $estimate_dry_run,
+	            );
+				
+				
+				$result = $gnrl->_curl( $url, $fields, 'POST' );
+				$result = json_decode( $result, true );
+				///_p($result); exit;
+				if( $result['status'] == 1 ){
+					$url = API_URL.'rideConfirmPayment';
+					$fields = array(
+						'login_id' => $row_Data['i_driver_id'],
+						'v_token' => $row_Data['v_token'],
+						'i_ride_id' => $ride_id,
+						'force_close' => 1,
+					);
+					$result = $gnrl->_curl( $url, $fields, 'POST' );
+					$result = json_decode( $result, true );
+					$gnrl->redirectTo($page.'.php?succ=1&msg=edit');
+				}
+				else{
+					$gnrl->redirectTo($page.'.php?a=4&script=force_close&id='.$ride_id.'&succ=0&msg='.$result['message']);
+				}
+				
+			}else{
+				
+			}
+				
+		}
+	}
 
 	
 
@@ -351,7 +409,13 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
                     <div class="block-flat">
                         <div class="header">
                             <h3>
-                                View <?php echo $title2;?>
+                            	<?php 
+                            	if($script == 'force_close'){?>
+                            		Force Close Trip
+                            	<?php }else{ ?>
+                                	View <?php echo $title2;?>
+                            	<?php }
+                            	?>
                               
                                 <?php if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['srch_driver']) && $_REQUEST['srch_driver'] != '' || isset($_REQUEST['srch_filter_status']) && $_REQUEST['srch_filter_status'] != ''
                                                            || isset($_REQUEST['srch_filter_city']) && $_REQUEST['srch_filter_city'] != '' || isset($_REQUEST['srch_filter_type']) && $_REQUEST['srch_filter_type'] != '' || isset($_REQUEST['d_start_date']) && $_REQUEST['d_start_date'] != ''  ){ ?>
@@ -416,7 +480,39 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
                                 </div>
 							</form>
 							<?php 
-                        }else{
+                        }elseif ($script == 'force_close'){ ?>
+                        	<form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
+                                <div class="row">
+                                    
+                                        
+                                    <div class="col-md-12">
+                                        
+                                        <div class="content">
+                                            
+										   	
+                                            <div class="form-group">
+                                                <label>Kilometer <?php echo $gnrl->getAstric(); ?></label>
+                                                <input type="number" class="form-control" id="estimate_km" name="estimate_km" value="0" required />
+                                            </div>
+                                             <div class="form-group">
+                                                <label>Driver Dry Run <?php echo $gnrl->getAstric(); ?></label>
+                                                <input type="number" class="form-control" id="estimate_dry_run" name="estimate_dry_run" value="0" required />
+                                            </div>
+											<div class="form-group"> 
+												<label>Ride Close Reason </label>
+												<textarea name="l_close_reason" class="form-control" style="min-height:200px" ></textarea>
+											</div>
+                                            <div class="form-group">
+                                                <button class="btn btn-primary" type="submit" name="force_close_btn" value="Submit">Submit</button>
+                                                <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="Submit">Cancel</button></a> 
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+							</form>
+
+                        <?php }else{
 							if( 1 ){
 								if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
 	                            	$limit = $_REQUEST['pageno'];
@@ -712,7 +808,7 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 																<td>
 																	<?php echo $globalRideStatus[ $row['e_status'] ];?>
 																	<br>
-																	<a target="_blank" href="<?php echo str_replace( '_track_code_', $row['v_ride_code'].'-'.$row['id'], RIDE_TRACK_URL );?>">Track</a>
+																	<a target="_blank" href="<?php echo str_replace( '_track_code_', $row['v_ride_code'], RIDE_TRACK_URL );?>">Track</a>
 																</td>
 	                                                            <td class="text-right" >
 	                                                                <div class="btn-group">
@@ -723,11 +819,17 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 	                                                                    <ul role="menu" class="dropdown-menu pull-right">
 
 	                                                                    <?php
-                                                                           if(isset($_REQUEST['deleted'])){ ?>
+                                                                            if(isset($_REQUEST['deleted'])){ ?>
                                                                                 <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
                                                                             <?php  
-                                                                            }else{ ?>
+                                               					            }else{ ?>
                                                                                 <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">View</a></li>
+                                                                            <?php 
+                                                                                if($row['e_status'] == 'start'){ ?>
+                                                                                <li><a href="<?php echo $page?>.php?a=4&script=force_close&id=<?php echo $row['id'];?>">Force Close</a></li>
+                                                                            <?php }
+                                                                            ?>
+                                                                                
 	                                                                        	<li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
                                                                             <?php }
                                                                         ?>

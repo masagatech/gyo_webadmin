@@ -40,7 +40,17 @@ $gnrl->check_login();
 
     if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='manual_submit'){
 
-        $i_user_id=$_REQUEST['id'];
+        $i_wallet_id=$_REQUEST['id'];
+        _P($i_wallet_id);
+
+        ##Sum of all transaction 
+        $ssql = "SELECT * from ".$table." where id = ".$i_wallet_id." ";
+        $restepm = $dclass->query($ssql);
+        $wallet_data = $dclass->fetchResults($restepm);
+        $wallet_data=$wallet_data[0];
+        _P($wallet_data);
+        exit;
+        // $i_user_id=$_REQUEST['id'];
         if($amount < 0){
             $v_action='minus';
         }elseif ($amount > 0) {
@@ -49,12 +59,13 @@ $gnrl->check_login();
             $gnrl->redirectTo($page.".php?succ=0&msg=wallet_error&a=2&script=manual&id=".$_REQUEST['id']);
         }
         $ins = array(
-            'i_user_id'  => $i_user_id,
+            'i_user_id'  => $wallet_data['i_user_id'],
             'v_type' =>'custom',
             'v_action'  => $v_action,
             'f_amount'=> $amount,
             'l_data'=> json_encode($l_data),
             'd_added' => date('Y-m-d H:i:s'),
+            'i_wallet_id' => $i_wallet_id,
         );
       
         $id = $dclass->insert( $table2, $ins );
@@ -63,17 +74,17 @@ $gnrl->check_login();
 
             
             ##Sum of all transaction 
-            $ssql = "SELECT SUM(f_amount) as TOTAL from ".$table2." where i_user_id = ".$i_user_id." ";
+            $ssql = "SELECT SUM(f_amount) as TOTAL from ".$table2." where id = ".$i_wallet_id." ";
             $restepm = $dclass->query($ssql);
             $row = $dclass->fetchResults($restepm);
             $row = $row[0];
             ## update the wallet
-            $ssql2="UPDATE ".$table." SET f_amount =  ".$row['total']." WHERE i_user_id = ".$i_user_id." ";
+            $ssql2="UPDATE ".$table." SET f_amount =  ".$row['total']." WHERE id = ".$i_wallet_id." ";
             $restepm2 = $dclass->update_sql($ssql2);
 
 
             #get user data
-            $user_info = $dclass->select('*','tbl_user'," AND id = '".$i_user_id."'");
+            $user_info = $dclass->select('*','tbl_user'," AND id = '".$wallet_data['i_user_id']."'");
             $user_info = $user_info[0];
             
             #get notification template data
@@ -382,7 +393,7 @@ $gnrl->check_login();
                                         tbl_wallet_transaction  t1
                                     LEFT JOIN tbl_user as t2 ON t1.i_user_id = t2.id
  
-                                     WHERE true AND t1.i_user_id=".$_REQUEST['id']." ".$wh;
+                                     WHERE true AND t1.i_wallet_id =".$_REQUEST['id']." ".$wh;
 
                             $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 't1.d_added' );
                             $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );            
@@ -394,6 +405,8 @@ $gnrl->check_login();
                             $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                             $restepm = $dclass->query($sqltepm);
                             $row_Data = $dclass->fetchResults($restepm);
+
+
                             
                             ?>
                             <div class="content">
@@ -485,37 +498,48 @@ $gnrl->check_login();
                                 </form>
                             </div> <?php 
                         }elseif( ($script == 'manual') && 1 ){
-                            $row = $dclass->select('*','tbl_user'," AND id = '".$id."'");
-                            $row = $row[0];
-                            extract( $row );
+                            // $row = $dclass->select('*','tbl_user'," AND id = '".$id."'");
+                            // $row = $row[0];
+                            // extract( $row );
+                            $ssql = "SELECT t1.*,
+                                        t2.v_name as user_name
+                                    FROM 
+                                        tbl_wallet  t1
+                                    LEFT JOIN tbl_user as t2 ON t1.i_user_id = t2.id
+ 
+                                     WHERE true AND t1.id=".$_REQUEST['id']." ".$wh;
+                            $restepm = $dclass->query($ssql);
+                            $user_data = $dclass->fetchResults($restepm);
+                            extract($user_data[0]);
+                            
                         ?>
                            
                                         
-                            <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
-                                <div class="row">
-                                    <div class="col-md-6 ">
-                                        <div class="content">
-                                            <div class="form-group">
-                                                <label>Driver Name</label>
-                                                <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" readOnly="" />
-                                            </div>
-                                            <div class="form-group">
-                                                <label> Amount</label>
-                                                <input type="text"  pattern="\d" title="Only digits" class="form-control" id="amount" name="amount" value="" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label> Description</label>
-                                                <textarea class="form-control" name="l_data[description]"></textarea>
-                                            </div>
-                                           
-                                            <div class="form-group">
-                                                <button class="btn btn-primary" type="submit" name="submit_btn" value="manual_submit">Submit</button>
-                                                <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
-                                            </div>
+                        <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
+                            <div class="row">
+                                <div class="col-md-6 ">
+                                    <div class="content">
+                                        <div class="form-group">
+                                            <label>Driver Name</label>
+                                            <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $user_name; ?>" readOnly="" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label> Amount</label>
+                                            <input type="text"  pattern="\d" title="Only digits" class="form-control" id="amount" name="amount" value="" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label> Description</label>
+                                            <textarea class="form-control" name="l_data[description]"></textarea>
+                                        </div>
+                                       
+                                        <div class="form-group">
+                                            <button class="btn btn-primary" type="submit" name="submit_btn" value="manual_submit">Submit</button>
+                                            <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 
                                         </div>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
+                        </form>
                                  
                             <?php 
                         }
@@ -555,7 +579,12 @@ $gnrl->check_login();
                                 }else{
                                     $wh .= " AND t1.i_delete='0'";
                                 }
+                                if( isset( $_REQUEST['filter_wallet_type'] ) && $_REQUEST['filter_wallet_type'] != '' ){
+                                    $keyword =  trim( $_REQUEST['filter_wallet_type'] );
+                                    $wh .= " AND t1.v_wallet_type = '".$keyword."'";
+                                }
                                 
+
                                 $ssql = "SELECT t1.*,
                                             t2.v_name as user_name
                                         FROM 
@@ -573,13 +602,14 @@ $gnrl->check_login();
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
 
-                                #USE FOR USER DROPDOWN MENU
-                                // $ssql2 = "SELECT id,v_name FROM tbl_user WHERE true AND v_role= 'user' ORDER BY v_name ASC ";
-                                // $restepm2 = $dclass->query($ssql2);
-                                // $user_Data = $dclass->fetchResults($restepm2);
-                                // foreach ($user_Data as $d_key => $d_value) {
-                                //     $user_name_arr[$d_value['id']]= $d_value['v_name'];
-                                // }
+                                #USE FOR WALLET TYPE DROPDOWN MENU
+                                $ssql3 = "SELECT id,v_name,v_key FROM tbl_wallet_types WHERE true AND i_delete = '0' ORDER BY v_name ASC ";
+                                $restepm3 = $dclass->query($ssql3);
+                                $wallet_type_Data = $dclass->fetchResults($restepm3);
+                                $wallet_type_arr=array();
+                                foreach ($wallet_type_Data as $w_key => $w_value) {
+                                    $wallet_type_arr[$w_value['v_key']]= $w_value['v_name'];
+                                }
 
                                 ?>
                                 <div class="content">
@@ -607,18 +637,27 @@ $gnrl->check_login();
                                                             <label><?php $pagen->writeLimitBox(); ?></label>
                                                         </div>
                                                     </div>
-                                                  
+                                                    <label style="margin-left:15px">Wallet Type : 
+                                                         <div class="clearfix"></div>
+                                                            <div class="pull-left" style="">
+                                                            <div>
+                                                             <select class="select2" name="filter_wallet_type" id="filter_wallet_type" onChange="document.frm.submit();">
+                                                                    <option value="">--Select--</option>
+                                                                     <?php echo $gnrl->get_keyval_drop($wallet_type_arr,$_GET['filter_wallet_type']); ?>
+                                                                    </select>
+                                                            </div>
+                                                        </div>
+                                                    </label>
                                                     
                                                     <div class="clearfix"></div>
                                                 </div>
                                             </div>
-                                            
                                             <!-- <?php chk_all('drop');?> -->
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
                                                 <?php
                                                 echo $gnrl->renderTableHeader(array(
                                                     't2.v_name' => array( 'order' => 1, 'title' => 'Name' ),
-                                                    't1.v_type' => array( 'order' => 1, 'title' => 'Type' ),
+                                                    't1.v_wallet_type' => array( 'order' => 1, 'title' => 'Wallet Type' ),
                                                     't1.f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
                                                     'action' => array( 'order' => 0, 'title' => 'Action' ),
                                                 ));
@@ -631,11 +670,10 @@ $gnrl->check_login();
                                                             
                                                             ?>
                                                             <tr>
-                                                                
                                                                 <td>
                                                                     <?php echo $row['user_name']; ?>
                                                                 </td>
-                                                                <td><?php echo $row['v_type'];?></td>
+                                                                <td><?php echo $row['v_wallet_type'];?></td>
                                                                 <td><?php echo $row['f_amount'];?></td>
                                                                 <td class="pull-right">
                                                                     <div class="btn-group">
@@ -650,8 +688,8 @@ $gnrl->check_login();
                                                                                     <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
                                                                                 <?php  
                                                                                 }else{ ?>
-                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['i_user_id'];?>">View Transaction</a></li>
-                                                                                     <li><a href="<?php echo $page?>.php?a=2&script=manual&id=<?php echo $row['i_user_id'];?>">Manual adjustment</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['id'];?>">View Transaction</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=manual&id=<?php echo $row['id'];?>">Manual adjustment</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
                                                                                     <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>

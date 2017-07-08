@@ -18,8 +18,8 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var notification_id = gnrl._is_undf( params.notification_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var notification_id = gnrl._is_undf( params.notification_id );
 	if( !notification_id ){ _status = 0; _message = 'err_req_notification_id'; }
 	
 	if( !_status ){

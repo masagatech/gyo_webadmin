@@ -17,8 +17,8 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var v_type = gnrl._is_undf( params.v_type, 'pending' ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var v_type = gnrl._is_undf( params.v_type, 'pending' );
 	
 	if( !_status ){
 		gnrl._api_response( res, 0, _message );
@@ -42,6 +42,7 @@ var currentApi = function( req, res, next ){
 			}
 			else{
 				for( var i = 0; i < data.length; i++ ){
+					
 					if( data[i].l_data.title[_lang] ){
 						data[i].l_data.title = data[i].l_data.title[_lang];
 					}
@@ -65,6 +66,7 @@ var currentApi = function( req, res, next ){
 					else{
 						data[i].l_data.content = '';
 					}
+					
 					if( typeof( data[i].l_data.content ) == 'object' ){
 						data[i].l_data.content = '';
 					}

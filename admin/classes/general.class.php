@@ -1013,6 +1013,50 @@ $mail = new PHPMailer();
             curl_close($ch);
             return $result;
         }
+		
+		
+		
+		
+		function _curl( $url, $fields = array(), $method = 'GET' ){ 
+        	
+            if( $method == 'GET' ){
+               
+               try{
+				    if( count( $fields ) ){
+				    	
+						$url = $url.'?'.http_build_query( $fields );
+					}
+        			
+
+					$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, $url ); 
+					curl_setopt($ch, CURLOPT_ENCODING, '');
+					curl_setopt($ch, CURLOPT_POST, 0 ); 
+					curl_setopt($ch, CURLOPT_FAILONERROR, 1 ); 
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 ); 
+					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false );
+					curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
+					$retValue = curl_exec($ch);
+					
+					curl_close($ch);
+				}
+				catch( Exception $e ){
+					_p($e);
+				}
+            }
+            else{
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url ); 
+                curl_setopt($ch, CURLOPT_POST, 1 );
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query( $fields ) );
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false ); 
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10000 ); 
+                $retValue = curl_exec($ch);
+                curl_close($ch);
+            }
+            return $retValue; 
+        }
 
         
 	}

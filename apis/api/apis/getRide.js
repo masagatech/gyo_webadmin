@@ -19,8 +19,8 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var i_ride_id = gnrl._is_undf( params.i_ride_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var i_ride_id = gnrl._is_undf( params.i_ride_id );
 	
 	if( !i_ride_id ){ _status = 0; _message = 'err_req_ride_id'; }
 	
@@ -74,11 +74,20 @@ var currentApi = function( req, res, next ){
 					list_icon : '',
 					plotting_icon : '',
 				};
-				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = '"+_row.l_data.vehicle_type+"' ", function( status, data ){ 
+				
+				var _q = " SELECT ";
+				_q += " l_data->>'list_icon' AS list_icon ";
+				_q += " , l_data->>'plotting_icon' AS plotting_icon ";
+				_q += " FROM tbl_vehicle_type WHERE v_type = '"+_row.l_data.vehicle_type+"'; ";
+				
+				dclass._query( _q, function( status, data ){ 
 					if( status && data.length ){
 						var temp = data[0];
-						if( temp.l_data.list_icon ){ _row.vehicle_type_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.list_icon ); }
-						if( temp.l_data.plotting_icon ){ _row.vehicle_type_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.l_data.plotting_icon ); }
+						if( temp.list_icon ){ _row.vehicle_type_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.list_icon ); }
+						if( temp.plotting_icon ){ _row.vehicle_type_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.plotting_icon ); }
+						callback( null );
+					}
+					else{
 						callback( null );
 					}
 				});
@@ -192,31 +201,35 @@ var currentApi = function( req, res, next ){
 			
 			// Get Rate & Comment
 			function( callback ){
+				
 				_row.rate = {
 					'i_rate' : 0,
 					'rate_cmment' : '',
 				};
-				
-				var _q = "SELECT ";
-					_q += " * ";
-					_q += " FROM ";
-					_q += " tbl_ride_rate ";
-					_q += " WHERE i_ride_id = '"+i_ride_id+"' ";
-					_q += " AND l_data->>'v_type' = 'user' ";
-				
-				
-				dclass._query( _q, function( status, data ){ 
-					if( status && data.length ){
-						_row.rate = {
-							'i_rate' : data[0].i_rate,
-							'rate_cmment' : data[0].l_comment,
-						};
-						callback( null );
-					}
-					else{
-						callback( null );
-					}
-				});
+				if( !_row.i_driver_id ){
+					callback( null );
+				}
+				else{
+					
+					var _q = " SELECT ";
+						_q += " i_rate, l_comment ";
+						_q += " FROM ";
+						_q += " tbl_ride_rate ";
+						_q += " WHERE i_ride_id = '"+i_ride_id+"' AND i_target_user_id = '"+_row.i_driver_id+"' ";
+						
+					dclass._query( _q, function( status, data ){ 
+						if( status && data.length ){
+							_row.rate = {
+								'i_rate' : data[0].i_rate,
+								'rate_cmment' : data[0].l_comment,
+							};
+							callback( null );
+						}
+						else{
+							callback( null );
+						}
+					});
+				}
 			},
 			
 			// Get Estimated Prices

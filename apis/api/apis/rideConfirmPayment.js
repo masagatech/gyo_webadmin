@@ -20,8 +20,8 @@ var currentApi = function( req, res, next ){
 	var _status = 1;
 	var _message = '';
 	var _response = {};
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var i_ride_id = gnrl._is_undf( params.i_ride_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var i_ride_id = gnrl._is_undf( params.i_ride_id );
 	if( !i_ride_id ){ _status = 0; _message = 'err_req_ride_id'; }
 	
 	
@@ -31,121 +31,151 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 		
+		// STEPS
 		
-		/*
-		STEPS
+		// Get Ride
+		// Update Ride To Paid + Update Vehicle To Idle + Update Cash Payment Active
 		
-			>> Get Ride
-			>> Update ride to Paid
-			>> Set Vehicle To Idle
-			>> Make Cash Payment Active
-			>> Select User
-			>> Select Driver
-			
-			>> User Ride Completion Action
-				>> Email
-				>> SMS
-			
-			>> Driver Ride Completion Action
-				>> Email
-				>> SMS
-			
-			>> Send Money To Referral
-				>> Get Referral User
-				>> Get Referral Wallet
-				>> Add To Referral Wallet
-				>> Refresh Wallet
-				>> Send SMS
-				>> Send Email
-				>> Update Current User
-			
-		*/
+		// Select User
+		// Select Driver
 		
+		// User Ride Completion Action
+			// Email
+			// SMS
 		
+		// Driver Ride Completion Action
+			// Email
+			// SMS
 		
-		var staticSettings = 1;
-		var _data = {
-			ride : {},
-			rideBillStr : '',
-		};
+		// Send Money To Referral
+			// Get Referral User
+			// Get Referral Wallet
+			// Add To Referral Wallet
+			// Refresh Wallet
+			// Send SMS
+			// Send Email
+			// Update Current User
+		
+		var _data = {};
+		var _keywords = {};
 		
 		async.series([
 		
 			// Get Ride
 			function( callback ){
-				Ride.get( i_ride_id, function( ride_status, ride_data ){
-					if( !ride_status ){
+				
+				var _q = "SELECT ";
+				
+				_q += " dr.id AS driver_id ";
+				_q += " , dr.v_name AS driver_name ";
+				_q += " , dr.v_email AS driver_email ";
+				_q += " , COALESCE( dr.l_data->>'referral_code', '' ) AS driver_referral_code ";
+				_q += " , COALESCE( ( dr.l_data->>'referral_amount' )::numeric, 0 ) AS driver_referral_amount ";
+				_q += " , COALESCE( ( dr.l_data->>'referral_user_id' )::numeric, 0 ) AS driver_referral_user_id ";
+				_q += " , COALESCE( dr.l_data->>'referral_wallet_type', '' ) AS driver_referral_wallet_type ";
+				_q += " , COALESCE( dr.l_data->>'referral_wallet_apply', '' ) AS driver_referral_wallet_apply ";
+				_q += " , dr.lang AS driver_lang ";
+				
+				_q += " , ur.id AS user_id ";
+				_q += " , ur.v_name AS user_name ";
+				_q += " , ur.v_email AS user_email ";
+				_q += " , ur.v_phone AS user_phone ";
+				_q += " , COALESCE( ur.l_data->>'referral_code', '' ) AS user_referral_code ";
+				_q += " , COALESCE( ( ur.l_data->>'referral_amount' )::numeric, 0 ) AS user_referral_amount ";
+				_q += " , COALESCE( ( ur.l_data->>'referral_user_id' )::numeric, 0 ) AS user_referral_user_id ";
+				_q += " , COALESCE( ur.l_data->>'referral_wallet_type', '' ) AS user_referral_wallet_type ";
+				_q += " , COALESCE( ur.l_data->>'referral_wallet_apply', '' ) AS user_referral_wallet_apply ";
+				_q += " , ur.lang AS user_lang ";
+				
+				_q += " , rd.i_user_id ";
+				_q += " , rd.i_paid ";
+				_q += " , rd.v_pin ";
+				_q += " , rd.v_ride_code ";
+				_q += " , rd.d_start ";
+				_q += " , rd.d_end ";
+				_q += " , rd.l_data AS ride_l_data ";
+				
+				_q += " FROM tbl_ride rd ";
+				
+				_q += " LEFT JOIN tbl_user ur ON ur.id = rd.i_user_id ";
+				_q += " LEFT JOIN tbl_user dr ON dr.id = rd.i_driver_id ";
+				
+				_q += " WHERE true ";
+				_q += " AND rd.id = '"+i_ride_id+"' ";
+				_q += " AND dr.id = '"+login_id+"'; ";
+				
+				dclass._query( _q, function( status, data ){ 
+					
+					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
-					else if( !ride_data.length ){
+					else if( !data.length ){
 						gnrl._api_response( res, 0, 'err_no_ride', {} );
 					}
-					else if( ride_data[0].i_paid != 0 ){
+					else if( data[0].i_paid != 0 ){
 						gnrl._api_response( res, 0, 'err_msg_ride_alreay_confirmed', {} );
 					}
 					else{
-						_data.ride = ride_data[0];
+						
+						_data = data[0];
+						
+						_keywords = {
+							'[user_name]' : _data.user_name,
+							'[i_ride_id]' : i_ride_id,
+							'[ride_pin]' : _data.v_pin,
+							'[ride_code]' : _data.v_ride_code,
+							'[ride_total]' : _data.ride_l_data.final_amount,
+							'[ride_total_time]' : _data.ride_l_data.trip_time_in_min,
+							'[ride_discount]' : _data.ride_l_data.promocode_code_discount,
+							'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.d_start ) ),
+							'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.d_end ) ),
+							'[ride_start_address]' : _data.ride_l_data.pickup_address,
+							'[ride_end_address]' : _data.ride_l_data.destination_address,
+							'[ride_distance]' : _data.ride_l_data.actual_distance,
+							'[ride_promocode_code]' : _data.ride_l_data.promocode_code,
+							'[ride_payment_method]' : _data.ride_l_data.payment_mode,
+							'[ride_bill_table]' : '',
+							'[city]' : _data.ride_l_data.city,
+							'[driver_name]' : _data.driver_name,
+						};
+						
 						callback( null );
 					}
+					
 				});
+				
 			},
 			
-			// Update ride to complete
+			// Update Ride To Paid + Update Vehicle To Idle + Update Cash Payment Active
 			function( callback ){
-				var _ins = [
-					"i_paid = '1'",
-				];
-				dclass._updateJsonb( 'tbl_ride', _ins, " AND id = '"+i_ride_id+"' ", function( status, data ){ 
+				
+				
+				var _q = [];
+					
+				// Update Ride To Paid
+				_q.push( "UPDATE tbl_ride SET i_paid = '1' WHERE id = '"+i_ride_id+"'; ");
+				
+				// Update Vehicle To Idle
+				_q.push( "UPDATE tbl_user SET is_onride = 0, is_buzzed = 0 WHERE id = '"+login_id+"'; " );
+				
+				// Update Cash Payment Active
+				_q.push( "UPDATE tbl_ride_payments SET i_success = 1 WHERE AND v_type = 'cash' AND i_ride_id = '"+i_ride_id+"'; " );
+				
+				dclass._query( _q.join(''), function( status, data ){ 
+					
 					callback( null );
+					
 				});
+				
 			},
-			
-			// Set Vehicle To Idle
-			function( callback ){
-				var ins = {
-					'is_onride' : 0,
-					'is_buzzed' : 0,
-				};
-				dclass._update( 'tbl_user', ins, " AND id = '"+_data.ride.i_driver_id+"' ", function( status, data ){
-					callback( null );
-				});
-			},
-			
-			// Make Cash Payment Active
-			function( callback ) {
-				var _ins = {
-					'i_success' : 1,
-				};
-				dclass._update( 'tbl_ride_payments', _ins, " AND v_type = 'cash' AND i_ride_id = '"+i_ride_id+"' ", function( status, data ){
-					callback( null );
-				});
-			},
-			
-			// Select User
-			function( callback ) {
-				User.get( _data.ride.i_user_id, function( status, data ){
-					_data.user = data[0];
-					callback( null );
-				});
-			},
-			
-			// Select Driver
-			function( callback ) {
-				User.get( _data.ride.i_driver_id, function( status, data ){
-					_data.driver = data[0];
-					callback( null );
-				});
-			},
-			
 			
 			// Get Charges STR
 			function( callback ) {
-				Ride.getChargesTableStr( i_ride_id, function( bill_table ){
-					_data.rideBillStr = bill_table;
+				Ride.getChargesTableStr( i_ride_id, function( str ){
+					_keywords['[ride_bill_table]'] = str;
 					callback( null );
 				});
 			},
-			
 			
 			// User Ride Completion Action
 			function( callback ){
@@ -154,70 +184,42 @@ var currentApi = function( req, res, next ){
 					
 					// Email
 					function( callback ){
+						
 						Email.send({
-							_to : _data.user.v_email,
-							_lang : User.lang( _data.user ),
+							_to : _data.user_email,
+							_lang : _data.user_lang,
 							_key : 'user_ride_complete',
-							_keywords : {
-								'[user_name]' : _data.user.v_name,
-								'[i_ride_id]' : i_ride_id,
-								'[ride_pin]' : _data.ride.v_pin,
-								'[ride_code]' : _data.ride.v_ride_code,
-								'[ride_total]' : _data.ride.l_data.final_amount,
-								'[ride_total_time]' : _data.ride.l_data.trip_time_in_min,
-								'[ride_discount]' : _data.ride.l_data.promocode_code_discount,
-								'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_start ) ),
-								'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_end ) ),
-								'[ride_start_address]' : _data.ride.l_data.pickup_address,
-								'[ride_end_address]' : _data.ride.l_data.destination_address,
-								'[ride_distance]' : _data.ride.l_data.actual_distance,
-								'[ride_promocode_code]' : _data.ride.l_data.promocode_code,
-								'[ride_payment_method]' : _data.ride.l_data.payment_mode,
-								'[ride_bill_table]' : _data.rideBillStr,
-								'[city]' : _data.ride.l_data.city,
-								'[driver_name]' : _data.driver.v_name,
-								
-							},
+							_keywords : _keywords,
 						}, function( error_mail, error_info ){
+							
 							callback( null );
+							
 						});
+						
 					},
 					
 					// SMS
 					function( callback ){
 						
+						_keywords['[ride_bill_table]'] = '';
+						
 						SMS.send({
-							_to : _data.user.v_phone,
-							_lang : User.lang( _data.user ),
+							_to : _data.user_phone,
+							_lang : _data.user_lang,
 							_key : 'user_ride_complete',
-							_keywords : {
-								'[user_name]' : _data.user.v_name,
-								'[i_ride_id]' : i_ride_id,
-								'[ride_pin]' : _data.ride.v_pin,
-								'[ride_code]' : _data.ride.v_ride_code,
-								'[ride_total]' : _data.ride.l_data.final_amount,
-								'[ride_total_time]' : _data.ride.l_data.trip_time_in_min,
-								'[ride_discount]' : _data.ride.l_data.promocode_code_discount,
-								'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_start ) ),
-								'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.ride.d_end ) ),
-								'[ride_start_address]' : _data.ride.l_data.pickup_address,
-								'[ride_end_address]' : _data.ride.l_data.destination_address,
-								'[ride_distance]' : _data.ride.l_data.actual_distance,
-								'[ride_promocode_code]' : _data.ride.l_data.promocode_code,
-								'[ride_payment_method]' : _data.ride.l_data.payment_mode,
-								'[city]' : _data.ride.l_data.city,
-								
-								'[driver_name]' : _data.driver.v_name,
-							},
+							_keywords : _keywords,
 						}, function( status, error_info ){
+							
 							callback( null );
+							
 						});
-					}
+					},
 					
 				], function( error, results ){
+					
 					callback( null );
+					
 				});
-				
 				
 			},
 			
@@ -228,149 +230,73 @@ var currentApi = function( req, res, next ){
 					
 					// Email
 					function( callback ){
+						
+						_keywords['[user_name]'] = _keywords['[driver_name]'];
+						
 						Email.send({
-							_to : _data.driver.v_email,
-							_lang : User.lang( _data.driver ),
+							_to : _data.driver_email,
+							_lang : _data.driver_lang,
 							_key : 'driver_ride_complete',
-							_keywords : {
-								'[user_name]' : _data.driver.v_name,
-								'[i_ride_id]' : i_ride_id,
-							},
+							_keywords : _keywords,
 						}, function( error_mail, error_info ){
+							
 							callback( null );
+							
 						});
 					},
 					
 					// SMS
 					function( callback ){
+						
 						callback( null );
-					}
+						
+					},
 					
 				], function( error, results ){
+					
 					callback( null );
+					
 				});
-				
 				
 			},
 			
-			// Send Money To Referral
+			
+			// ##APPLY_REFERRAL - User
 			function( callback ){
 				
-				var referral_code 		= _data.user.l_data.referral_code ? _data.user.l_data.referral_code : '';
-				var referral_code_id 	= parseFloat( _data.user.l_data.referral_code_id ? _data.user.l_data.referral_code_id : 0 );
-				var referral_user_id 	= parseFloat( _data.user.l_data.referral_user_id ? _data.user.l_data.referral_user_id : 0 );
-				var referral_amount 	= parseFloat( _data.user.l_data.referral_amount ? _data.user.l_data.referral_amount : 0 );
-				var referral_user 		= {};
-				var referral_wallet 	= {};
-				
-				/*
-				_p( 'referral_code', referral_code );
-				_p( 'referral_code_id', referral_code_id );
-				_p( 'referral_user_id', referral_user_id );
-				_p( 'referral_amount', referral_amount );
-				_p( '_data.user', _data.user );
-				*/
-				
-				if( referral_code_id && referral_user_id && referral_code && referral_amount > 0 ){
-				
-					async.series([
-						
-						// Get Referral User
-						function( callback ){
-							User.get( referral_user_id, function( status, data ){
-								referral_user = data[0];
-								callback( null );
-							});
-						},
-					
-						// Get Referral Wallet
-						function( callback ){
-							Wallet.get( referral_user_id, 'user', function( status, wallet ){
-								referral_wallet = wallet;
-								callback( null );
-							});
-						},
-						
-						// Add To Referral Wallet
-						function( callback ){
-							var _ins = {
-								'i_wallet_id' : referral_wallet.id,
-								'i_user_id' : referral_user_id,
-								'v_type' : 'referral',
-								'v_action' : 'plus',
-								'f_amount' : referral_amount,
-								'd_added' : gnrl._db_datetime(),
-								'l_data' : {
-									'referred_user_id' : _data.user.id,
-									'referred_user_name' : _data.user.v_name,
-									'i_ride_id' : i_ride_id,
-								},
-							};
-							Wallet.addTransaction( _ins, function( status, data ){ 
-								callback( null );
-							});
-							
-						},
-						
-						// Refresh Wallet
-						function( callback ){
-							Wallet.refreshUserWallet( referral_user_id, function( status, data ){ 
-								callback( null );
-							});
-						},
-						
-						// Send SMS 
-						function( callback ){
-							SMS.send({
-								_to : referral_user.v_phone,
-								_lang : User.lang( referral_user ),
-								_key : 'user_add_money',
-								_keywords : {
-									'[user_name]' : referral_user.v_name,
-									'[amount]' : referral_amount,
-									'[from]' : Wallet.getPaymentModeName( 'referral' ),
-								},
-							}, function( error_sms, error_info ){
-								callback( null );
-							});
-						},
-						
-						// Send Email 
-						function( callback ){
-							Email.send({
-								_to : referral_user.v_email,
-								_lang : User.lang( referral_user ),
-								_key : 'user_add_money',
-								_keywords : {
-									'[user_name]' : referral_user.v_name,
-									'[amount]' : referral_amount,
-									'[from]' : Wallet.getPaymentModeName( 'referral' ),
-								},
-							}, function( error_mail, error_info ){
-								callback( null );
-							});
-						},
-						
-						// Update Current User
-						function( callback ){
-							var _ins = [
-								" l_data = l_data || '"+gnrl._json_encode({
-									'referral_code' 	: '',
-									// 'referral_code_id' 	: 0,
-									'referral_user_id' 	: 0,
-									'referral_amount' 	: 0,
-								})+"' "
-							];
-							dclass._updateJsonb( 'tbl_user', _ins, " AND id = '"+_data.user.id+"' ", function( status, data ){ 
-								callback( null );
-							});
-						},
-						
-					], function( error, results ){
-						
+				if( _data.user_referral_code && _data.user_referral_wallet_apply == 'first_ride' ){
+					User.runReferralModule({
+							user_id : _data.user_id,
+							user_name : _data.user_name,
+							referral_code : _data.user_referral_code,
+							referral_amount : _data.user_referral_amount,
+							referral_user_id : _data.user_referral_user_id,
+							referral_wallet_type : _data.user_referral_wallet_type,
+						}, function( status, data ){
 						callback( null );
-						
-					});
+					});	
+				}
+				else{
+					callback( null );
+				}
+			},
+			
+			// ##APPLY_REFERRAL - Driver
+			function( callback ){
+				
+				if( _data.driver_referral_code && _data.driver_referral_wallet_apply == 'first_ride' ){
+					
+					User.runReferralModule({
+							user_id : _data.driver_id,
+							user_name : _data.driver_name,
+							referral_code : _data.driver_referral_code,
+							referral_amount : _data.driver_referral_amount,
+							referral_user_id : _data.driver_referral_user_id,
+							referral_wallet_type : _data.driver_referral_wallet_type,
+						}, function( status, data ){
+						callback( null );
+					});	
+					
 				}
 				else{
 					callback( null );

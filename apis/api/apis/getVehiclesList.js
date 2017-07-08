@@ -18,9 +18,9 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var v_type = gnrl._is_undf( params.v_type ).trim();
-	var l_latitude = gnrl._is_undf( params.l_latitude, 0 ).trim();
-	var l_longitude = gnrl._is_undf( params.l_longitude, 0 ).trim();
+	var v_type = gnrl._is_undf( params.v_type );
+	var l_latitude = gnrl._is_undf( params.l_latitude, 0 );
+	var l_longitude = gnrl._is_undf( params.l_longitude, 0 );
 	
 	if( !v_type ){ _status = 0; _message = 'err_req_vehicle_type'; }
 	if( _status && !l_latitude ){ _status = 0; _message = 'err_req_latitude'; } // 
@@ -31,14 +31,15 @@ var currentApi = function( req, res, next ){
 	}
 	else {
 		
-		var _vehicle_type = {};
 		var _vehicle_list = [];
+		var radius = 0;
 		
 		async.series([
 		
 			// Get Vehicle Type
 			function( callback ){
-				dclass._select( '*', 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = '"+v_type+"' AND e_status = 'active' ", function( status, data ){ 
+				var _selection = " COALESCE( ( l_data->'other'->>'vehicle_list_radious' )::numeric, 0 ) AS radius ";
+				dclass._select( _selection, 'tbl_vehicle_type', " AND i_delete = '0' AND v_type = '"+v_type+"' AND e_status = 'active' ", function( status, data ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, '', {} );
 					}
@@ -46,7 +47,7 @@ var currentApi = function( req, res, next ){
 						gnrl._api_response( res, 0, 'err_no_vehicles', {} );
 					}
 					else{
-						_vehicle_type = data[0];
+						radius = data[0].radius ? data[0].radius : 20;
 						callback( null );
 					}
 				});
@@ -55,25 +56,23 @@ var currentApi = function( req, res, next ){
 			// Find Nearest Vehicles
 			function( callback ){
 				
-				var radius = _vehicle_type.l_data.other.vehicle_list_radious ? _vehicle_type.l_data.other.vehicle_list_radious : 20;
-				
 				var _q = "";
 				_q += " SELECT ";
 				_q += " * ";
 				_q += " FROM ";
 				_q += " ( ";
 					_q += " SELECT ";
-					_q += " a.id, a.i_driver_id, a.v_type, b.l_latitude, b.l_longitude ";
-					_q += ", "+gnrl._distQuery( l_latitude, l_longitude, "b.l_latitude::double precision", "b.l_longitude::double precision" )+" AS distance"
+					_q += " b.id, b.i_driver_id, b.v_type, c.l_latitude, c.l_longitude ";
+					_q += ", "+gnrl._distQuery( l_latitude, l_longitude, "c.l_latitude::double precision", "c.l_longitude::double precision" )+" AS distance"
 					_q += " FROM ";
-					_q += " tbl_vehicle a ";
-					_q += " LEFT JOIN tbl_user b ON b.id = a.i_driver_id ";
+					_q += " tbl_vehicle b ";
+					_q += " LEFT JOIN tbl_user c ON c.id = b.i_driver_id ";
 					_q += " WHERE true ";
-					_q += " AND a.v_type = '"+v_type+"' ";
-					_q += " AND b.v_role = 'driver' ";
-					_q += " AND b.e_status = 'active' ";
-					_q += " AND b.is_onduty = '1' ";
-					_q += " AND b.is_onride = '0' ";
+					_q += " AND b.v_type = '"+v_type+"' ";
+					_q += " AND c.v_role = 'driver' ";
+					_q += " AND c.e_status = 'active' ";
+					_q += " AND c.is_onduty = '1' ";
+					_q += " AND c.is_onride = '0' ";
 				_q += " ) AS sub ";
 				_q += " WHERE true ";
 				_q += " AND distance <= "+radius+" ";
@@ -81,7 +80,6 @@ var currentApi = function( req, res, next ){
 				_q += " distance ASC ";
 				
 				_response._q = _q;
-				
 				
 				dclass._query( _q, function( status, data ){
 					if( !status ){

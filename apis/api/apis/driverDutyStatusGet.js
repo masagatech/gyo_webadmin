@@ -15,7 +15,7 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
 	
 	if( _status ){
 		
@@ -24,7 +24,13 @@ var currentApi = function( req, res, next ){
 			
 			// Get Duty Status
 			function( callback ){
-				User.get( login_id, function( status, data ){
+				
+				var _q = " SELECT ";
+				_q += " id ";
+				_q += " , is_onduty ";
+				_q += " FROM tbl_user WHERE id = '"+login_id+"' ";
+				
+				dclass._query( _q, function( status, data ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, '', {} );
 					}
@@ -37,6 +43,7 @@ var currentApi = function( req, res, next ){
 						});
 					}
 				});
+				
 			},
 			
 		], function( error, results ){

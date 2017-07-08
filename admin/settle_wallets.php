@@ -12,11 +12,20 @@ $gnrl->check_login();
     $title2 = 'settle driver Wallet';
     // $v_role ='user';
     $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit'  ) ) ? $_REQUEST['script'] : "";
-    
+   
+   
+   // exit;
     ## Insert Record in database starts
     if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
       
-        $i_user_id=$_REQUEST['id'];
+        $i_wallet_id=$_REQUEST['id'];
+        ##Sum of all transaction 
+        $ssql = "SELECT * from ".$table." where id = ".$i_wallet_id." ";
+        $restepm = $dclass->query($ssql);
+        $wallet_data = $dclass->fetchResults($restepm);
+        $wallet_data=$wallet_data[0];
+        
+
         if($receivable_amount > 0){
             $v_type="company_paid";
             $v_action="minus";
@@ -35,20 +44,21 @@ $gnrl->check_login();
             $v_action="";
         }
         $ins = array(
-            'i_user_id'  => $i_user_id,
-            'v_type' =>$v_type,
+            'i_user_id'  => $wallet_data['i_user_id'],
+            'v_type' => $v_type,
             'v_action'  => $v_action,
             'f_amount'=> $f_amount,
             'f_payable'=> $f_payable,
             'f_running_balance'=> $f_running_balance,
             'd_added' => date('Y-m-d H:i:s'),
+            'i_wallet_id' => $i_wallet_id,
         );
         
         $id = $dclass->insert( $table3, $ins );
         if($id > 0){
 
             ##Sum of all transaction 
-            $ssql = "SELECT SUM(f_amount) as TOTAL from ".$table3." where i_user_id = ".$i_user_id." ";
+            $ssql = "SELECT SUM(f_amount) as TOTAL from ".$table3." where i_wallet_id = ".$i_wallet_id." ";
             $restepm = $dclass->query($ssql);
             $row = $dclass->fetchResults($restepm);
             $row = $row[0];
@@ -60,67 +70,29 @@ $gnrl->check_login();
             if($receivable_amount < 0){
                 $str_sql="f_amount + (".$f_amount.")";
             }
-            $ssql2="UPDATE ".$table." SET f_amount = ".$str_sql." WHERE i_user_id = ".$i_user_id." ";
+            $ssql2="UPDATE ".$table." SET f_amount = ".$str_sql." WHERE id = ".$i_wallet_id." ";
            
             $restepm2 = $dclass->update_sql($ssql2);
             
             $gnrl->redirectTo($page2.".php?succ=1&msg=add_settle");
         }
     }
-
-    ## Delete Record from the database starts
-    // if(isset($_REQUEST['a']) && $_REQUEST['a']==3) {
-    //     if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
-    //         $id = $_REQUEST['id'];
-    //         if($_REQUEST['chkaction'] == 'delete') {
-    //             if(1){
-    //                 $dclass->delete( $table ," id = '".$id."'");
-    //                 $gnrl->redirectTo($page.".php?succ=1&msg=del");
-    //             }else{
-    //                 $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
-    //             }
-    //         }
-    //         // make records active
-    //         else if($_REQUEST['chkaction'] == 'active'){
-    //             if(1){
-    //                 $ins = array('e_status'=>'active');
-    //                 $dclass->update( $table, $ins, " id = '".$id."'");
-    //                 $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
-    //             }else{
-    //                 $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
-    //             }
-    //         }
-    //         // make records inactive
-    //         else if($_REQUEST['chkaction'] == 'inactive'){
-    //             if(1){
-    //                 $ins = array( 'e_status' => 'inactive' );
-    //                 $dclass->update( $table, $ins, " id = '".$id."'");
-    //                 $gnrl->redirectTo($page.".php?succ=1&msg=multiinact");
-    //             }else{
-    //                 $gnrl->redirectTo($page.".php?succ=0&msg=not_auth");
-    //             }
-    //         }
-    //         // make records active
-    //         else if($_REQUEST['chkaction'] == 'delete_image'){
-    //             $ins = array('v_image'=>'');
-    //             $dclass->update($table,$ins," id='$id'");
-    //             $gnrl->redirectTo($page.".php?succ=1&msg=multiact");
-    //         }
-            
-    //     }   
-    // }
-    
     ## Edit Process
     if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
         if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 
-            $id = $_REQUEST['id'];
+            $wallet_id=$_REQUEST['id'];
+            // #GET WALLET DATA USING WALLET ID
+            // $ssql3 = "SELECT * FROM ".$table." WHERE true AND id = ".$wallet_id."";
+            // $restepm3 = $dclass->query($ssql3);
+            // $wallet_Data = $dclass->fetchResults($restepm3);
+
             $ssql = "SELECT w.*,
                             u.v_name as driver_name
                           FROM ".$table." as w
                          LEFT JOIN ".$table2." 
                         as u ON w.i_user_id = u.id
-                         WHERE true AND w.i_user_id=".$id." ";
+                         WHERE true AND w.id=".$wallet_id." ";
 
             $restepm = $dclass->query($ssql);
             $row = $dclass->fetchResults($restepm);

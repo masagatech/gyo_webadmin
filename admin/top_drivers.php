@@ -1,8 +1,6 @@
 <?php 
 include('includes/configuration.php');
 $gnrl->check_login();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 extract( $_POST );
 $page_title = "Driver Performance";
 $page = "top_drivers";
@@ -38,14 +36,13 @@ $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_
                         <div class="header">
                             <h3>
                                 View <?php echo $title2;?>
-                             	<span id="reports_div" style="display: hidden;">
-                             		<a href="reports.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright">
-										<button class="btn btn-primary" type="button">Report Excel </button>
+                             		<a href="reports.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright btn_reports">
+										<button class="btn btn-primary" type="button">Export Excel </button>
 									</a>
-									<a href="table.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright">
-										<button class="btn btn-primary" type="button">Report PDF </button>
+									<a href="table.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright btn_reports">
+										<button class="btn btn-primary" type="button">Export PDF </button>
 									</a>
-                             	</span>
+                             	
                 				
                         		
                             </h3>
@@ -112,8 +109,10 @@ $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_
 	                           	$_SESSION['report_query'][$page] = $ssql." ORDER BY ".$sortby." ".$sorttype;
 	                            $restepm = $dclass->query($sqltepm);
 	                            $row_Data = $dclass->fetchResults($restepm);
+	                            // echo "<script>  </script>";
 
 								?>
+								
 	                            <div class="content">
 	                                <form name="frm" action="" method="get" >
 	                                    <div class="table-responsive">
@@ -200,7 +199,7 @@ $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_
 	                                                    }
 	                                                }
 	                                                else{?>
-	                                                    <tr><td colspan="8">No Record found.</td></tr><?php 
+	                                                    <tr><td colspan="8" id="no_record">No Record found.</td></tr><?php 
 	                                                }?>
 	                                            </tbody>
 	                                        </table>
@@ -240,10 +239,9 @@ $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_
 <?php include('_scripts.php');?>
 <?php include('jsfunctions/jsfunctions.php');?>
 <script type="text/javascript">
-	function export_reports(){
-
-	}
+	export_reports(<?php echo $nototal; ?>);
 </script>
+
 
 </body>
 </html>

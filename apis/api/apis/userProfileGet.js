@@ -18,7 +18,7 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
 	
 	if( _status ){
 		dclass._select( '*', 'tbl_user', " AND v_role = 'user' AND id = '"+login_id+"' ", function( status, data ){ 

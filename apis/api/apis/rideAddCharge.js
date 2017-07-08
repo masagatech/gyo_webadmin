@@ -17,11 +17,11 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var i_ride_id = gnrl._is_undf( params.i_ride_id ).trim();
-	var v_charge_type = gnrl._is_undf( params.v_charge_type ).trim();
-	var v_charge_info = gnrl._is_undf( params.v_charge_info ).trim();
-	var f_amount = gnrl._is_undf( params.f_amount ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var i_ride_id = gnrl._is_undf( params.i_ride_id );
+	var v_charge_type = gnrl._is_undf( params.v_charge_type );
+	var v_charge_info = gnrl._is_undf( params.v_charge_info );
+	var f_amount = gnrl._is_undf( params.f_amount );
 	
 	if( !i_ride_id ){ _status = 0; _message = 'err_req_ride_id'; }
 	if( _status && !v_charge_type ){ _status = 0; _message = 'err_req_charge_type'; }
@@ -32,15 +32,12 @@ var currentApi = function( req, res, next ){
 		_status = 0; _message = 'err_invalid_charge_type';
 	}
 	
-	if( !v_charge_info && ( v_charge_type == 'other_charge'
-		|| v_charge_type == 'ride_time_pick_charge'
-		) ){
+	if( !v_charge_info && ( v_charge_type == 'other_charge' || v_charge_type == 'ride_time_pick_charge' ) ){
 		// _status = 0; _message = 'err_req_charge_info';
 	}
 	if( isNaN( f_amount ) ){
 		_status = 0; _message = 'err_invalid_amount';
 	}
-	// 
 	
 	if( !_status ){
 		gnrl._api_response( res, 0, _message );

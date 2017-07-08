@@ -18,7 +18,7 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var v_username = gnrl._is_undf( params.v_username ).trim();
+	var v_username = gnrl._is_undf( params.v_username );
 	if( !v_username ){ _status = 0; _message = 'err_req_email_or_phone'; }
 	
 	// ##EMAIL, ##SMS
@@ -30,8 +30,14 @@ var currentApi = function( req, res, next ){
 	if( _status ){
 
 		async.series([
+		
 			function( callback ){
-				dclass._select( '*', 'tbl_user', " AND v_role = 'user' AND ( v_email = '"+v_username+"' OR v_phone = '"+v_username+"' )", function( status, user ){ 
+				
+				var _q = " SELECT ";
+					_q += " id, v_name, v_email, v_phone ";
+					_q += " FROM tbl_user WHERE v_role = 'user' AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' ) ";
+				
+				dclass._query( _q, function( status, user ){
 					if( !status ){
 						gnrl._api_response( res, 0, '' );
 					}
@@ -45,6 +51,8 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
+			
+			
 			function( callback ){
 				var _ins   = {
 					'v_otp' : _v_otp

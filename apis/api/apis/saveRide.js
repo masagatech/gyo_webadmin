@@ -16,22 +16,22 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
-	var vehicle_type = gnrl._is_undf( params.vehicle_type ).trim();
-	var pickup_address = gnrl._is_undf( params.pickup_address ).trim();
-	var pickup_latitude = gnrl._is_undf( params.pickup_latitude ).trim();
-	var pickup_longitude = gnrl._is_undf( params.pickup_longitude ).trim();
-	var destination_address = gnrl._is_undf( params.destination_address ).trim();
-	var destination_latitude = gnrl._is_undf( params.destination_latitude ).trim();
-	var destination_longitude = gnrl._is_undf( params.destination_longitude ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var vehicle_type = gnrl._is_undf( params.vehicle_type );
+	var pickup_address = gnrl._is_undf( params.pickup_address );
+	var pickup_latitude = gnrl._is_undf( params.pickup_latitude );
+	var pickup_longitude = gnrl._is_undf( params.pickup_longitude );
+	var destination_address = gnrl._is_undf( params.destination_address );
+	var destination_latitude = gnrl._is_undf( params.destination_latitude );
+	var destination_longitude = gnrl._is_undf( params.destination_longitude );
 	
-	var estimate_km = gnrl._is_undf( params.estimate_km, 0 ).trim();
-	var estimate_time = gnrl._is_undf( params.estimate_time, 0 ).trim();
+	var estimate_km = gnrl._is_undf( params.estimate_km, 0 );
+	var estimate_time = gnrl._is_undf( params.estimate_time, 0 );
 
-	var city = gnrl._is_undf( params.city ).trim();
+	var city = gnrl._is_undf( params.city );
 	var charges = gnrl._is_undf( params.charges, {} );
-	var ride_type = gnrl._is_undf( params.ride_type ).trim();
-	var ride_time = gnrl._is_undf( params.ride_time ).trim();
+	var ride_type = gnrl._is_undf( params.ride_type );
+	var ride_time = gnrl._is_undf( params.ride_time );
 	
 	if( !vehicle_type ){ _status = 0; _message = 'err_req_vehicle_type'; }
 	if( _status && !pickup_address ){ _status = 0; _message = 'err_req_pickup_address'; }
@@ -52,31 +52,28 @@ var currentApi = function( req, res, next ){
 		gnrl._api_response( res, 0, _message );
 	}
 	else{
-		var v_ride_code = '';
 		var ride_id = 0;
-		var new_pin = "";
-		var v_pin = Ride.getPin();
+		var v_ride_code = '';
+		var new_pin = '';
 		var i_city_id = 0;
-		var _user = {};
 		var v_gender = 'male';
+		var v_pin = Ride.getPin();
 		
 		async.series([
 			
 			// Get User
 			function( callback ){
-				User.get( login_id, function( status, data ){
+				dclass._select( 'v_gender', 'tbl_user', " AND id = '"+login_id+"' ", function( status, data ){
 					if( status && data.length ){
-						_user = data[0];
-						v_gender = _user.v_gender;
+						v_gender = data[0].v_gender;
 					}
-					
 					callback( null );
 				});
 			},
 			
 			// Get City ID
 			function( callback ){
-				City.getByName( city, function( status, data ){
+				dclass._select( 'v_gender', 'tbl_city', " AND LOWER( v_name ) = '"+city.toLowerCase()+"' ", function( status, data ){
 					if( status && data.length ){
 						i_city_id = data[0].id;
 					}
@@ -149,7 +146,6 @@ var currentApi = function( req, res, next ){
 					'i_ride_id' : ride_id,
 					'v_pin' : new_pin,
 					'v_ride_code' : v_ride_code,
-					
 				});
 			}
 			

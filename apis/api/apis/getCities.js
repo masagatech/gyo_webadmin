@@ -17,7 +17,7 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	City.getActiveList( function( status, data ){
+	dclass._select( 'id, v_name, v_code', 'tbl_city', " AND i_delete = '0' AND e_status = 'active' ORDER BY v_name ", function( status, data ){
 		if( !status ){
 			gnrl._api_response( res, 0, _message );
 		}
@@ -28,6 +28,7 @@ var currentApi = function( req, res, next ){
 			gnrl._api_response( res, 1, _message, data );
 		}
 	});
+	
 	
 };
 

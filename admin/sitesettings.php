@@ -83,9 +83,11 @@ else {
 											<label>Uploads Url</label>
 											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required parsley-type="url" >
 										</div>
-										
-										
-										
+										<div class="form-group ">
+											<?php $key = 'API_URL';?>
+											<label>API Url</label>
+											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required parsley-type="url" >
+										</div>
 										<div class="form-group ">
 											<button class="btn btn-primary" type="submit" name="submit_btn" value="Update">Update</button>
 										</div>
@@ -149,23 +151,6 @@ else {
 							</div>
                         </div>
                         
-						<div class="block-flat">
-                            <div class="header"><h3>Referral Program</h3></div>
-							<div class="row">
-								<div class="col-sm-6">
-									<div class="content">
-										<div class="form-group ">
-											<?php $key = 'REFER_AMOUNT'; ?>
-											<label>Refer Amount</label>
-											<input type="text" class="form-control" id="<?php echo $key;?>" name="<?php echo $key;?>" value="<?php echo $$key?>" required  >
-										</div>
-										<div class="form-group ">
-											<button class="btn btn-primary" type="submit" name="submit_btn" value="Update">Update</button>
-										</div>
-									</div>
-								</div>
-							</div>
-                        </div>
 						
 						<div class="block-flat">
                             <div class="header"><h3>Push Notification Settings</h3></div>

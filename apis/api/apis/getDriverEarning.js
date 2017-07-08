@@ -19,7 +19,7 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id   = gnrl._is_undf( params.login_id ).trim();
+	var login_id   = gnrl._is_undf( params.login_id );
 	var from_date   = gnrl._is_undf( params.from_date, 0 );
 	var to_date   = gnrl._is_undf( params.to_date, 0 );
 
@@ -27,12 +27,12 @@ var currentApi = function( req, res, next ){
 	if( _status && !to_date ){ _status = 0; _message = 'err_req_to_date'; }
 	
 	if( _status ){	
-
-		var _wallet = [];
+	
+		var wallet_type = 'money';
+		
+		var _wallet = {};
 		var _wallet_history = [];
-		var _wh = {
-			'wallet' : {},
-			'wallet_amount' : 0,
+		var _data = {
 			'wallet_history' : [],
 		};
 		
@@ -40,19 +40,22 @@ var currentApi = function( req, res, next ){
 			>> Get Wallet
 			>> Get Wallet History
 		*/
-
-		async.series([
 		
+		async.series([
 		
 			// Get Wallet
 			function( callback ){
-				Wallet.get( login_id, 'driver', function( status, wallet ){
-					_wh.wallet = wallet;
-					_wh.wallet_amount = wallet.f_amount;
+				Wallet.get({
+					selection : 'id, f_amount',
+					user_id : login_id,
+					role : 'driver',
+					wallet_type : wallet_type
+				}, function( status, wallet ){
+					_wallet = wallet;
 					callback( null );
 				});
 			},
-			
+		
 			// Get Wallet History
 			function( callback ){
 				
@@ -63,33 +66,90 @@ var currentApi = function( req, res, next ){
 				to_date = gnrl._db_ymd( '', new Date( to_date ) );
 				
 				
-				Wallet.getWalletHistory( login_id, {
-					role : 'driver',
-					lang : _lang,
-					from_date : from_date,
-					to_date : to_date,
+				var _q = " SELECT ";
+				_q += " v_type ";
+				_q += " , f_amount ";
+				_q += " , f_receivable ";
+				_q += " , f_payable ";
+				_q += " , f_received ";
+				_q += " , COALESCE( l_data->>'ride_id', '' ) AS ride_id ";
+				_q += " , COALESCE( l_data->>'ride_code', '' ) AS ride_code ";
+				_q += " , COALESCE( l_data->>'vehicle_type', '' ) AS vehicle_type ";
+				_q += " , d_added ";
+				
+				_q += " FROM tbl_wallet_transaction WHERE true ";
+				_q += " AND i_wallet_id = '"+_wallet.id+"' ";
+				
+				if( from_date ){
+					_q += " AND d_added >= '"+from_date+"' ";
+				}
+				if( to_date ){
+					_q += " AND d_added <= '"+to_date+"' ";
+				}
+				
+				_q += " ORDER BY id DESC ";
+				
+				dclass._query( _q, function( status, data ){
 					
-				}, function( status, wallet_history ){
-					
-					for( var i = 0; i < wallet_history.length; i++ ){
-						wallet_history[i].details = wallet_history[i].l_data;
-						wallet_history[i].details.ride_date = wallet_history[i].d_date;
-						wallet_history[i].details.i_ride_id = 0;
-						wallet_history[i].details.vehicle_type = '';
-						wallet_history[i].details.action = '';
-						wallet_history[i].details.action_amount = '';
-						wallet_history[i].details.balance = '';
+					if( status && data.length ){
+						
+						for( var k in data ){
+							
+							data[k].from = Wallet.getPaymentModeName( data[k].v_type );
+							
+							var msg = 'msg_wallet_driver_'+data[k].v_type;
+							
+							var s = gnrl._lbl( msg );
+							if( data[k].ride_code ){
+								s = s.split('[ride_code]').join( data[k].ride_code );
+							}
+								
+							data[k].f_amount = data[k].f_received;
+							
+							s = s.split('[amount]').join( data[k].f_amount > 0 ? data[k].f_amount : ( data[k].f_amount * -1 ) );
+							s = s.split('[receivable_amount]').join( data[k].f_receivable > 0 ? data[k].f_receivable : ( data[k].f_receivable * -1 ) );
+							s = s.split('[payable_amount]').join( data[k].f_payable > 0 ? data[k].f_payable : ( data[k].f_payable * -1 ) );
+							s = s.split('[received_amount]').join( data[k].f_received > 0 ? data[k].f_received : ( data[k].f_received * -1 ) );
+							
+							data[k].message = s;
+							data[k].action_amount = data[k].f_amount > 0 ? data[k].f_amount : ( data[k].f_amount * -1 );
+							if( data[k].v_type == 'ride' ){
+								data[k].action_amount = data[k].f_receivable - data[k].f_payable;
+							}
+							
+							_data.wallet_history.push({
+								"from" : data[k].from,
+								"message" : s,
+								"details": {
+									i_ride_id : data[k].ride_code,
+									ride_date : gnrl._timestamp( data[k].d_added ),
+									vehicle_type : '',
+									action : data[k].v_type,
+									action_amount : data[k].action_amount,
+									balance : _wallet.f_amount,
+								}
+							});
+						}
+						
+						callback( null );
+						
 					}
-					_wh.wallet_history = wallet_history;
-					
-					callback( null );
+					else{
+						
+						callback( null );
+						
+					}
 				});
+				
 			},
 			
 		], 
 		function( error, results ){
-			gnrl._api_response( res, 1, '', _wh );
+			gnrl._api_response( res, 1, '', _data );
 		});
+		
+		
+		
 		
 	}
 	else{

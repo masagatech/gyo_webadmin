@@ -18,8 +18,8 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id   = gnrl._is_undf( params.login_id ).trim();
-	var city = gnrl._is_undf( params.city ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
+	var city = gnrl._is_undf( params.city );
 
 	if( !city ){ _status = 0; _message = 'err_req_city'; }
 	
@@ -59,7 +59,7 @@ var currentApi = function( req, res, next ){
 		
 	}
 	else{
-		gnrl._api_response( res, 0, '_message' );
+		gnrl._api_response( res, 0, _message, {} );
 	}
 };
 

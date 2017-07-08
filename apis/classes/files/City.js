@@ -25,13 +25,6 @@ var currClass = function( params ){
 			});
 		},
 		
-		getActiveList : function( cb ){
-			var _self = this;
-			dclass._select( '*', table, " AND i_delete = '0' AND e_status = 'active' ORDER BY v_name ", function( status, data ){
-				cb( status, data );
-			});
-		},
-		
 	}
 };
 

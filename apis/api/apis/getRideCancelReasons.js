@@ -17,11 +17,14 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var v_type = gnrl._is_undf( params.v_type ).trim();
+	var v_type = gnrl._is_undf( params.v_type );
 	if( !v_type ){ _status = 0; _message = 'err_req_type'; }
 	
 	if( _status ){
-		dclass._select( '*', 'tbl_ride_cancel_reason', " AND i_delete = '0' AND v_type = '"+v_type+"' ORDER BY i_order ", function( status, data ){ 
+		
+		var _selection = "id, j_title";
+		
+		dclass._select( _selection, 'tbl_ride_cancel_reason', " AND i_delete = '0' AND v_type = '"+v_type+"' ORDER BY i_order ", function( status, data ){ 
 			if( status && !data.length ){
 				gnrl._api_response( res, 0, 'err_no_records', {} );
 			}

@@ -18,10 +18,10 @@ var currentApi = function( req, res, next ){
 	var _message = '';
 	var _response = {};
 	
-	var v_username = gnrl._is_undf( params.v_username ).trim();
-	var v_password = gnrl._is_undf( params.v_password ).trim();
-	var v_device_token = gnrl._is_undf( params.v_device_token ).trim();
-	var v_imei_number	= gnrl._is_undf( params.v_imei_number ).trim();
+	var v_username = gnrl._is_undf( params.v_username );
+	var v_password = gnrl._is_undf( params.v_password );
+	var v_device_token = gnrl._is_undf( params.v_device_token );
+	var v_imei_number	= gnrl._is_undf( params.v_imei_number );
 	
 	if( !v_username ){ _status = 0; _message = 'err_req_email_or_phone'; }
 	if( _status && !v_password ){ _status = 0; _message = 'err_req_password'; }
@@ -51,21 +51,29 @@ var currentApi = function( req, res, next ){
 		var v_token = '';
 		var v_otp = gnrl._get_otp();
 		var d_last_login = gnrl._db_datetime();
-		var isVerified = 1;
+		
 		var vehicle_id = 0;
 		
 		async.series([
 		
 			// Get User
 			function( callback ){
-				User.getByUsername( v_username, function( status, user ){
+				
+				
+				var _q = " SELECT ";
+				// *,
+					_q += " id ";
+					_q += " , v_id, v_name, v_phone, v_role, v_imei_number, v_password, v_token, e_status, lang ";
+					_q += " , COALESCE( ( l_data->>'is_otp_verified' )::numeric, 0 ) AS is_otp_verified ";
+					_q += " FROM tbl_user WHERE v_role = 'driver' AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' ) ";
+				
+				
+				dclass._query( _q, function( status, user ){
+					
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
 					else if( !user.length ){
-						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
-					}
-					else if( !User.isDriver( user[0] ) ){
 						gnrl._api_response( res, 0, 'err_msg_no_account', {} );
 					}
 					else if( user[0].v_imei_number != null && user[0].v_imei_number != '' && user[0].v_imei_number != v_imei_number ){ 
@@ -79,32 +87,18 @@ var currentApi = function( req, res, next ){
 					}
 					else{
 						_user = user[0];
+						_user.is_otp_verified = parseInt( _user.is_otp_verified );
+						
 						callback( null );
 					}
 				});
 			},
 			
 			
-			// Check Verified OR Not
+			// Check Verified OR Inactive
 			function( callback ){
 				
-				isVerified = User.isVerified( _user );
-				
-				// Check Verified And Inactive
-				if( isVerified && _user.e_status == 'inactive' ){
-					gnrl._api_response( res, 0, 'err_acc_inactive', {} ); 
-				}
-				else{
-					callback( null );
-				}
-				
-			},
-			
-			
-			// If not verified
-			function( callback ){
-				
-				if( !isVerified ){
+				if( _user.is_otp_verified != 1 ){
 					
 					async.series([
 						
@@ -123,7 +117,7 @@ var currentApi = function( req, res, next ){
 							SMS.send({
 								_key : 'resend_otp',
 								_to : _user.v_phone,
-								_lang : User.lang( _user ),
+								_lang : _user.lang,
 								_keywords : {
 									'[user_name]' : _user.v_name,
 									'[otp]' : v_otp,
@@ -143,10 +137,13 @@ var currentApi = function( req, res, next ){
 					});
 					
 				}
+				
+				// Check Inactive
+				else if( _user.e_status == 'inactive' ){
+					gnrl._api_response( res, 0, 'err_acc_inactive', {} ); 
+				}
 				else{
-					
 					callback( null );
-					
 				}
 				
 			},
@@ -198,7 +195,7 @@ var currentApi = function( req, res, next ){
 					
 					// Get Vehicle ID
 					function( callback ){
-						dclass._select( '*', 'tbl_vehicle', " AND i_driver_id = '"+_user.id+"' ", function( status, data ){ 
+						dclass._select( 'id', 'tbl_vehicle', " AND i_driver_id = '"+_user.id+"' ", function( status, data ){ 
 							if( status && data.length ){
 								vehicle_id = data[0].id;
 							}
@@ -217,10 +214,11 @@ var currentApi = function( req, res, next ){
 		], 
 		function( error, results ){
 			delete _user.v_password;
-			_user.v_token = v_token;
-			_user.lang = User.lang( _user );
-			_user.vehicle_id = vehicle_id;
+			
+			_user.v_token 		= v_token;
+			_user.vehicle_id 	= vehicle_id;
 			gnrl._api_response( res, 1, 'succ_login_successfully', _user );
+			
 		});
 	}
 };

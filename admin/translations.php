@@ -29,6 +29,7 @@ $file = str_replace( 'uploads/', '', UPLOAD_PATH ).'translation.json';
 		"err_invalid_referral_code" => "Error! Invalid Referral Code",
 		"err_invalid_role" => "Error! Invalid Role",
 		"err_invalid_status" => "Error! Invalid Status",
+		"err_invalid_payment_method" => "Error! Invalid Payment Method",
 		"err_msg_already_login" => "Error! Already Login",
 		"err_msg_device_not_recognized" => "Error! Device Not Recognized",
 		"err_msg_email_not_sent" => "Error! Email Not Sent",
@@ -41,6 +42,7 @@ $file = str_replace( 'uploads/', '', UPLOAD_PATH ).'translation.json';
 		"err_msg_no_sms_template" => "Error! No Sms Template",
 		"err_msg_not_logged_in" => "Error! Not Logged In",
 		"err_msg_ride_alreay_accepted" => "Error! Ride Alreay Accepted",
+		"err_msg_ride_alreay_cancelled" => "Error! Ride Alreay Cancelled",
 		"err_msg_ride_alreay_completed" => "Error! Ride Alreay Completed",
 		"err_msg_ride_alreay_confirmed" => "Error! Ride Alreay Confirmed",
 		"err_msg_sms_not_sent" => "Error! Sms Not Sent",
@@ -296,6 +298,8 @@ $file = str_replace( 'uploads/', '', UPLOAD_PATH ).'translation.json';
 		"msg_refer_code_string_on" => "Message! Refer Code String On",
 		"msg_wallet_credit" => "Message! Wallet Credit",
 		"msg_wallet_debit" => "Message! Wallet Debit",
+		"msg_wallet_payment_method" => "Message! Wallet Payment Method",
+		
 		"msg_wallet_driver_payu" => "Message! Wallet Driver Payu",
 		"msg_wallet_driver_ride" => "Message! Wallet Driver Ride",
 		"msg_wallet_driver_ride_cancel" => "Message! Wallet Driver Ride Cancel",
@@ -329,6 +333,7 @@ $file = str_replace( 'uploads/', '', UPLOAD_PATH ).'translation.json';
 		"succ_sos_send" => "Success Message! Sos Send",
 		"succ_status_updated" => "Success Message! Status Updated",
 		"succ_support_inquiry_submitted" => "Success Message! Support Inquiry Submitted",
+		
 	);
 	
 	ksort( $keyArr );

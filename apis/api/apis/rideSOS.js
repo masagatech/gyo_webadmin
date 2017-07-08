@@ -35,21 +35,29 @@ var currentApi = function( req, res, next ){
 		var _driver = {};
 		
 		var l_data = {
-			city_id : 0,
-			city_name : city,
-			ride_code : '',
-			phone_sos : '',
-			phone_user : '',
-			phone_driver : '',
+			city_id 		: 0,
+			city_name 		: city,
+			ride_code 		: '',
+			
+			phone_sos 		: '',
+			phone_user 		: '',
+			phone_driver 	: '',
 		};
 		
 		async.series([
 		
-			// Get City
+		
+			// Get Ride
 			function( callback ){
-				City.getByName( city, function( status, data ){
+				var _slct = "id, i_driver_id, i_user_id, v_ride_code";
+				_slct += " , l_data->>'i_city_id' AS i_city_id ";
+				_slct += " , l_data->>'city' AS city ";
+				dclass._select( _slct, 'tbl_ride', " AND id = '"+i_ride_id+"' ", function( status, data ){
 					if( status && data.length ){
-						l_data.city_id = data[0].id;
+						_ride = data[0];
+						l_data.city_id = _ride.i_city_id ? _ride.i_city_id : 0;
+						l_data.city_name = _ride.city;
+						l_data.ride_code = _ride.v_ride_code;
 						callback( null );
 					}
 					else{
@@ -60,7 +68,7 @@ var currentApi = function( req, res, next ){
 			
 			// Get SOS Number
 			function( callback ){
-				SOS.getByCityID( l_data.city_id, function( status, data ){
+				dclass._select( 'v_phone', 'tbl_sos', " AND i_delete = '0' AND i_city_id = '"+l_data.city_id+"' ", function( status, data ){
 					if( status && data.length ){
 						l_data.phone_sos = data[0].v_phone;
 						callback( null );
@@ -71,23 +79,10 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
-			// Get Ride
-			function( callback ){
-				Ride.get( i_ride_id, function( status, data ){
-					if( status && data.length ){
-						_ride = data[0];
-						l_data.ride_code = _ride.v_ride_code;
-						callback( null );
-					}
-					else{
-						callback( null );
-					}
-				});
-			},
 			
 			// Get User
 			function( callback ){
-				User.get( _ride.i_user_id, function( status, data ){
+				dclass._select( 'id, v_name, v_email, v_phone', 'tbl_user', " AND id = '"+_ride.i_user_id+"' ", function( status, data ){
 					if( status && data.length ){
 						_user = data[0];
 						l_data.phone_user = _user.v_phone;
@@ -101,7 +96,7 @@ var currentApi = function( req, res, next ){
 			
 			// Get Driver
 			function( callback ){
-				User.get( _ride.i_driver_id, function( status, data ){
+				dclass._select( 'id, v_name, v_email, v_phone', 'tbl_user', " AND id = '"+_ride.i_driver_id+"' ", function( status, data ){
 					if( status && data.length ){
 						_driver = data[0];
 						l_data.phone_driver = _driver.v_phone;
@@ -134,12 +129,13 @@ var currentApi = function( req, res, next ){
 			
 			// Send SMS
 			function( callback ){
-				var params = {
+				SMS.send({
 					_to      	: l_data.phone_sos,
 					_lang 		: _lang,
 					_key 		: 'ride_alert_sos',
 					_keywords 	: {
-						'[city]' : city,
+						'[i_ride_id]' : i_ride_id,
+						'[city]' : l_data.city_name,
 						
 						'[user_id]' : _user.id,
 						'[user_name]' : _user.v_name,
@@ -151,12 +147,10 @@ var currentApi = function( req, res, next ){
 						'[driver_email]' : _driver.v_email,
 						'[driver_phone]' : _driver.v_phone,
 						
-						'[ride_code]' : _ride.v_ride_code,
-						'[i_ride_id]' : i_ride_id,
+						'[ride_code]' : l_data.ride_code,
 						
 					},
-				};
-				SMS.send( params, function( error_mail, error_info ){
+				}, function( error_mail, error_info ){
 					callback( null );
 				});
 			},
@@ -188,7 +182,8 @@ var currentApi = function( req, res, next ){
 				Email.send( params, function( error_mail, error_info ){
 					callback( null );
 				});
-			},*/
+			},
+			*/
 			
 
 		], 

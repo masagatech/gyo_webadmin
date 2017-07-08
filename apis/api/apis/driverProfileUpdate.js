@@ -55,14 +55,14 @@ var currentApi = function( req, res, next ){
 			}
 		}
 		
-		var login_id 			= gnrl._is_undf( params.login_id ).trim();
-		var v_token 			= gnrl._is_undf( params.v_token ).trim();
-		var v_name 				= gnrl._is_undf( params.v_name ).trim();
-		var v_email 			= gnrl._is_undf( params.v_email ).trim();
-		var v_phone 			= gnrl._is_undf( params.v_phone ).trim();
+		var login_id 			= gnrl._is_undf( params.login_id );
+		var v_token 			= gnrl._is_undf( params.v_token );
+		var v_name 				= gnrl._is_undf( params.v_name );
+		var v_email 			= gnrl._is_undf( params.v_email );
+		var v_phone 			= gnrl._is_undf( params.v_phone );
 		var v_gender 			= gnrl._is_undf( params.v_gender, 'male' );
-		var v_vehicle_type 		= gnrl._is_undf( params.v_vehicle_type ).trim();
-		var v_vehicle_number 	= gnrl._is_undf( params.v_vehicle_number ).trim();
+		var v_vehicle_type 		= gnrl._is_undf( params.v_vehicle_type );
+		var v_vehicle_number 	= gnrl._is_undf( params.v_vehicle_number );
 		var i_city_id 			= gnrl._is_undf( params.i_city_id );
 		var l_data 				= gnrl._is_undf( params.l_data );
 		
@@ -93,9 +93,10 @@ var currentApi = function( req, res, next ){
 			}
 			else{
 				
+				var _q = " SELECT id, v_email FROM tbl_user WHERE id != '"+login_id+"' AND ( LOWER( v_email ) = '"+v_email.toLowerCase()+"' OR v_phone = '"+v_phone+"' ); ";
 				
-				dclass._select( '*', 'tbl_user', " AND id != '"+login_id+"' AND ( v_email = '"+v_email+"' OR v_phone = '"+v_phone+"' )", function( status, data ){ 
-				
+				dclass._query( _q, function( status, data ){ 
+					
 					if( status && data.length ){
 						
 						gnrl._remove_loop_file( fs, fileArr );
@@ -110,7 +111,7 @@ var currentApi = function( req, res, next ){
 					
 					else{
 
-						dclass._select( '*', 'tbl_user', " AND ( id = '"+login_id+"' )", function( status, data ){ 
+						dclass._select( '*', 'tbl_user', " AND id = '"+login_id+"' ", function( status, data ){ 
 							
 							if( status && !data.length ){
 								gnrl._remove_loop_file( fs, fileArr );

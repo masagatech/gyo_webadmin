@@ -17,7 +17,7 @@ var currentApi = function( req, res, next ){
 	var _message  = '';
 	var _response = {};
 	
-	var login_id = gnrl._is_undf( params.login_id ).trim();
+	var login_id = gnrl._is_undf( params.login_id );
 	
 	if( _status ){	
 

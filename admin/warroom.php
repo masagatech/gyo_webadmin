@@ -41,11 +41,11 @@ $table = 'tbl_user';
 								<button class="btn btn-primary" type="button" onclick="load_driver_warroom();">Refresh</button>
 								</a> 
 								<span id="reports_div" style="display: hidden;">
-                             		<a href="reports.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright">
-										<button class="btn btn-primary" type="button">Report Excel </button>
+                             		<a href="reports.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright btn_reports">
+										<button class="btn btn-primary" type="button">Export Excel </button>
 									</a>
-									<a href="table.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright">
-										<button class="btn btn-primary" type="button">Report PDF </button>
+									<a href="table.php?page=<?php echo $page; ?>&page_title=<?php echo $page_title; ?> " class="fright btn_reports">
+										<button class="btn btn-primary" type="button">Export PDF </button>
 									</a>
                              	</span>
 							</h3>
@@ -165,12 +165,14 @@ $table = 'tbl_user';
 				
 				if( res.status == 0 ){
 					
-					jQuery('#div_map').hide();
+					jQuery('#div_map, .btn_reports').hide();
+
 					
 				}
 				else{
 					
-					jQuery('#div_map').show();
+					jQuery('#div_map, .btn_reports').show();
+
 					
 					var data = res.data;
 					

@@ -24,7 +24,7 @@ var currentApi = function( req, res, next ){
 		gnrl._api_response( res, 0, _message );
 	}
 	else{
-		Settings.getMulti( key, function( data ){
+		Settings.getMulti( key, function( status, data ){
 			gnrl._api_response( res, 1, _message, data );
 		});
 	}

@@ -32,13 +32,13 @@ var currClass = function( params ){
 			}
 			wh = wh.join(" OR ");
 			
-			dclass._select( '*', table, " AND ("+wh+") ", function( status, data ){
+			dclass._select( 'v_key,l_value', table, " AND ("+wh+") ", function( status, data ){
 				if( status && data.length ){
 					for( var k in data ){
 						obj[data[k].v_key] = data[k].l_value;
 					}
 				}
-				cb( obj );
+				cb( status, obj );
 			});
 		},
 		

@@ -100,24 +100,59 @@ var currClass = function( params ){
 			}
 		},
 		
-		getChargesData : function( data, cb ){
+		getChargesData : function( l_data, cb ){
+			
 			var _self = this;
-			var tempArr = {
-				'min_charge' : 0,
-				'base_fare' : 0,
-				'service_tax' : 0,
-				'surcharge' : 0,
-				'ride_time_charge' : 0,
-				'max_dry_run_km' : 0,
-				'max_dry_run_charge' : 0,
-				'upto_km' : 0,
-				'upto_km_charge' : 0,
-				'after_km_charge' : 0,
-			};
-			for( var k in tempArr ){
-				tempArr[k] = gnrl._round( parseFloat( data.l_data.charges[k] ? data.l_data.charges[k] : 0 ) );
-			}
-			cb( tempArr );
+			
+			l_data.actual_distance = l_data.actual_distance ? parseFloat( l_data.actual_distance ) : 0;
+			
+			l_data.actual_dry_run = l_data.actual_dry_run ? parseFloat( l_data.actual_dry_run ) : 0;
+			l_data.apply_dry_run = l_data.apply_dry_run ? parseFloat( l_data.apply_dry_run ) : 0;
+			l_data.apply_dry_run_amount = l_data.apply_dry_run_amount ? parseFloat( l_data.apply_dry_run_amount ) : 0;
+			
+			l_data.trip_time_in_min = l_data.trip_time_in_min ? parseFloat( l_data.trip_time_in_min ) : 0;
+			l_data.trip_time = l_data.trip_time ? l_data.trip_time : { days : 0, hours : 0, minutes : 0, seconds : 0, };
+			l_data.trip_time.days = l_data.trip_time.days ? parseFloat( l_data.trip_time.days ) : 0;
+			l_data.trip_time.hours = l_data.trip_time.hours ? parseFloat( l_data.trip_time.hours ) : 0;
+			l_data.trip_time.minutes = l_data.trip_time.minutes ? parseFloat( l_data.trip_time.minutes ) : 0;
+			l_data.trip_time.seconds = l_data.trip_time.seconds ? parseFloat( l_data.trip_time.seconds ) : 0;
+			
+			l_data.ride_paid_by_cash = l_data.ride_paid_by_cash ? parseFloat( l_data.ride_paid_by_cash ) : 0;
+			l_data.ride_paid_by_wallet = l_data.ride_paid_by_wallet ? parseFloat( l_data.ride_paid_by_wallet ) : 0;
+			
+			l_data.ride_driver_receivable = l_data.ride_driver_receivable ? parseFloat( l_data.ride_driver_receivable ) : 0;
+			l_data.ride_driver_payable = l_data.ride_driver_payable ? parseFloat( l_data.ride_driver_payable ) : 0;
+			l_data.ride_driver_received = l_data.ride_driver_received ? parseFloat( l_data.ride_driver_received ) : 0;
+			
+			l_data.company_commision_amount = l_data.company_commision_amount ? parseFloat( l_data.company_commision_amount ) : 0;
+			
+			l_data.final_amount = l_data.final_amount ? parseFloat( l_data.final_amount ) : 0;
+			
+			l_data.charges.min_charge = l_data.charges.min_charge ? parseFloat( l_data.charges.min_charge ) : 0;
+			l_data.charges.base_fare = l_data.charges.base_fare ? parseFloat( l_data.charges.base_fare ) : 0;
+			l_data.charges.ride_time_charge = l_data.charges.ride_time_charge ? parseFloat( l_data.charges.ride_time_charge ) : 0;
+			l_data.charges.upto_km = l_data.charges.upto_km ? parseFloat( l_data.charges.upto_km ) : 0;
+			l_data.charges.upto_km_charge = l_data.charges.upto_km_charge ? parseFloat( l_data.charges.upto_km_charge ) : 0;
+			l_data.charges.after_km_charge = l_data.charges.after_km_charge ? parseFloat( l_data.charges.after_km_charge ) : 0;
+			l_data.charges.other_charge = l_data.charges.other_charge ? parseFloat( l_data.charges.other_charge ) : 0;
+			l_data.charges.service_tax = l_data.charges.service_tax ? parseFloat( l_data.charges.service_tax ) : 0;
+			l_data.charges.surcharge = l_data.charges.surcharge ? parseFloat( l_data.charges.surcharge ) : 0;
+			
+			l_data.charges.max_dry_run_km = l_data.charges.max_dry_run_km ? parseFloat( l_data.charges.max_dry_run_km ) : 0;
+			l_data.charges.max_dry_run_charge = l_data.charges.max_dry_run_charge ? parseFloat( l_data.charges.max_dry_run_charge ) : 0;
+			l_data.charges.cancel_charge_user = l_data.charges.cancel_charge_user ? parseFloat( l_data.charges.cancel_charge_user ) : 0;
+			l_data.charges.cancel_charge_driver = l_data.charges.cancel_charge_driver ? parseFloat( l_data.charges.cancel_charge_driver ) : 0;
+			
+			l_data.charges.company_commission = l_data.charges.company_commission ? l_data.charges.company_commission : 0;
+			
+			l_data.charges.promocode_id = l_data.charges.promocode_id ? parseFloat( l_data.charges.promocode_id ) : 0;
+			l_data.charges.promocode_code = l_data.charges.promocode_code ? l_data.charges.promocode_code : 0;
+			l_data.charges.promocode_code_discount = l_data.charges.promocode_code_discount ? parseFloat( l_data.charges.promocode_code_discount ) : 0;
+			l_data.charges.promocode_code_discount_upto = l_data.charges.promocode_code_discount_upto ? parseFloat( l_data.charges.promocode_code_discount_upto ) : 0;
+			l_data.charges.promocode_code_discount_amount = l_data.charges.promocode_code_discount_amount ? parseFloat( l_data.charges.promocode_code_discount_amount ) : 0;
+			
+			cb( l_data );
+			
 		},
 		
 		calculateDistances : function( ride_id, cb ){

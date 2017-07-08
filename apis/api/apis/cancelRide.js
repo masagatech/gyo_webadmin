@@ -241,7 +241,7 @@ var currentApi = function( req, res, next ){
 								var _ins = {
 									'i_user_id' : _data.user.id,
 									'v_type'    : 'ride_cancel',
-									'v_action'  : 'minus',
+									
 									'f_amount'  : gnrl._minus( _data.deductAmount ),
 									'd_added'   : gnrl._db_datetime(),
 									'l_data'    : {
@@ -347,7 +347,7 @@ var currentApi = function( req, res, next ){
 								var _ins = {
 									'i_user_id' : _data.driver.id,
 									'v_type'    : 'ride_cancel', 
-									'v_action'  : 'minus',
+									
 									'f_amount'  : gnrl._minus( _data.deductAmount ),
 									'd_added'   : gnrl._db_datetime(),
 									'l_data'    : {

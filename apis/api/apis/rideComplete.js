@@ -36,937 +36,762 @@ var currentApi = function( req, res, next ){
 	}
 	else{
 		
-		var _data = {
-			
-			actual_distance : 0,
-			actual_amount : 0,
-			actual_dry_run : 0,
-			service_tax : 0,
-			surcharge : 0,
-			final_amount : 0,
-			discount : 0,
-			apply_dry_run : 0,
-			apply_dry_run_amount : 0,
-			ride_paid_by_cash : 0,
-			ride_paid_by_wallet : 0,
-			company_commision : 0,
-			company_commision_amount : 0,
-			ride_driver_receivable : 0,
-			ride_driver_payable : 0,
-			
-			_ins : {},
-			
-			charges : {
-				'min_charge' : 0,
-				'base_fare' : 0,
-				'total_fare' : 0,
-				'ride_time_charge' : 0,
-				'service_tax' : 0,
-				'surcharge' : 0,
-				'discount' : 0,
-			},
-			ride : {},
-			user : {},
-			driver : {},
-			
-		};
-		
-		var paymentArr = {
-			'wallet' : 0,
-			'cash' : 0,
-		};
-		
-		var end_date = gnrl._db_datetime();
-		var trip_time = {};
-		var trip_time_in_min = 0;
-		
+		var end_date 		= gnrl._db_datetime();
+		var _data 			= {};
+		var _ride 			= {};
+		var l_data	 		= {};
+		var multi_Queries 	= [];
 		
 		/*
 		STEPS
 		
-			>> Get Ride
-			>> Update ride to complete
-			>> Get Ride Charges
+			// Get Ride
+			// Ride Set Charges
+			// Calculate Total Time
+			// Calculate Total Distance
+			// Calculate Different Charges
+				// Dry Run
+				// Other Charges
+				// Min Charge
+				// Base Fare
+				// Ride Time Charge
+				// Total Fare
+				// Service Tax
+				// Surcharge
+				// Discount
+				// Calculate Company Comission
 			
-			>> Calculate Total Distance
-			>> Calculate Total Time
-			>> Calculate Dry Run
+			// Get User Wallet
+			// Get Driver Wallet
+			// Update Ride To Complete
 			
-			>> Entry of Min Charge
-			>> Entry of Base Fare
-			>> Entry of Service Tax
-			>> Entry of Surcharge
-			>> Entry of Discount
+			// Fire All Queries
 			
-			>> Get Final Total
+			// Ride Complete Notification
+				// To User
+				// To Driver - Not Using
 			
-			>> Calculate Company Comission
-			
-			>> Get User Wallet
-
-			>> Update ride to paid
-			
-			>> Add Payment [Wallet,Cash]
-				>> Via Wallet
-				>> Via Cash
-			
-			>> Select User
-			>> Select Driver
-			
-			>> User Wallet Actions
-				>> Deduct Ride Amount, If any
-				>> Refresh User Wallet, If any
-				>> Send Notification, If any
-			
-			>> Driver Manage Payment
-				>> Add
-			
-			>> Dry Run, If any
-				>> Get Wallet
-				>> Add
-				>> Refresh
-				>> Send notification
-			
-			>> Send Notification for Ride Complete [Driver / User]
-			
-			>> Ride Completion ##EMAIL ##SMS ## Driver
-			>> Ride Completion ##EMAIL ##SMS ## User
-			
+			// User # Wallet Actions [Cut From Wallet, If Pay From Wallet]
+				// Add Transaction
+				// Refresh
+				// Send Notification
+				
+			// Driver # Wallet Actions [Ride Money Add To Wallet, If Dry Run]
+				// Add Transaction For Ride Money
+				// Add Transaction For Dry Run
+				// Refresh
+				// Send Notification, Driver = Wallet Get Payment
+				// Send Notification, Driver = Wallet Get Dry Run
+				
 		*/
 		
+		var dTest = 0;
 		
 		async.series([
 		
 			// Get Ride
 			function( callback ){
-				Ride.get( i_ride_id, function( ride_status, ride_data ){
-					if( !ride_status ){
+				
+				var _q = "SELECT ";
+				
+				_q += " dr.id AS driver_id ";
+				_q += " , dr.v_name AS driver_name ";
+				_q += " , dr.v_email AS driver_email ";
+				_q += " , dr.v_phone AS driver_phone ";
+				_q += " , dr.v_device_token AS driver_device_token ";
+				_q += " , COALESCE( dr.l_data->>'referral_code', '' ) AS driver_referral_code ";
+				_q += " , COALESCE( ( dr.l_data->>'referral_amount' )::numeric, 0 ) AS driver_referral_amount ";
+				_q += " , COALESCE( ( dr.l_data->>'referral_user_id' )::numeric, 0 ) AS driver_referral_user_id ";
+				_q += " , COALESCE( dr.l_data->>'referral_wallet_type', '' ) AS driver_referral_wallet_type ";
+				_q += " , COALESCE( dr.l_data->>'referral_wallet_apply', '' ) AS driver_referral_wallet_apply ";
+				_q += " , dr.lang AS driver_lang ";
+				
+				_q += " , ur.id AS user_id ";
+				_q += " , ur.v_name AS user_name ";
+				_q += " , ur.v_email AS user_email ";
+				_q += " , ur.v_phone AS user_phone ";
+				_q += " , ur.v_device_token AS user_device_token ";
+				_q += " , COALESCE( ur.l_data->>'referral_code', '' ) AS user_referral_code ";
+				_q += " , COALESCE( ( ur.l_data->>'referral_amount' )::numeric, 0 ) AS user_referral_amount ";
+				_q += " , COALESCE( ( ur.l_data->>'referral_user_id' )::numeric, 0 ) AS user_referral_user_id ";
+				_q += " , COALESCE( ur.l_data->>'referral_wallet_type', '' ) AS user_referral_wallet_type ";
+				_q += " , COALESCE( ur.l_data->>'referral_wallet_apply', '' ) AS user_referral_wallet_apply ";
+				_q += " , ur.lang AS user_lang ";
+				
+				_q += " , rd.* ";
+				
+				_q += " FROM tbl_ride rd ";
+				
+				_q += " LEFT JOIN tbl_user ur ON ur.id = rd.i_user_id ";
+				_q += " LEFT JOIN tbl_user dr ON dr.id = rd.i_driver_id ";
+				
+				_q += " WHERE true ";
+				_q += " AND rd.id = '"+i_ride_id+"' ";
+				_q += " AND dr.id = '"+login_id+"'; ";
+				
+				dclass._query( _q, function( status, data ){ 
+					if( !status ){
 						gnrl._api_response( res, 0, 'error', {} );
 					}
-					else if( !ride_data.length ){
+					else if( !data.length ){
 						gnrl._api_response( res, 0, 'err_no_ride', {} );
 					}
-					else if( ride_data[0].e_status == 'complete' ){
+					else if( data[0].e_status == 'complete' ){
 						gnrl._api_response( res, 0, 'err_msg_ride_alreay_completed', {} );
 					}
 					else{
-						_data.ride = ride_data[0];
+						_ride = data[0];
+						l_data = data[0].l_data;
 						callback( null );
 					}
 				});
+				
 			},
 			
-			// Update ride to complete
+			// Ride Set Charges
 			function( callback ){
-				var _ins = [
-					"e_status = 'complete'",
-					"d_end = '"+end_date+"'",
-				];
-				dclass._updateJsonb( 'tbl_ride', _ins, " AND id = '"+i_ride_id+"' ", function( status, data ){ 
+				Ride.getChargesData( _ride.l_data, function( data ){
+					l_data = data;
 					callback( null );
 				});
-			},
-			
-			// Get Ride Charges
-			function( callback ){
-				Ride.getChargesData( _data.ride, function( data ){
-					_data.charges = data;
-					callback( null );
-				});
-			},
-			
-			// Calculate Total Distance
-			function( callback ){
-				if( force_close == 1 ){
-					_data.actual_distance = estimate_km;
-					_data.actual_dry_run = estimate_dry_run;
-					callback( null );
-				}
-				else{
-					Ride.calculateDistances( i_ride_id, function( status, data ){
-						_data.actual_distance = data.actual_distance;
-						_data.actual_dry_run = data.actual_dry_run;
-						callback( null );
-					});	
-				}
 			},
 			
 			// Calculate Total Time
 			function( callback ){
 				
-				trip_time = gnrl._dateDiff( _data.ride.d_start, end_date );
-				trip_time_in_min = 0;
-				// if( parseFloat( trip_time.days ) > 0 ){ trip_time_in_min += ( parseFloat( trip_time.days ) * 60 * 60 ); }
-				if( parseFloat( trip_time.hours ) > 0 ){ trip_time_in_min += ( parseFloat( trip_time.hours ) * 60 ); }
-				if( parseFloat( trip_time.minutes ) > 0 ){ trip_time_in_min += parseFloat( trip_time.minutes ); }
-				if( parseFloat( trip_time.seconds ) > 30 ){ trip_time_in_min += 1; }
-				else if( parseFloat( trip_time.seconds ) > 0 ){ trip_time_in_min += 0.5; }
+				var temp = gnrl._dateDiff( _ride.d_start, end_date );
+				var mins = 0;
+				
+				mins += ( temp.days * 60 * 60 );
+				mins += ( temp.hours * 60 );
+				mins += ( temp.minutes );
+				mins += ( temp.seconds > 30 ? 1 : 0.5 );
+				
+				l_data.trip_time = temp;
+				l_data.trip_time_in_min = mins;
 				
 				callback( null );
 			},
 			
-			
-			// Calculate Dry Run
+			// Calculate Total Distance
 			function( callback ){
-				if( _data.actual_dry_run <= 0 ){
+				if( force_close == 1 ){
+					l_data.actual_distance 	= estimate_km;
+					l_data.actual_dry_run 	= estimate_dry_run;
 					callback( null );
 				}
 				else{
-					_data.apply_dry_run = ( _data.actual_dry_run > _data.charges.max_dry_run_km ) ? _data.charges.max_dry_run_km : _data.actual_dry_run;
-					_data.apply_dry_run_amount = gnrl._round( _data.apply_dry_run * _data.charges.max_dry_run_charge );
-					callback( null );
+					Ride.calculateDistances( i_ride_id, function( status, data ){
+						l_data.actual_distance	= data.actual_distance;
+						l_data.actual_dry_run 	= data.actual_dry_run;
+						callback( null );
+					});	
 				}
 			},
 			
-			// Entry of Ride Time Charge
+			/*// Testing Data
 			function( callback ){
-				if( _data.charges.ride_time_charge > 0 ){
-					var chrg = gnrl._round( _data.charges.ride_time_charge * trip_time_in_min );
-					var _ins = {
-						'i_ride_id' : _data.ride.id,
-						'v_charge_type' : 'ride_time_charge',
-						'f_amount' : chrg,
-						'd_added' : gnrl._db_datetime(),
-						'l_data' : gnrl._json_encode({
-							'i_added_by' : login_id,
-							'v_charge_info' : '',
-							'ride_time_charge' : _data.charges.ride_time_charge,
-							'trip_time_in_min' : trip_time_in_min,
-						}),
-					};
-					dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
-						callback( null );
-					});
+				if( dTest ){
+					l_data.actual_distance 	= 5;
+					l_data.actual_dry_run 	= 3;
+					l_data.charges.promocode_code_discount = '5%';
+					l_data.charges.promocode_code_discount_upto = 10;
+					l_data.trip_time_in_min = 20;
 				}
-				else{
-					callback( null );
-				}
-			},
+				callback( null );
+			},*/
 			
-			// Entry of Min Charge
-			function( callback ){
-				var _ins = {
-					'i_ride_id' : _data.ride.id,
-					'v_charge_type' : 'min_charge',
-					'f_amount' : gnrl._round( _data.charges.min_charge ),
-					'd_added' : gnrl._db_datetime(),
-					'l_data' : gnrl._json_encode({
-						'i_added_by' : login_id,
-						'v_charge_info' : '',
-					}),
-				};
-				dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
-					if( !ins_status ){
-						callback( null );
-					}
-					else{
-						callback( null );
-					}
-				});
-			},
-			
-			// Entry of Base Fare
-			function( callback ){
-				var _ins = {
-					'i_ride_id' : _data.ride.id,
-					'v_charge_type' : 'base_fare',
-					'f_amount' : gnrl._round( _data.charges.base_fare ),
-					'd_added' : gnrl._db_datetime(),
-					'l_data' : gnrl._json_encode({
-						'i_added_by' : login_id,
-						'v_charge_info' : '',
-					}),
-				};
-				dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
-					if( !ins_status ){
-						callback( null );
-					}
-					else{
-						callback( null );
-					}
-				});
-			},
-			
-			// Entry of Total Fare
+			// Calculate Different Charges
 			function( callback ){
 				
-				if( _data.actual_distance > _data.charges.upto_km ){ 
-					_data.actual_amount += ( _data.charges.upto_km_charge * _data.charges.upto_km ); 
-					
-				}
+				async.series([
 				
-				_data.actual_amount += ( _data.charges.after_km_charge * ( _data.actual_distance - _data.charges.upto_km ) );
-				
-				//else{
-				//	_data.actual_amount += ( _data.charges.upto_km_charge * _data.actual_distance ); 
-				//}
-				
-				
-				
-				if( _data.actual_amount <= 0 ){ 
-					_data.actual_amount = 0; 
-				}
-				
-				_data.actual_amount = gnrl._round( _data.actual_amount );
-				
-				var _ins = {
-					'i_ride_id' : _data.ride.id,
-					'v_charge_type' : 'total_fare',
-					'f_amount' : gnrl._round( _data.actual_amount ),
-					'd_added' : gnrl._db_datetime(),
-					'l_data' : gnrl._json_encode({
-						'i_added_by' : login_id,
-						'v_charge_info' : '',
-						'actual_distance' : _data.actual_distance,
-					}),
-				};
-				dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
-					if( !ins_status ){
-						callback( null );
-					}
-					else{
-						callback( null );
-					}
-				});
-				
-			},
-			
-			// Entry of Service Tax
-			function( callback ){
-				
-				var _q = "";
-				_q += " SELECT ";
-				_q += " COALESCE( SUM( f_amount ), 0 ) AS total_amount ";
-				_q += " FROM ";
-				_q += " tbl_ride_charges ";
-				_q += " WHERE true ";
-				_q += " AND i_ride_id = '"+i_ride_id+"' ";
-				
-				dclass._query( _q, function( ftotal_status, ftotal_data ){
-					
-					if( !ftotal_status ){
-						callback( null );
-					}
-					else{
+					// Dry Run
+					function( callback ){
 						
-						if( _data.charges.service_tax > 0 ){
-							_data.charges.service_tax = parseFloat( ( ftotal_data[0].total_amount * _data.charges.service_tax ) / 100 );
-						}
-						else{
-							_data.charges.service_tax = 0;
-						}
-						
-						_data.charges.service_tax = gnrl._round( _data.charges.service_tax );
-						
-						var _ins = {
-							'i_ride_id' : _data.ride.id,
-							'v_charge_type' : 'service_tax',
-							'f_amount' : _data.charges.service_tax,
-							'd_added' : gnrl._db_datetime(),
-							'l_data' : gnrl._json_encode({
-								'i_added_by' : login_id,
-								'v_charge_info' : '',
-								'service_tax' : _data.charges.service_tax,
-								
-							}),
-						};
-						dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
-							if( !ins_status ){
-								callback( null );
-							}
-							else{
-								callback( null );
-							}
-						});
-						
-					}
-				});
-				
-			},
-			
-			// Entry of Surcharge
-			function( callback ){
-				
-				var _q = "";
-				_q += " SELECT ";
-				_q += " COALESCE( SUM( f_amount ), 0 ) AS total_amount ";
-				_q += " FROM ";
-				_q += " tbl_ride_charges ";
-				_q += " WHERE true ";
-				_q += " AND i_ride_id = '"+i_ride_id+"' ";
-				
-				dclass._query( _q, function( ftotal_status, ftotal_data ){
-					
-					if( !ftotal_status ){
-						callback( null );
-					}
-					else{
-						
-						if( _data.charges.surcharge > 0 ){
-							_data.charges.surcharge = parseFloat( ( ftotal_data[0].total_amount * _data.charges.surcharge ) / 100 );
-						}
-						else{
-							_data.charges.surcharge = 0;
-						}
-						
-						_data.charges.surcharge = gnrl._round( _data.charges.surcharge );
-						
-						var _ins = {
-							'i_ride_id' : _data.ride.id,
-							'v_charge_type' : 'surcharge',
-							'f_amount' : _data.charges.surcharge,
-							'd_added' : gnrl._db_datetime(),
-							'l_data' : gnrl._json_encode({
-								'i_added_by' : login_id,
-								'v_charge_info' : '',
-								'surcharge' : _data.charges.surcharge,
-							}),
-						};
-						dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
-							if( !ins_status ){
-								callback( null );
-							}
-							else{
-								callback( null );
-							}
-						});
-						
-					}
-				});
-				
-			}, 
-			
-			
-			// Entry of Discount
-			function( callback ){
-				
-				if( _data.ride.l_data.charges.promocode_id > 0 && _data.ride.l_data.charges.promocode_code_discount != '' ){
-					
-					Ride.getFinalTotalWithoutDiscount( i_ride_id, function( total ){
-						
-						var tempDiscount = gnrl._isPercent( total, _data.ride.l_data.charges.promocode_code_discount );
-						
-						_data.discount = tempDiscount.comm_amount;
-						if( _data.discount > _data.ride.l_data.charges.promocode_code_discount_upto ){
-							_data.discount = _data.ride.l_data.charges.promocode_code_discount_upto;
-						}
-						
-						if( _data.discount > 0 ){
-							_data.discount = gnrl._minus( _data.discount );
-							var _ins = {
-								'i_ride_id' : _data.ride.id,
-								'v_charge_type' : 'discount',
-								'f_amount' : gnrl._minus( _data.discount ),
-								'd_added' : gnrl._db_datetime(),
-								'l_data' : gnrl._json_encode({
-									'i_added_by' : login_id,
-									'v_charge_info' : '',
-									'promocode_id' : _data.ride.l_data.charges.promocode_id,
-									'promocode_code' : _data.ride.l_data.charges.promocode_code,
-									'promocode_code_discount' : _data.ride.l_data.charges.promocode_code_discount,
-									'promocode_code_discount_upto' : _data.ride.l_data.charges.promocode_code_discount_upto,
-									'promocode_code_discount_amount' : _data.ride.l_data.charges.promocode_code_discount_amount,
-								}),
-							};
-							dclass._insert( 'tbl_ride_charges', _ins, function( ins_status, ins_data ){
-								callback( null );
-							});
+						if( l_data.actual_dry_run > 0 ){
+							
+							var dryCharge 	= l_data.charges.max_dry_run_charge;
+							var dryRun 		= ( l_data.actual_dry_run <= l_data.charges.max_dry_run_km ) ? l_data.actual_dry_run : l_data.charges.max_dry_run_km;
+							
+							l_data.apply_dry_run = dryRun;
+							l_data.apply_dry_run_amount = gnrl._round( dryRun * dryCharge );
+							
+							callback( null );
 						}
 						else{
 							callback( null );
 						}
-					});
-				}
-				else{
+						
+					},
+					
+					// Other Charges
+					function( callback ){
+						l_data.final_amount += l_data.charges.other_charge;
+						callback( null );
+					},
+					
+					// Min Charge
+					function( callback ){
+						
+						var chrg = gnrl._round( l_data.charges.min_charge );
+						
+						l_data.final_amount += chrg;
+						
+						var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
+						_q += " ( "+i_ride_id+", 'min_charge', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
+							'i_added_by' : login_id,
+							'v_charge_info' : '',
+						})+"' ); ";
+						
+						multi_Queries.push( _q );
+						
+						callback( null );
+						
+					},
+					
+					// Base Fare
+					function( callback ){
+						
+						var chrg = gnrl._round( l_data.charges.base_fare );
+						
+						l_data.final_amount += chrg;
+						
+						var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
+						_q += " ( "+i_ride_id+", 'base_fare', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
+							'i_added_by' : login_id,
+							'v_charge_info' : '',
+						})+"' ); ";
+						
+						multi_Queries.push( _q );
+						
+						callback( null );
+						
+					},
+					
+					// Ride Time Charge
+					function( callback ){
+						
+						var chrg = gnrl._round( l_data.charges.ride_time_charge );
+						
+						if( chrg > 0 ){
+							
+							chrg = gnrl._round( chrg * l_data.trip_time_in_min );
+							
+							l_data.final_amount += chrg;
+							
+							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
+							_q += " ( "+i_ride_id+", 'ride_time_charge', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
+								'i_added_by' : login_id,
+								'v_charge_info' : '',
+							})+"' ); ";
+							
+							multi_Queries.push( _q );
+							
+						}
+							
+						callback( null );
+						
+					},
+					
+					// Total Fare
+					function( callback ){
+						
+						var chrg = 0;
+						
+						if( l_data.actual_distance <= l_data.charges.upto_km ){ 
+							chrg = ( l_data.charges.upto_km_charge * l_data.actual_distance );
+						}
+						else{
+							chrg = ( l_data.charges.upto_km_charge * l_data.charges.upto_km );
+							chrg += ( l_data.charges.after_km_charge * ( l_data.actual_distance - l_data.charges.upto_km ) );
+						}
+						
+						chrg = chrg > 0 ? gnrl._round( chrg ) : 0;
+						
+						if( chrg > 0 ){
+							
+							l_data.final_amount += chrg;
+							
+							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
+							_q += " ( "+i_ride_id+", 'total_fare', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
+								'i_added_by' : login_id,
+								'v_charge_info' : '',
+							})+"' ); ";
+							
+							multi_Queries.push( _q );
+							
+						}
+							
+						callback( null );
+						
+					},
+					
+					// Service Tax
+					function( callback ){
+				
+						var tempTotal = l_data.final_amount;
+						
+						var chrg = l_data.charges.service_tax;
+						
+						if( chrg ){
+							
+							chrg = gnrl._round( parseFloat( ( tempTotal * chrg ) / 100 ) );
+							
+							l_data.final_amount += chrg;
+							
+							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
+							_q += " ( "+i_ride_id+", 'service_tax', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
+								'i_added_by' : login_id,
+								'v_charge_info' : '',
+							})+"' ); ";
+							
+							multi_Queries.push( _q );
+							
+						}
+						
+						callback( null );
+						
+					},
+					
+					// Surcharge
+					function( callback ){
+				
+						var tempTotal = l_data.final_amount;
+						
+						var chrg = l_data.charges.surcharge;
+						
+						if( chrg ){
+							
+							chrg = gnrl._round( parseFloat( ( tempTotal * chrg ) / 100 ) );
+							
+							l_data.final_amount += chrg;
+							
+							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
+							_q += " ( "+i_ride_id+", 'surcharge', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
+								'i_added_by' : login_id,
+								'v_charge_info' : '',
+							})+"' ); ";
+							
+							multi_Queries.push( _q );
+							
+						}
+						
+						callback( null );
+						
+					},
+					
+					// Discount
+					function( callback ){
+						
+						if( l_data.charges.promocode_code_discount ){
+							
+							var tempTotal = l_data.final_amount;
+							
+							var tempDiscount = gnrl._isPercent( tempTotal, l_data.charges.promocode_code_discount );
+							
+							var chrg = gnrl._round( tempDiscount.comm_amount );
+							
+							if( chrg > l_data.charges.promocode_code_discount_upto ){
+								chrg = l_data.charges.promocode_code_discount_upto;
+							}
+							
+							chrg = gnrl._minus( chrg );
+							
+							l_data.final_amount += chrg;
+							
+							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
+							_q += " ( "+i_ride_id+", 'discount', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
+								'i_added_by' : login_id,
+								'v_charge_info' : '',
+							})+"' ); ";
+							
+							multi_Queries.push( _q );
+							
+						}
+						
+						l_data.final_amount = gnrl._round( l_data.final_amount );
+						
+						callback( null );
+						
+					},
+					
+					// Calculate Company Comission
+					function( callback ){
+						
+						var chrg = gnrl._round( gnrl._calc_commision( l_data.final_amount, l_data.charges.company_commission ) );
+						
+						l_data.company_commision_amount = chrg;
+						l_data.ride_driver_payable 		= chrg;
+						l_data.ride_driver_receivable 	= gnrl._round( l_data.final_amount - chrg );
+						
+						callback( null );
+					},
+					
+					
+				], function( error, results ){
+					
 					callback( null );
-				}
-			}, 
-			
-			
-			// Get Final Total
-			function( callback ){
-				Ride.getFinalTotal( i_ride_id, function( total ){
-					_data.final_amount = total;
-					callback( null );
+					
 				});
-			},
-			
-			// Calculate Company Comission
-			function( callback ){
-				_data.company_commision = _data.ride.l_data.charges.company_commission;
-				_data.company_commision_amount = gnrl._calc_commision( _data.final_amount, _data.company_commision );
-				_data.ride_driver_payable = _data.company_commision_amount;
-				_data.ride_driver_receivable = gnrl._round( _data.final_amount - _data.ride_driver_payable );
-				callback( null );
+				
 			},
 			
 			// Get User Wallet
 			function( callback ){
-				
 				Wallet.get({
-					user_id : _data.ride.i_user_id,
+					selection : 'id, f_amount',
+					user_id : _ride.user_id,
 					role : 'user',
 					wallet_type : 'money'
 				}, function( status, _wallet ){
 					
-					_data._wallet = _wallet;
+					_data._user_wallet = _wallet;
 					
-					if( _data._wallet.f_amount <= 0 ){
-						paymentArr.cash = _data.final_amount;
+					var byCash = 0;
+					var byWallet = 0;
+					
+					if( _wallet.f_amount <= 0 ){
+						byCash = l_data.final_amount;
 					}
-					else if( _data.final_amount < _data._wallet.f_amount ){
-						paymentArr.wallet = _data.final_amount;
+					else if( l_data.final_amount <= _wallet.f_amount ){
+						byWallet = l_data.final_amount;
 					}
 					else{
-						paymentArr.wallet = _data._wallet.f_amount;
-						paymentArr.cash = _data.final_amount - paymentArr.wallet;
+						byWallet 	= _wallet.f_amount;
+						byCash 		= l_data.final_amount - byWallet;
 					}
 					
-					paymentArr.wallet = gnrl._round( paymentArr.wallet );
-					paymentArr.cash = gnrl._round( paymentArr.cash );
+					byCash = gnrl._round( byCash );
+					byWallet = gnrl._round( byWallet );
 					
-					_data.paymentArr = paymentArr;
+					if( byWallet > 0 ){
+						
+						l_data.ride_paid_by_wallet = byWallet;
+						
+						// Add Wallet Payment
+						var _q = " INSERT INTO tbl_ride_payments ( i_ride_id, v_type, f_amount, d_added, i_success, l_data ) VALUES ";
+						_q += " ( "+i_ride_id+", 'wallet', "+byWallet+", '"+gnrl._db_datetime()+"', 1, '"+gnrl._json_encode({})+"' ); ";
+						multi_Queries.push( _q );
+						
+					}
+					
+					if( byCash > 0 ){
+						
+						l_data.ride_paid_by_cash = byCash;
+						l_data.ride_driver_received = byCash;
+						
+						// Add Cash Payment
+						var _q = " INSERT INTO tbl_ride_payments ( i_ride_id, v_type, f_amount, d_added, i_success, l_data ) VALUES ";
+						_q += " ( "+i_ride_id+", 'cash', "+byCash+", '"+gnrl._db_datetime()+"', 0, '"+gnrl._json_encode({})+"' ); ";
+						
+						multi_Queries.push( _q );
+					}
 					
 					callback( null );
 					
 				});
 			},
 			
-			// Update Ride = Complete & Paid
+			// Get Driver Wallet
+			function( callback ){
+				Wallet.get({
+					selection : 'id, f_amount',
+					user_id : _ride.driver_id,
+					role : 'driver',
+					wallet_type : 'money'
+				}, function( status, _wallet ){
+					_data._driver_wallet = _wallet;
+					callback( null );
+				});
+			},
+			
+			// Update Ride To Complete
 			function( callback ){
 				
-				var _ins = [
-					" l_data = l_data || '"+gnrl._json_encode({
-						'actual_distance' : _data.actual_distance,
-						'actual_dry_run' : _data.actual_dry_run,
-						'final_amount' : _data.final_amount,
-						'trip_time' : trip_time,
-						'trip_time_in_min' : trip_time_in_min,
-						'apply_dry_run' : _data.apply_dry_run,
-						'apply_dry_run_amount' : _data.apply_dry_run_amount,
-
-						'promocode_code_discount_amount' : _data.discount,
-						
-						'ride_paid_by_cash' : paymentArr.cash,
-						'ride_paid_by_wallet' : paymentArr.wallet,
-						
-						'company_commision' : _data.company_commision,
-						'company_commision_amount' : _data.company_commision_amount,
-						'ride_driver_receivable' : _data.ride_driver_receivable,
-						'ride_driver_payable' : _data.ride_driver_payable,
-						
-					})+"' "
-				];
+				var _q = " UPDATE tbl_ride SET ";
+				_q += " e_status = 'complete' ";
+				_q += " , d_end = '"+end_date+"' ";
+				_q += " , l_data = l_data || '"+gnrl._json_encode( l_data )+"' ";
+				_q += " WHERE id = '"+i_ride_id+"'; ";
 				
-				dclass._updateJsonb( 'tbl_ride', _ins, " AND id = '"+i_ride_id+"' ", function( status, data ){ 
-					if( !status ){
-						gnrl._api_response( res, 0, 'error', {} );
-					}
-					else{
-						callback( null );
-					}
-				});
+				multi_Queries.push( _q );
+				
+				callback( null );
 				
 			},
 			
-			// Add Payments [Wallet,Cash]
+			// Fire All Queries
+			function( callback ){
+				dclass._query( multi_Queries.join(''), function( status, data ){
+					callback( null );
+				});
+			},
+			
+			// Ride Complete Notification
 			function( callback ){
 				
 				async.series([
 					
-					// Via Wallet
+					// To User
 					function( callback ){
-						if( paymentArr.wallet > 0 ){
-							var _ins = {
-								'i_ride_id' : i_ride_id,
-								'v_type' : 'wallet',
-								'f_amount' : paymentArr.wallet,
-								'd_added' : gnrl._db_datetime(),
-								'i_success' : 1,
-								'l_data' : gnrl._json_encode({
-								})
-							};
-							dclass._insert( 'tbl_ride_payments', _ins, function( status, data ){
-								callback( null );
-							});
-						}
-						else{
+						Notification.send({
+							_key : 'user_ride_complete',
+							_role : 'user',
+							_tokens : [{
+								'id' : _ride.user_id,
+								'lang' : _ride.user_lang,
+								'token' : _ride.user_device_token,
+							}],
+							_keywords : {},
+							_custom_params : {
+								i_ride_id : i_ride_id,
+								ride_code : _ride.v_ride_code,
+							},
+							_need_log : 0,
+						}, function( err, response ){
 							callback( null );
-						}
+						});
 					},
 					
-					// Via Cash
+					/*
+					// To Driver - Not Using
 					function( callback ){
-						if( paymentArr.cash > 0 ){
-							var _ins = {
-								'i_ride_id' : i_ride_id,
-								'v_type' : 'cash',
-								'f_amount' : paymentArr.cash,
-								'd_added' : gnrl._db_datetime(),
-								'i_success' : 0,
-								'l_data' : gnrl._json_encode({
-								})
-							};
-							dclass._insert( 'tbl_ride_payments', _ins, function( status, data ){
-								callback( null );
-							});
-						}
-						else{
+						Notification.send( {
+							_key : 'driver_ride_complete',
+							_role : 'driver',
+							_tokens : [{
+								'id' : _ride.driver_id,
+								'lang' : _ride.driver_lang,
+								'token' : _ride.driver_device_token,
+							}],
+							_keywords : {},
+							_custom_params : {
+								i_ride_id : i_ride_id,
+								ride_code : _ride.v_ride_code,
+							},
+							_need_log : 0,
+						}, function( err, response ){
 							callback( null );
-						}
+						});
 					},
+					*/
+				
+				], function( error, results ){
 					
+					callback( null );
+					
+				});
 				
-				], function( payent_error, payent_results ){
-					callback( null );
-				});
-			},
-			
-			// Select User
-			function( callback ) {
-				User.get( _data.ride.i_user_id, function( status, data ){
-					_data.user = data[0];
-					callback( null );
-				});
-			},
-			
-			// Select Driver
-			function( callback ) {
-				User.get( _data.ride.i_driver_id, function( status, data ){
-					_data.driver = data[0];
-					callback( null );
-				});
-			},
-			
-			// User Wallet Actions
-			function( callback ) {
 				
-				if( paymentArr.wallet <= 0 ){
-					callback( null );
-				}
-				else{
+			},
+			
+			// User # Wallet Actions [Cut From Wallet, If Pay From Wallet]
+			function( callback ){
+				if( l_data.ride_paid_by_wallet > 0 ){
 					async.series([
 						
-						// Deduct Ride Amount, If any
+						// Add Transaction
 						function( callback ){
-							Wallet.get({
-								user_id : _data.ride.i_user_id,
-								role : 'user',
-								wallet_type : 'money'
-							}, function( status, _wallet ){
-								_data._user_wallet = _wallet;
-								callback( null );
-							});
-						},
-						
-						// Deduct Ride Amount, If any
-						function( callback ){
-							var _ins = {
-								'i_wallet_id' : _data._user_wallet.id,
-								'i_user_id' : _data.ride.i_user_id,
-								'v_type'    : 'ride',
-								'v_action'  : 'minus',
-								'f_amount'  : gnrl._minus( paymentArr.wallet ),
-								'd_added'   : gnrl._db_datetime(),
-								'l_data'    : {
-									'ride_id' : i_ride_id,
-									'ride_code' : _data.ride.v_ride_code,
-									'vehicle_type' : _data.ride.l_data.vehicle_type,
-								},
-							};
-							Wallet.addTransaction( _ins, function( insert_transaction_status, insert_transaction_data ){ 
-								callback( null );
-							});
-						},
-						
-						// Refresh User Wallet, If any
-						function( callback ){
-							Wallet.refreshWallet({
-								wallet_id 	: _data._user_wallet.id,
-								special 	: 0,
+							Wallet.addTransaction({
+								i_wallet_id : _data._user_wallet.id, 
+								i_user_id 	: _ride.user_id, 
+								v_type		: 'ride', 
+								
+								f_amount	: gnrl._minus( l_data.ride_paid_by_wallet ), 
+								d_added		: gnrl._db_datetime(), 
+								l_data		: gnrl._json_encode({
+									'ride_id' 		: i_ride_id,
+									'ride_code'		: _ride.v_ride_code,
+									'vehicle_type' 	: _ride.l_data.vehicle_type,
+								})
 							}, function( status, data ){ 
 								callback( null );
 							});
 						},
 						
-						// Send Notification, If any
+						// Refresh
 						function( callback ){
-							var tokens = [{
-								'id' : _data.user.id,
-								'lang' : _data.user.lang,
-								'token' : _data.user.v_device_token,
-							}];
-							var params = {
+							Wallet.refreshWallet2( _data._user_wallet.id, function( amount ){ 
+								_data._user_wallet.f_amount = amount;
+								callback( null );
+							});
+						},
+						
+						// Send Notification
+						function( callback ){
+							Notification.send({
 								_key : 'user_ride_wallet_payment',
 								_role : 'user',
-								_tokens : tokens,
+								_tokens : [{
+									'id' : _ride.user_id,
+									'lang' : _ride.user_lang,
+									'token' : _ride.user_device_token,
+								}],
 								_keywords : {},
 								_custom_params : {
 									i_ride_id : i_ride_id,
-									ride_code : _data.ride.v_ride_code,
-									paid_wallet_amount : paymentArr.wallet,
+									ride_code : _ride.v_ride_code,
+									paid_wallet_amount : l_data.ride_paid_by_wallet,
 								},
 								_need_log : 0,
-							};
-							Notification.send( params, function( err, response ){
+							}, function( err, response ){
 								callback( null );
 							});
-						},
+						}
 						
-					
-					],function( payent_error, payent_results ){
+					], function( error, results ){
 						callback( null );
 					});
 				}
-				
+				else{
+					callback( null );
+				}
 			},
 			
-			// Driver Manage Payment
-			function( callback ) {
+			// Driver # Wallet Actions [Ride Money Add To Wallet, If Dry Run]
+			function( callback ){
+				
 				async.series([
 					
-					// Get Wallet
-					function( callback ){
-						Wallet.get({
-							user_id : _data.ride.i_driver_id,
-							role : 'driver',
-							wallet_type : 'money'
-						}, function( status, _wallet ){
-							_data._driver_wallet = _wallet;
-							callback( null );
-						});
-					},
-				
-					// Add
+					// Add Transaction For Ride Money
 					function( callback ){
 						
-						var f_receivable = _data.ride_driver_receivable;
-						var f_payable = _data.ride_driver_payable;
-						var f_received = paymentArr.cash;
-						var f_amount = gnrl._round( _data.ride_driver_receivable - f_received );
-						var f_running_balance = 0;
+						var f_receivable 	= l_data.ride_driver_receivable;
+						var f_payable 		= l_data.ride_driver_payable;
+						var f_received 		= l_data.ride_paid_by_cash;
+						var f_amount 		= gnrl._round( l_data.ride_driver_receivable - f_received );
 						
-						var _ins = {
-							'i_wallet_id' : _data._driver_wallet.id,
-							'i_user_id' : _data.ride.i_driver_id,
-							'v_type'    : 'ride',
-							'v_action'  : 'plus',
-							'f_receivable' 		: gnrl._round( f_receivable ),
-							'f_payable' 		: gnrl._round( f_payable ),
-							'f_received' 		: gnrl._round( f_received ),
-							'f_running_balance' : gnrl._round( f_running_balance ),
-							'f_amount' 			: gnrl._round( f_amount ),
-							'd_added'   : gnrl._db_datetime(),
-							'l_data'    : {
-								'ride_id' : i_ride_id,
-								'ride_code' : _data.ride.v_ride_code,
-								'vehicle_type' : _data.ride.l_data.vehicle_type,
-							},
-						};
-						Wallet.addTransaction( _ins, function( status, data ){ 
-							callback( null );
-						});
-					},
-					
-					// Refresh
-					function( callback ){
-						Wallet.refreshWallet({
-							wallet_id 	: _data._driver_wallet.id,
-							special 	: 1,
-						}, function( status, data ){ 
-							callback( null );
-						});
-					},
-					
-					// Send notification
-					function( callback ){
-						var tokens = [{
-							'id' : _data.driver.id,
-							'lang' : _data.driver.lang,
-							'token' : _data.driver.v_device_token,
-						}];
-						var params = {
-							_key : 'driver_ride_get_payment',
-							_role : 'driver',
-							_tokens : tokens,
-							_keywords : {},
-							_custom_params : {
-								i_ride_id : i_ride_id,
-								ride_code : _data.ride.v_ride_code,
-							},
-							_need_log : 0,
-						};
-						Notification.send( params, function( err, response ){
-							callback( null );
-						});
-					},
-				
-				], 
-				function( payent_error, payent_results ){
-					callback( null );
-				});
-			},
-			
-			// Dry Run, If any
-			function( callback ) {
-				
-				if( _data.apply_dry_run_amount > 0 ){
-					
-					async.series([
-						
-						// Get Wallet
-						function( callback ){
-							Wallet.get({
-								user_id : _data.ride.i_driver_id,
-								role : 'driver',
-								wallet_type : 'money'
-							}, function( status, _wallet ){
-								_data._driver_wallet = _wallet;
-								callback( null );
-							});
-						},
-					
-						// Add
-						function( callback ){
+						Wallet.addTransaction({
 							
-							var f_receivable = _data.apply_dry_run_amount;
-							var f_payable = 0;
-							var f_received = 0;
-							var f_amount = _data.apply_dry_run_amount;
-							var f_running_balance = 0;
+							i_wallet_id 	: _data._driver_wallet.id, 
+							i_user_id 		: _ride.driver_id, 
+							v_type			: 'ride', 
+							
+							f_receivable	: f_receivable,
+							f_payable		: f_payable,
+							f_received		: f_received,
+							f_amount		: f_amount,
+							
+							d_added			: gnrl._db_datetime(), 
+							l_data			: gnrl._json_encode({
+								'ride_id' 		: i_ride_id,
+								'ride_code'		: _ride.v_ride_code,
+								'vehicle_type' 	: _ride.l_data.vehicle_type,
+							})
+						}, function( status, data ){
+							
+							callback( null );
+							
+						});
+					},
+					
+					// Add Transaction For Dry Run
+					function( callback ){
+						if( l_data.apply_dry_run_amount > 0 ){
+							
+							var f_receivable = l_data.apply_dry_run_amount;
+							var f_payable 	 = 0;
+							var f_received 	 = 0;
+							var f_amount 	 = l_data.apply_dry_run_amount;
 							
 							if( _data._driver_wallet.f_amount < 0 ){
 								var temp = ( -1 * _data._driver_wallet.f_amount );
-								if( _data.apply_dry_run_amount < temp ){
-									f_received = _data.apply_dry_run_amount;
+								if( l_data.apply_dry_run_amount < temp ){
+									f_received = l_data.apply_dry_run_amount;
 								}
 								else{
 									f_received = temp;
 								}
 							}
 							
-							var _ins = {
-								'i_wallet_id' : _data._driver_wallet.id,
-								'i_user_id' : _data.ride.i_driver_id,
-								'v_type'    : 'ride_dry_run',
-								'v_action'  : 'plus',
-								'f_receivable' 		: gnrl._round( f_receivable ),
-								'f_payable' 		: gnrl._round( f_payable ),
-								'f_received' 		: gnrl._round( f_received ),
-								'f_running_balance' : gnrl._round( f_running_balance ),
-								'f_amount' 			: gnrl._round( f_amount ),
-								'd_added'   : gnrl._db_datetime(),
-								'l_data'    : {
-									'ride_id' : i_ride_id,
-									'ride_code' : _data.ride.v_ride_code,
-									'vehicle_type' : _data.ride.l_data.vehicle_type,
-								},
-							};
-							
-							Wallet.addTransaction( _ins, function( status, data ){ 
+							Wallet.addTransaction({
+								
+								i_wallet_id 	: _data._driver_wallet.id, 
+								i_user_id 		: _ride.driver_id, 
+								v_type			: 'ride_dry_run', 
+								
+								f_receivable	: f_receivable,
+								f_payable		: f_payable,
+								f_received		: f_received,
+								f_amount		: f_amount,
+								
+								d_added			: gnrl._db_datetime(), 
+								l_data			: gnrl._json_encode({
+									'ride_id' 		: i_ride_id,
+									'ride_code'		: _ride.v_ride_code,
+									'vehicle_type' 	: _ride.l_data.vehicle_type,
+								})
+							}, function( status, data ){
+								
 								callback( null );
+								
 							});
-							
-						},
-						
-						// Refresh
-						function( callback ){
-							Wallet.refreshWallet({
-								wallet_id 	: _data._driver_wallet.id,
-								special 	: 1,
-							}, function( status, data ){ 
-								callback( null );
-							});
-						},
-						
-						// Send notification
-						function( callback ){
-							var tokens = [{
-								'id' : _data.driver.id,
-								'lang' : _data.driver.lang,
-								'token' : _data.driver.v_device_token,
-							}];
-							var params = {
-								_key : 'driver_ride_get_dry_run',
-								_role : 'driver',
-								_tokens : tokens,
-								_keywords : {},
-								_custom_params : {
-									i_ride_id : i_ride_id,
-									ride_code : _data.ride.v_ride_code,
-								},
-								_need_log : 0,
-							};
-							Notification.send( params, function( err, response ){
-								callback( null );
-							});
-						},
+						}
+						else{
+							callback( null );
+						}
+					},
 					
-					], 
-					function( payent_error, payent_results ){
-						callback( null );
-					});
-				}
-				else{
-					callback( null );
-				}
-			},
-			
-			// Send Notification for Ride Complete [Driver / User]
-			function( callback ){
-				
-				async.series([
-					
-					// Send To User
+					// Refresh
 					function( callback ){
-						var tokens = [{
-							'id' : _data.user.id,
-							'lang' : _lang,
-							'token' : _data.user.v_device_token,
-						}];
-						var params = {
-							_key : 'user_ride_complete',
-							_role : 'user',
-							_tokens : tokens,
-							_keywords : {},
-							_custom_params : {
-								i_ride_id : i_ride_id,
-								ride_code : _data.ride.v_ride_code,
-							},
-							_need_log : 0,
-						};
-						Notification.send( params, function( err, response ){
+						Wallet.refreshWallet2( _data._driver_wallet.id, function( amount ){ 
+							_data._driver_wallet.f_amount = amount;
 							callback( null );
 						});
 					},
 					
-					/*
-					// Send To Driver
+					// Send Notification, Driver = Wallet Get Payment
 					function( callback ){
-						var tokens = [{
-							'id' : _data.driver.id,
-							'lang' : _lang, //_data.driver.l_data.lang ? _data.driver.l_data.lang : _lang,
-							'token' : _data.driver.v_device_token,
-						}];
-						var params = {
-							_key : 'driver_ride_complete',
+						Notification.send({
+							_key : 'driver_ride_get_payment',
 							_role : 'driver',
-							_tokens : tokens,
+							_tokens : [{
+								'id' : _ride.driver_id,
+								'lang' : _ride.driver_lang,
+								'token' : _ride.driver_device_token,
+							}],
 							_keywords : {},
 							_custom_params : {
 								i_ride_id : i_ride_id,
-								ride_code : _data.ride.v_ride_code,
+								ride_code : _ride.v_ride_code,
 							},
 							_need_log : 0,
-						};
-						Notification.send( params, function( err, response ){
+						}, function( err, response ){
 							callback( null );
 						});
-					},*/
+					},
 					
+					// Send Notification, Driver = Wallet Get Dry Run
+					function( callback ){
+						if( l_data.apply_dry_run_amount > 0 ){
+							Notification.send({
+								_key : 'driver_ride_get_dry_run',
+								_role : 'driver',
+								_tokens : [{
+									'id' : _ride.driver_id,
+									'lang' : _ride.driver_lang,
+									'token' : _ride.driver_device_token,
+								}],
+								_keywords : {},
+								_custom_params : {
+									i_ride_id : i_ride_id,
+									ride_code : _ride.v_ride_code,
+								},
+								_need_log : 0,
+							}, function( err, response ){
+								callback( null );
+							});	
+						}
+						else{
+							callback( null );
+						}
+					},
 					
-				], function( payent_error, payent_results ){
+				], function( error, results ){
+					
 					callback( null );
+					
 				});
 				
 			},
@@ -974,7 +799,7 @@ var currentApi = function( req, res, next ){
 		], 
 		
 		function( error, results ){
-			gnrl._api_response( res, 1, 'succ_ride_completed', {} );
+			gnrl._api_response( res, 1, 'succ_ride_completed', {});
 		});
 		
 	}

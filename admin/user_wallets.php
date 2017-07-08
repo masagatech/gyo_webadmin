@@ -52,16 +52,16 @@ $gnrl->check_login();
         exit;
         // $i_user_id=$_REQUEST['id'];
         if($amount < 0){
-            $v_action='minus';
+            
         }elseif ($amount > 0) {
-            $v_action='plus';
+            
         }else{
             $gnrl->redirectTo($page.".php?succ=0&msg=wallet_error&a=2&script=manual&id=".$_REQUEST['id']);
         }
         $ins = array(
             'i_user_id'  => $wallet_data['i_user_id'],
             'v_type' =>'custom',
-            'v_action'  => $v_action,
+
             'f_amount'=> $amount,
             'l_data'=> json_encode($l_data),
             'd_added' => date('Y-m-d H:i:s'),

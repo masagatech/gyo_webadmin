@@ -95,12 +95,11 @@ var currClass = function( params ){
 							'i_wallet_id' 		: referral_user.wallet_id,
 							'i_user_id' 		: referral_user_id,
 							'v_type' 			: 'referral',
-							'v_action' 			: 'plus',
 							
 							'f_receivable' 		: gnrl._round( referral_amount ),
 							'f_payable' 		: 0,
 							'f_received' 		: gnrl._round( referral_amount ),
-							'f_running_balance' : 0,
+							
 							'f_amount' 			: gnrl._round( referral_amount ),
 							
 							'd_added' 			: gnrl._db_datetime(),
@@ -117,7 +116,6 @@ var currClass = function( params ){
 							'i_wallet_id' 		: referral_user.wallet_id,
 							'i_user_id' 		: referral_user_id,
 							'v_type' 			: 'referral',
-							'v_action' 			: 'plus',
 							'f_amount' 			: referral_amount,
 							'd_added' 			: gnrl._db_datetime(),
 							'l_data' 			: {

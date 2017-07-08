@@ -124,7 +124,7 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'rideApplyPromotionCode', _is_login, require('./apis/rideApplyPromotionCode') );	
 	app.all(gnrl._api_base+'rideChargeTypes', require('./apis/rideChargeTypes') );
 	
-	// 
+	//
 	app.all(gnrl._api_base+'rideComplete', _is_login, require('./apis/rideComplete') ); // Long Process
 	
 	app.all(gnrl._api_base+'rideConfirmPayment', _is_login, require('./apis/rideConfirmPayment') );

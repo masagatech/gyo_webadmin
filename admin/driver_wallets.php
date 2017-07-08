@@ -243,7 +243,7 @@ $gnrl->check_login();
                             $wh = '';
                             if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
                                 $keyword =  trim( $_REQUEST['keyword'] );
-                                $wh = " AND ( 
+                                $wh .= " AND ( 
                                    LOWER(v_name) like LOWER('%".$keyword."%')  OR
                                    LOWER(v_email) like LOWER('%".$keyword."%')  OR
                                    LOWER(v_role) like LOWER('%".$keyword."%')  OR
@@ -252,24 +252,25 @@ $gnrl->check_login();
                                 )";
                             }
                             
+                            
                            $ssql = "SELECT t1.*,
                                         t2.v_name as user_name
                                     FROM 
                                         tbl_wallet_transaction  t1
                                     LEFT JOIN tbl_user as t2 ON t1.i_user_id = t2.id
  
-                                     WHERE true AND t1.i_user_id=".$_REQUEST['id']." ".$wh;
-                                        
-                            $sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
-                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';
+                                     WHERE true AND t1.i_wallet_id =".$_REQUEST['id']." ".$wh;
+
+                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 't1.d_added' );
+                            $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );            
+                            /*$sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
+                            $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';*/
                             
                             $nototal = $dclass->numRows($ssql);
                             $pagen = new vmPageNav($nototal, $limitstart, $limit, $form ,"black");
                             $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                             $restepm = $dclass->query($sqltepm);
                             $row_Data = $dclass->fetchResults($restepm);
-
-
                             ?>
                             <div class="content">
                                 <form name="frm" action="" method="get" >
@@ -281,7 +282,6 @@ $gnrl->check_login();
                                                         <label>
                                                             <input type="text" aria-controls="datatable" class="form-control fleft" placeholder="Search" name="keyword" value="<?php echo isset( $_REQUEST['keyword'] ) ? $_REQUEST['keyword'] : ""?>" style="width:auto;"/>
                                                             <button type="submit" class="btn btn-primary fleft" style="margin-left:0px;"><span class="fa fa-search"></span></button>
-
                                                         </label>
                                                     </div>
                                                 </div>
@@ -293,28 +293,21 @@ $gnrl->check_login();
                                                 <div class="clearfix"></div>
                                             </div>
                                         </div>
-                                        
                                         <!-- <?php chk_all('drop');?> -->
                                         <table class="table table-bordered" id="datatable" style="width:100%;" >
-                                            <thead>
-                                                <tr>
-                                                    <th width="25%">Name</th>
-                                                    <th width="10%">Type</th>
-                                                    <th width="10%">Amount</th>
-                                                    <th width="10%">Receivable<br>Amount</th>
-                                                    <th width="10%">Payable<br>Amount</th>
-                                                    <th width="10%">Received<br>Amount</th>
-                                                    <th width="5%">Running<br>Balance</th>
-                                                    <th width="5%">Date<br> Time</th>
-                                                    <!-- <th width="14%"><span class="pull-right"></span></th> -->
-                                                </tr>
-                                            </thead>
+                                            <?php
+                                                echo $gnrl->renderTableHeader(array(
+                                                    't2.v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    't1.v_type' => array( 'order' => 1, 'title' => 'Type' ),
+                                                    't1.f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
+                                                    't1.d_added' => array( 'order' => 1, 'title' => 'Date<br> Time' ),
+                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                ));
+                                            ?> 
                                             <tbody>
                                                 <?php 
                                                 if($nototal > 0){
-                                                        
                                                     foreach($row_Data as $row){
-                                                        
                                                         ?>
                                                         <tr>
                                                             <?php $l_data=json_decode($row['l_data'],true); ?>
@@ -322,25 +315,22 @@ $gnrl->check_login();
 
                                                             <td><?php echo $row['v_type'];?></td>
                                                             <td><?php echo $row['f_amount'];?></td>
-                                                            <td><?php echo $row['f_receivable'];?></td>
-                                                            <td><?php echo $row['f_payable'];?></td>
-                                                            <td><?php echo $row['f_received'];?></td>
-                                                            <td><?php echo $row['f_running_balance'];?></td>
+                                                           
                                                              <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                             
                                                             <td>
-                                                                <!-- <div class="btn-group">
+                                                                <div class="btn-group">
                                                                     <button class="btn btn-default btn-xs" type="button">Actions</button>
                                                                     <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
                                                                         <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                                                                     </button>
-                                                                    <ul role="menu" class="dropdown-menu pull-right">
+                                                                    <!-- <ul role="menu" class="dropdown-menu pull-right">
                                                                         <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
                                                                         <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
                                                                         <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
                                                                         <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-                                                                    </ul>
-                                                                </div> -->
+                                                                    </ul> -->
+                                                                </div>
                                                             </td>
                                                         </tr><?php 
                                                     }
@@ -370,8 +360,7 @@ $gnrl->check_login();
                                     </div>
                                 </form>
                             </div> <?php 
-                        }
-                        else{
+                        }else{
                             if( 1 ){
                                 if ( isset( $_REQUEST['pageno'] ) && $_REQUEST['pageno'] != '' ){
                                     $limit = $_REQUEST['pageno'];
@@ -401,9 +390,9 @@ $gnrl->check_login();
                                     )";
                                 }
 
-                                if( isset( $_REQUEST['payeble'] ) && $_REQUEST['payeble'] != '' ){
-                                    $keyword =  trim( $_REQUEST['payeble'] );
-                                    if($keyword=="payeble"){
+                                if( isset( $_REQUEST['payable'] ) && $_REQUEST['payable'] != '' ){
+                                    $keyword =  trim( $_REQUEST['payable'] );
+                                    if($keyword=="payable"){
                                      $wh .=" AND t1.f_amount > 0 ";
                                     }else{
                                          $wh =" AND t1.f_amount < 0 ";
@@ -478,7 +467,7 @@ $gnrl->check_login();
                                                                 </div>
                                                                 <div class="clearfix"></div> 
                                                                 <?php 
-                                                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['filter_driver']) && $_REQUEST['filter_driver'] != '' || isset($_REQUEST['payeble']) && $_REQUEST['payeble'] != ''  ){ ?>
+                                                                    if(isset($_REQUEST['keyword']) && $_REQUEST['keyword'] != '' || isset($_REQUEST['filter_driver']) && $_REQUEST['filter_driver'] != '' || isset($_REQUEST['payable']) && $_REQUEST['payable'] != ''  ){ ?>
                                                                         <a href="<?php echo $page ?>.php" class="fright" style="margin: -10px 0px 20px 0px ;" >
                                                                             <h4> Clear Search </h4></a>
                                                                 <?php } ?>
@@ -494,9 +483,9 @@ $gnrl->check_login();
 
                                                     <div class="pull-left" style="margin: 20px;">
                                                         <div>
-                                                         <select class="select2" name="payeble" id="payeble" onChange="document.frm.submit();">
+                                                         <select class="select2" name="payable" id="payable" onChange="document.frm.submit();">
                                                          <option value="">-- Select --</option>
-                                                                 <?php  $gnrl->getDropdownList(array('payeble','receivable'),$_GET['payeble']); ?>
+                                                                 <?php  $gnrl->getDropdownList(array('payable','receivable'),$_GET['payable']); ?>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -570,6 +559,7 @@ $gnrl->check_login();
                                                                                              <li><a href="<?php echo $page2?>.php?a=2&script=settle&id=<?php echo $row['id'];?>">Settle</a></li>
                                                                                         <?php }
                                                                                     ?>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['id'];?>">View Transaction</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
                                                                                     <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>

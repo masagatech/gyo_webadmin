@@ -16,28 +16,28 @@ $gnrl->check_login();
         $i_user_id=$_REQUEST['id'];
         if($receivable_amount > 0){
             $v_type="company_paid";
-            $v_action="minus";
+            
             $f_amount = (-1 * $paid_amount);
             $f_payable= ($receivable_amount - $paid_amount);
-            $f_running_balance = $receivable_amount - $paid_amount;
+            
 
         }elseif ($receivable_amount < 0) {
             $v_type="company_received";
             $f_amount = $paid_amount;
-            $v_action="plus";
+            
             $f_payable= (-1 * ($receivable_amount + $paid_amount));
-            $f_running_balance = $receivable_amount + $paid_amount;
+            
         }else{
             $v_type="";
-            $v_action="";
+            
         }
         $ins = array(
             'i_user_id'  => $i_user_id,
             'v_type' =>$v_type,
-            'v_action'  => $v_action,
+
             'f_amount'=> $f_amount,
             'f_payable'=> $f_payable,
-            'f_running_balance'=> $f_running_balance,
+
             'd_added' => date('Y-m-d H:i:s'),
         );
         

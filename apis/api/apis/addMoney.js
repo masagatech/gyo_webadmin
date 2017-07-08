@@ -107,7 +107,7 @@ var currentApi = function( req, res, next ){
 					'i_wallet_id' 	: _wallet.id,
 					'i_user_id' 	: login_id,
 					'v_type' 		: 'payment_method',
-					'v_action' 		: 'plus',
+					
 					'f_amount' 		: f_amount,
 					'd_added' 		: gnrl._db_datetime(),
 					'l_data' 		: {

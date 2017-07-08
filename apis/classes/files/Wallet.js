@@ -55,7 +55,6 @@ var currClass = function( params ){
 			});
 		},
 		
-		
 		addTransaction : function( _ins, cb ){
 			var _self = this;
 			dclass._insert( table2, _ins, function( status, data ){ 
@@ -63,23 +62,28 @@ var currClass = function( params ){
 			});
 		},
 		
-		
 		refreshWallet : function( params, cb ){
-		
 			var _self = this;
-			
-			var wallet_id 	= params.wallet_id;
-			var special 	= params.special ? 1 : 0;
-			
-			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS total', table2, " AND i_wallet_id = '"+wallet_id+"' ", function( status, wallet ){
-				if( status && wallet.length ){
-					var f_amount = gnrl._round( wallet[0].total );
-					var _q = [];
-					_q.push( " UPDATE "+table+" SET f_amount = "+f_amount+" "+" WHERE id = '"+wallet_id+"'; " );
-					if( special ){
-						_q.push( " UPDATE "+table2+" SET f_running_balance = "+f_amount+" WHERE id = ( SELECT id FROM "+table2+" WHERE i_wallet_id = '"+wallet_id+"' ORDER BY id DESC LIMIT 1 ); ");
-					}
-					dclass._query( _q.join(';'), function( status, data ){
+			var wallet_id = params.wallet_id;
+			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS f_amount', table2, " AND i_wallet_id = '"+wallet_id+"' ", function( status, data ){
+				if( status && data.length ){
+					var f_amount = gnrl._round( data[0].f_amount );
+					dclass._query( " UPDATE "+table+" SET f_amount = "+f_amount+" "+" WHERE id = '"+wallet_id+"'; ", function( status, data ){
+						return cb( f_amount );
+					});
+				}
+				else{
+					return cb( 0 );
+				}
+			});
+		},
+		
+		refreshWallet2 : function( wallet_id, cb ){
+			var _self = this;
+			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS f_amount', table2, " AND i_wallet_id = '"+wallet_id+"' ", function( status, data ){
+				if( status && data.length ){
+					var f_amount = gnrl._round( data[0].f_amount );
+					dclass._query( " UPDATE "+table+" SET f_amount = "+f_amount+" "+" WHERE id = '"+wallet_id+"'; ", function( status, data ){
 						return cb( f_amount );
 					});
 				}

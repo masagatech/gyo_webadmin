@@ -17,12 +17,15 @@ var currClass = function( params ){
 		send : function( params, cb ){
 			
 			var _to 		= params._to ? params._to : '';
-			var _key 		= params._key ? params._key : global._lang;
-			var _lang 		= params._lang ? params._lang : '';
+			var _key 		= params._key ? params._key : '';
+			var _lang 		= params._lang ? params._lang : global._lang;
 			var _keywords 	= params._keywords ? params._keywords : {};
+			
+			var _body 		= params._body ? params._body : '';
 			
 			var _template = {};
 			var _result = {
+				sms : {},
 				template : {},
 			};
 			
@@ -36,40 +39,67 @@ var currClass = function( params ){
 						
 				// Check Requirnments
 				function( callback ){
-					if( !_to ){ return cb( 0, 'err_req_phone' ); }
-					if( !validator.isLength( _to, { min : 10, max : 10 } ) ){ return cb( 0, 'err_validation_phone' ); }
-					if( !validator.isNumeric( _to ) ){ return cb( 0, 'err_validation_phone' ); }
+					if( !_to ){ 
+						return cb( 0, 'err_req_phone' ); 
+					}
+					else if( !validator.isLength( _to, { min : 10, max : 10 } ) ){ 
+						return cb( 0, 'err_validation_phone' ); 
+					}
+					else if( !validator.isNumeric( _to ) ){ 
+						return cb( 0, 'err_validation_phone' ); 
+					}
+					else if( _key == '' && ( _body == '' ) ){
+						return cb( 0, 'err_invalid_key' );
+					}
 					callback( null );
 				},
 				
 				// Get Template
 				function( callback ){
+					if( _key ){
+						var _q = "SELECT";
+						_q += " a.* ";
+						_q += " FROM tbl_sms a ";
+						_q += " WHERE v_key = '"+_key+"' ";
+						_q += " AND i_delete = '0' AND e_status = 'active' ";
+						
+						dclass._query( _q, function( status, data ){
+							if( !status ){
+								cb( 0, 'err_msg_no_sms_template' );
+							}
+							else if( !data.length ){
+								cb( 0, 'err_msg_no_sms_template' );
+							}
+							else{
+								data[0] = gnrl._getLangWiseData( data[0], _lang, [
+									'j_sms',
+								]);
+								_result.sms = data[0];
+								callback( null );
+							}
+						});
+					}
+					else{
+						_result.sms.j_sms = _body;
+						callback( null );
+					}
 					
-					var _q = "SELECT";
-					_q += " a.* ";
-					_q += " , ( SELECT l_value FROM tbl_sitesetting WHERE v_key = 'SMS_USERNAME' ) AS sms_username";
-					_q += " , ( SELECT l_value FROM tbl_sitesetting WHERE v_key = 'SMS_PASSWORD' ) AS sms_password";
-					_q += " , ( SELECT l_value FROM tbl_sitesetting WHERE v_key = 'SMS_SENDERNAME' ) AS sms_sendername";
-					_q += " FROM tbl_sms a ";
-					_q += " WHERE v_key = '"+_key+"' ";
-					_q += " AND i_delete = '0' AND e_status = 'active' ";
-					
-					dclass._query( _q, function( status, data ){
-						if( !status ){
-							cb( 0, 'err_msg_no_sms_template' );
-						}
-						else if( !data.length ){
-							cb( 0, 'err_msg_no_sms_template' );
-						}
-						else{
-							data[0] = gnrl._getLangWiseData( data[0], _lang, [
-								'j_sms',
-							]);
-							_result.sms = data[0];
-							callback( null );
-						}
+				},
+				
+				
+				// Get Settings
+				function( callback ){
+					var keys = [
+						'SMS_USERNAME',
+						'SMS_PASSWORD',
+						'SMS_SENDERNAME',
+					];
+					Settings.getMulti( keys, function( status, val ){
+						_result.sms.sms_username = val['SMS_USERNAME'];
+						_result.sms.sms_password = val['SMS_PASSWORD'];
+						_result.sms.sms_sendername = val['SMS_SENDERNAME'];
+						callback( null );
 					});
-					
 				},
 				
 				// Repace Keywords

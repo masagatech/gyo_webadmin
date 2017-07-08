@@ -42,6 +42,20 @@ var currentApi = function saveDriverInfo( req, res, done ){
 			});
 		});
 	}
+	if( action == 'sendSMS' ){
+		SMS.send({
+			_to : '8866207256',
+			_lang : 'en',
+			_key : '', // resend_otp
+			_body : 'Testing Email From GoYo',
+			_keywords : {},
+		}, function( error_mail, error_info ){
+			gnrl._api_response( res, 1, 'Done', {
+				error_mail : error_mail,
+				error_info : error_info
+			});
+		});
+	}
 	
 	else if( action == 'fcm2' ){
 		var tokens = [];

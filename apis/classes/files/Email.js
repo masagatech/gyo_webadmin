@@ -14,12 +14,16 @@ var currClass = function( params ){
 		send : function( params, cb ){
 			
 			var _to 		= params._to ? params._to : '';
-			var _key 		= params._key ? params._key : global._lang;
-			var _lang 		= params._lang ? params._lang : '';
+			var _key 		= params._key ? params._key : '';
+			var _lang 		= params._lang ? params._lang : global._lang;
 			var _keywords 	= params._keywords ? params._keywords : {};
+			
+			var _title 		= params._title ? params._title : '';
+			var _body 		= params._body ? params._body : '';
 			
 			var _template = {};
 			var _result = {
+				email : {},
 				template : {},
 			};
 			
@@ -30,7 +34,7 @@ var currClass = function( params ){
 					if( !_to ){
 						return cb( 0, 'err_req_email' );
 					}
-					else if( _key == '' ){
+					else if( _key == '' && ( _title == '' && _body == '' ) ){
 						return cb( 0, 'err_invalid_key' );
 					}
 					else{
@@ -41,24 +45,36 @@ var currClass = function( params ){
 				// Get Template
 				function( callback ){
 					
-					var _q = "SELECT * FROM tbl_email WHERE i_delete = '0' AND v_key = '"+_key+"' AND e_status = 'active' ";
-					
-					dclass._query( _q, function( status, data ){
-						if( !status ){
-							return cb( 0, 'err_msg_no_notification_template' );
-						}
-						else if( !data.length ){
-							return cb( 0, 'err_msg_no_notification_template' );
-						}
-						else{
-							data[0] = gnrl._getLangWiseData( data[0], _lang, [
-								'j_title',
-								'j_content',
-							]);
-							_result.email = data[0];
-							callback( null );
-						}
-					});
+					if( _key ){
+						
+						var _q = "SELECT j_title, j_content FROM tbl_email WHERE i_delete = '0' AND v_key = '"+_key+"' AND e_status = 'active' ";
+						
+						dclass._query( _q, function( status, data ){
+							if( !status ){
+								return cb( 0, 'err_msg_no_notification_template' );
+							}
+							else if( !data.length ){
+								return cb( 0, 'err_msg_no_notification_template' );
+							}
+							else{
+								data[0] = gnrl._getLangWiseData( data[0], _lang, [
+									'j_title',
+									'j_content',
+								]);
+								_result.email = data[0];
+								callback( null );
+							}
+						});	
+						
+					}
+					else{
+						
+						_result.email.j_title = _title;
+						_result.email.j_content = _body;
+						
+						callback( null );
+						
+					}
 					
 				},
 				
@@ -95,10 +111,11 @@ var currClass = function( params ){
 					
 					_result.email.j_title = temp1.replace(/\\/g, '' );
 					_result.settings.email_template = temp2.replace(/\\/g, '' );
-					
+
 					callback( null );
 					
 				},
+				
 				
 				// Send Email
 				function( callback ){
@@ -121,7 +138,7 @@ var currClass = function( params ){
 						html : _result.settings.email_template,
 						text : '',
 					};
-			
+					
 					// send mail with defined transport object
 					transporter.sendMail( mailOptions, function( error, info ){
 						if( error ){
@@ -131,7 +148,6 @@ var currClass = function( params ){
 							return cb( 1, info );
 						}
 					});
-					
 					
 				},
 				

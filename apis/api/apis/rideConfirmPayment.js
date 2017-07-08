@@ -102,7 +102,7 @@ var currentApi = function( req, res, next ){
 					else if( !data.length ){
 						gnrl._api_response( res, 0, 'err_no_ride', {} );
 					}
-					else if( data[0].i_paid != 0 ){
+					else if( data[0].i_paid ){
 						gnrl._api_response( res, 0, 'err_msg_ride_alreay_confirmed', {} );
 					}
 					else{
@@ -143,18 +143,16 @@ var currentApi = function( req, res, next ){
 				var _q = [];
 					
 				// Update Ride To Paid
-				_q.push( "UPDATE tbl_ride SET i_paid = '1' WHERE id = '"+i_ride_id+"'; ");
+				_q.push( "UPDATE tbl_ride SET i_paid = 1 WHERE id = '"+i_ride_id+"'; ");
 				
 				// Update Vehicle To Idle
 				_q.push( "UPDATE tbl_user SET is_onride = 0, is_buzzed = 0 WHERE id = '"+login_id+"'; " );
 				
 				// Update Cash Payment Active
-				_q.push( "UPDATE tbl_ride_payments SET i_success = 1 WHERE AND v_type = 'cash' AND i_ride_id = '"+i_ride_id+"'; " );
+				_q.push( "UPDATE tbl_ride_payments SET i_success = 1 WHERE v_type = 'cash' AND i_ride_id = '"+i_ride_id+"'; " );
 				
 				dclass._query( _q.join(''), function( status, data ){ 
-					
 					callback( null );
-					
 				});
 				
 			},
@@ -296,7 +294,7 @@ var currentApi = function( req, res, next ){
 		
 		function( error, results ){
 			
-			gnrl._api_response( res, 1, 'succ_ride_completed', _data );
+			gnrl._api_response( res, 1, 'succ_ride_completed', {} );
 			
 		});
 		

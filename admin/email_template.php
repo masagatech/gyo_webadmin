@@ -20,10 +20,7 @@ $gnrl->check_login();
 		$ins = array(
 			'v_key'    => $v_key,
 			'v_name'    => $v_name,
-			// 'v_from_name'    => $v_from_name,
-			// 'v_from_email'    => $v_from_email,
-			// 'v_reply_name'    => $v_reply_name,
-			// 'v_reply_email'    => $v_reply_email,
+			
 			'j_title'  => $j_title,
 			'j_content'  => $j_content,
 		    'e_status'   => $e_status ,
@@ -88,10 +85,7 @@ $gnrl->check_login();
 				$ins = array(
                     'v_key'    => $v_key,
 					'v_name'    => $v_name,
-					// 'v_from_name'    => $v_from_name,
-					// 'v_from_email'    => $v_from_email,
-					// 'v_reply_name'    => $v_reply_name,
-					// 'v_reply_email'    => $v_reply_email,
+					
 					'j_title'  => $j_title,
 					'j_content'  => $j_content,
 					'e_status'   => $e_status ,
@@ -163,35 +157,6 @@ $gnrl->check_login();
 														<input type="text" class="form-control" name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required />
 													</div>	
 												</div>
-												
-												<!-- <div class="col-md-6">
-													<div class="form-group">
-														<label>From Name</label>
-														<?php $key = 'v_from_name';?>
-														<input type="text" class="form-control" name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required />
-													</div>	
-												</div>
-												<div class="col-md-6">
-													<div class="form-group">
-														<label>From Email</label>
-														<?php $key = 'v_from_email';?>
-														<input type="text" class="form-control" name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required />
-													</div>	
-												</div>
-												<div class="col-md-6">
-													<div class="form-group">
-														<label>Reply To Name</label>
-														<?php $key = 'v_reply_name';?>
-														<input type="text" class="form-control" name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required />
-													</div>	
-												</div>
-												<div class="col-md-6">
-													<div class="form-group">
-														<label>Reply To Email</label>
-														<?php $key = 'v_reply_email';?>
-														<input type="text" class="form-control" name="<?php echo $key;?>" id="<?php echo $key;?>" value="<?php echo $$key?>" required />
-													</div>	
-												</div> -->
 												
 												
 												<div class="col-md-12">

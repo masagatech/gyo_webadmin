@@ -27,6 +27,22 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		gnrl._api_response( res, 1, 'Done', gnrl._timestamp( '2017-04-21 12:50:55+05:30' ) );
 	}
 	
+	if( action == 'sendMail' ){
+		Email.send({
+			_to 		: 'deven.crestinfotech@gmail.com',
+			_lang 		: 'en',
+			_key 		: '', // driver_ride_complete
+			_title 		: 'Testing Email From GoYo',
+			_body 		: 'Testing Email From GoYo',
+			_keywords 	: {},
+		}, function( error_mail, error_info ){
+			gnrl._api_response( res, 1, 'Done', {
+				error_mail : error_mail,
+				error_info : error_info
+			});
+		});
+	}
+	
 	else if( action == 'fcm2' ){
 		var tokens = [];
 		tokens.push({

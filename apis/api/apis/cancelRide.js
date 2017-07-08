@@ -256,10 +256,7 @@ var currentApi = function( req, res, next ){
 							
 							// Refresh Wallet
 							function( callback ){
-								Wallet.refreshWallet({
-									wallet_id 	: _data._user_wallet.id,
-									special 	: 0,
-								}, function( status, data ){ 
+								Wallet.refreshWallet( _data._user_wallet.id, function( amount ){ 
 									callback( null );
 								});
 							},
@@ -363,10 +360,7 @@ var currentApi = function( req, res, next ){
 							
 							// Refresh Wallet
 							function( callback ){
-								Wallet.refreshWallet({
-									wallet_id 	: _data._driver_wallet.id,
-									special 	: 1,
-								}, function( status, data ){ 
+								Wallet.refreshWallet( _data._driver_wallet.id, function( amount ){ 
 									callback( null );
 								});
 							},

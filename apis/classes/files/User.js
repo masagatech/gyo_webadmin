@@ -135,10 +135,7 @@ var currClass = function( params ){
 				
 				// Refresh Wallet
 				function( callback ){
-					Wallet.refreshWallet({
-						wallet_id 	: referral_user.wallet_id,
-						special 	: ( referral_user.v_role == 'driver' && referral_wallet_type == 'money' ? 1 : 0 ),
-					}, function( status, data ){ 
+					Wallet.refreshWallet( referral_user.wallet_id, function( amount ){ 
 						callback( null );
 					});
 				},

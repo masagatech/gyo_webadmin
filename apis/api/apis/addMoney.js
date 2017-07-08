@@ -130,10 +130,7 @@ var currentApi = function( req, res, next ){
 			
 			// Refresh Wallet
 			function( callback ){
-				Wallet.refreshWallet({
-					wallet_id 	: _wallet.id,
-					special 	: 0,
-				}, function( status, data ){ 
+				Wallet.refreshWallet( _wallet.id, function( amount ){ 
 					callback( null );
 				});
 			},

@@ -62,23 +62,7 @@ var currClass = function( params ){
 			});
 		},
 		
-		refreshWallet : function( params, cb ){
-			var _self = this;
-			var wallet_id = params.wallet_id;
-			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS f_amount', table2, " AND i_wallet_id = '"+wallet_id+"' ", function( status, data ){
-				if( status && data.length ){
-					var f_amount = gnrl._round( data[0].f_amount );
-					dclass._query( " UPDATE "+table+" SET f_amount = "+f_amount+" "+" WHERE id = '"+wallet_id+"'; ", function( status, data ){
-						return cb( f_amount );
-					});
-				}
-				else{
-					return cb( 0 );
-				}
-			});
-		},
-		
-		refreshWallet2 : function( wallet_id, cb ){
+		refreshWallet : function( wallet_id, cb ){
 			var _self = this;
 			dclass._select( 'COALESCE( SUM( f_amount ), 0 ) AS f_amount', table2, " AND i_wallet_id = '"+wallet_id+"' ", function( status, data ){
 				if( status && data.length ){

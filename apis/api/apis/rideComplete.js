@@ -612,7 +612,7 @@ var currentApi = function( req, res, next ){
 						
 						// Refresh
 						function( callback ){
-							Wallet.refreshWallet2( _data._user_wallet.id, function( amount ){ 
+							Wallet.refreshWallet( _data._user_wallet.id, function( amount ){ 
 								_data._user_wallet.f_amount = amount;
 								callback( null );
 							});
@@ -735,7 +735,7 @@ var currentApi = function( req, res, next ){
 					
 					// Refresh
 					function( callback ){
-						Wallet.refreshWallet2( _data._driver_wallet.id, function( amount ){ 
+						Wallet.refreshWallet( _data._driver_wallet.id, function( amount ){ 
 							_data._driver_wallet.f_amount = amount;
 							callback( null );
 						});

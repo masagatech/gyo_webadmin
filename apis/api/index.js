@@ -30,7 +30,7 @@ var apiRouter = function( app ){
 		var force_close = gnrl._is_undf( params.force_close, 0 );
 		var login_id = gnrl._is_undf( params.login_id ).trim();
 		var v_token = gnrl._is_undf( params.v_token ).trim();
-		//_p(force_close);
+		
 		if( !login_id ){ _status = 0; _message = 'err_req_login_id'; }
 		if( _status && !v_token ){ _status = 0; _message = 'err_req_auth_token'; }
 		
@@ -124,11 +124,8 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'rideApplyPromotionCode', _is_login, require('./apis/rideApplyPromotionCode') );	
 	app.all(gnrl._api_base+'rideChargeTypes', require('./apis/rideChargeTypes') );
 	
-	//
-	app.all(gnrl._api_base+'rideComplete', _is_login, require('./apis/rideComplete') ); // Long Process
-	
+	app.all(gnrl._api_base+'rideComplete', _is_login, require('./apis/rideComplete') ); 
 	app.all(gnrl._api_base+'rideConfirmPayment', _is_login, require('./apis/rideConfirmPayment') );
-	
 	app.all(gnrl._api_base+'rideGetCharges', _is_login, require('./apis/rideGetCharges') );
 	
 	app.all(gnrl._api_base+'ridePayment', _is_login, require('./apis/ridePayment') ); // Update After Check Response
@@ -155,7 +152,6 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'userResetPassword', require('./apis/userResetPassword') );
 	app.all(gnrl._api_base+'userSignUp', require('./apis/userSignUp') );
 	app.all(gnrl._api_base+'verifyAccount', require('./apis/verifyAccount') );
-	
 	
 	app.all( "*", function( req, res ) {
 		var resData = {

@@ -111,16 +111,12 @@ var currentApi = function( req, res, next ){
 			
 			// Get Ride
 			function( callback ){
+				
 				var _q = " SELECT ";
-				
 				_q += " id ";
-				_q += " , l_data->>'pickup_latitude' AS pickup_latitude ";
-				_q += " , l_data->>'pickup_longitude' AS pickup_longitude ";
-				_q += " , l_data->>'pickup_address' AS pickup_address ";
-				_q += " , l_data->>'destination_address' AS destination_address ";
-				_q += " , l_data->>'vehicle_type' AS vehicle_type ";
-				
+				_q += " , l_data ";
 				_q += " FROM tbl_ride WHERE id = '"+i_ride_id+"' ";
+				
 				dclass._query( _q, function( status, _rideData ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, 'error', _response );
@@ -131,12 +127,13 @@ var currentApi = function( req, res, next ){
 					else{
 						
 						_ride 			= _rideData[0];
+						pickup_lat 		= _ride.l_data.pickup_latitude ? _ride.l_data.pickup_latitude : '';
+						pickup_lng 		= _ride.l_data.pickup_longitude ? _ride.l_data.pickup_longitude : '';
+						pickup_Address 	= _ride.l_data.pickup_address ? _ride.l_data.pickup_address : '';
+						destin_Address 	= _ride.l_data.destination_address ? _ride.l_data.destination_address : '';
+						vehicle_type 	= _ride.l_data.vehicle_type ? _ride.l_data.vehicle_type : '';
 						
-						pickup_lat 		= _ride.pickup_latitude;
-						pickup_lng 		= _ride.pickup_longitude;
-						pickup_Address 	= _ride.pickup_address;
-						destin_Address 	= _ride.destination_address;
-						vehicle_type 	= _ride.vehicle_type;
+						//gnrl._api_response( res, 1, '', _rideData ); return;
 						
 						mainData._ride 	= _ride;
 						
@@ -406,7 +403,6 @@ var currentApi = function( req, res, next ){
 											if( notiStatus.succ.length > 0 ){
 												isBuzzSent = 1;
 											}
-											
 											callback( null );
 										});
 									}
@@ -443,7 +439,7 @@ var currentApi = function( req, res, next ){
 											
 											// Overwrite Vehicle wise charges, IF Found
 											function( callback ){
-												Ride.overWriteChargeVehicleWise( i_ride_id, function(){
+												Ride.overWriteChargeVehicleWise( i_ride_id, buzzIns.i_vehicle_id, _ride.l_data, function(){
 													callback( null );
 												});
 											},
@@ -592,11 +588,13 @@ var currentApi = function( req, res, next ){
 											
 											buzzAcceptArray.push( function( callback ){
 											
-												var _q = "SELECT i_driver_id FROM tbl_ride WHERE id = '"+i_ride_id+"' AND e_status = 'confirm'; ";
+												var _q = "SELECT i_driver_id, i_vehicle_id FROM tbl_ride WHERE id = '"+i_ride_id+"' AND e_status = 'confirm'; ";
 												
 												dclass._query( _q, function( status, data ){
 													
 													if( status && data.length ){
+														
+														var i_vehicle_id = data[0].i_vehicle_id;
 														
 														async.series([
 															
@@ -633,7 +631,7 @@ var currentApi = function( req, res, next ){
 														
 															// Overwrite Vehicle wise charges, IF Found
 															function( callback ){
-																Ride.overWriteChargeVehicleWise( i_ride_id, function(){
+																Ride.overWriteChargeVehicleWise( i_ride_id, i_vehicle_id, _ride.l_data, function(){
 																	callback( null );
 																});
 															},

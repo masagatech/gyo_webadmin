@@ -271,9 +271,9 @@ var currentApi = function( req, res, next ){
 					
 					// Get City
 					function( callback ){
-						City.get( i_city_id, function( status, city ){
-							if( status && city.length ){
-								cityCode = city[0].v_code;
+						dclass._select( 'v_code', 'tbl_city', " AND i_delete = '0' AND id = '"+i_city_id+"' ", function( status, data ){
+							if( status && data.length ){
+								cityCode = data[0].v_code;
 								callback( null );
 							}
 							else{

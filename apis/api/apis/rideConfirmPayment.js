@@ -35,9 +35,7 @@ var currentApi = function( req, res, next ){
 		
 		// Get Ride
 		// Update Ride To Paid + Update Vehicle To Idle + Update Cash Payment Active
-		
-		// Select User
-		// Select Driver
+		// Get Charges STR
 		
 		// User Ride Completion Action
 			// Email
@@ -45,16 +43,8 @@ var currentApi = function( req, res, next ){
 		
 		// Driver Ride Completion Action
 			// Email
-			// SMS
 		
-		// Send Money To Referral
-			// Get Referral User
-			// Get Referral Wallet
-			// Add To Referral Wallet
-			// Refresh Wallet
-			// Send SMS
-			// Send Email
-			// Update Current User
+		// Run Referral Modules
 		
 		var _data = {};
 		var _keywords = {};
@@ -259,7 +249,6 @@ var currentApi = function( req, res, next ){
 				});
 				
 			},
-			
 			
 			// ##APPLY_REFERRAL - User
 			function( callback ){

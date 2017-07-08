@@ -11,42 +11,6 @@ var currClass = function( params ){
 	
 	return {
 		
-		get : function( ride_id, cb ){
-			var _self = this;
-			dclass._select( '*', table, " AND id = '"+ride_id+"' ", function( status, data ){
-				if( status && data.length ){
-					_self.getDefaultFields( status, data, cb );
-				}
-				else{
-					cb( status, data );
-				}
-			});
-		},
-		
-		getWh : function( _wh, cb ){
-			var _self = this;
-			dclass._select( '*', table, _wh, function( status, data ){
-				if( status && data.length ){
-					_self.getDefaultFields( status, data, cb );
-				}
-				else{
-					cb( status, data );
-				}
-			});
-		},
-		
-		getWhSelect : function( _select, _wh, cb ){
-			var _self = this;
-			dclass._select( _select, table, _wh, function( status, data ){
-				if( status && data.length ){
-					_self.getDefaultFields( status, data, cb );
-				}
-				else{
-					cb( status, data );
-				}
-			});
-		},
-		
 		getDefaultFields : function( status, data, cb ){
 			if( status && data.length ){
 				
@@ -181,63 +145,20 @@ var currClass = function( params ){
 			});
 		},
 		
-		getFinalTotal : function( ride_id, cb ){
-			var _self = this;
-			var _q = " SELECT COALESCE( SUM( f_amount ), 0 ) AS final_amount FROM tbl_ride_charges WHERE i_ride_id = '"+ride_id+"' ";
-			dclass._query( _q, function( status, data ){
-				if( !status ){
-					cb( 0 );
-				}
-				else{
-					cb( gnrl._round( data.length ? data[0].final_amount : 0 ) );
-				}
-			});
-		},
-		
-		getFinalTotalWithoutDiscount : function( ride_id, cb ){
-			var _self = this;
-			var _q = " SELECT COALESCE( SUM( f_amount ), 0 ) AS final_amount FROM tbl_ride_charges WHERE v_charge_type NOT IN ('disount') AND i_ride_id = '"+ride_id+"' ";
-			dclass._query( _q, function( status, data ){
-				if( !status ){
-					cb( 0 );
-				}
-				else{
-					cb( gnrl._round( data.length ? data[0].final_amount : 0 ) );
-				}
-			});
-		},
-		
-		overWriteChargeVehicleWise : function( ride_id, cb ){
+		overWriteChargeVehicleWise : function( ride_id, vehicle_id, l_data, cb ){
 			
 			var _self = this;
 			
-			var _ride = {};
 			var _vehicle_wise = {};
 			
-			/*
-			>> Get Ride
-			>> Get Vehicle Wise Charge
-			>> Over Write Charges & Update Ride
-			*/
+			// Get Vehicle Wise Charge
+			// Over Write Charges & Update Ride
 			
 			async.series([
 				
-				// Get Ride
-				function( callback ){
-					dclass._select( 'id, i_vehicle_id, l_data', table, " AND id = '"+ride_id+"' ", function( status, data ){
-						if( status && data.length ){
-							_ride = data[0];
-							callback( null );
-						}
-						else{
-							return cb();
-						}
-					});
-				},
-				
 				// Get Vehicle Wise Charge
 				function( callback ){
-					var _q = " SELECT id,l_data FROM tbl_vehicle_fairs WHERE i_delete = '0' AND v_type = 'vehicle_wise' AND e_status = 'active' AND i_vehicle_id = '"+_ride.i_vehicle_id+"' ";
+					var _q = " SELECT id, l_data FROM tbl_vehicle_fairs WHERE i_delete = '0' AND v_type = 'vehicle_wise' AND e_status = 'active' AND i_vehicle_id = '"+vehicle_id+"' ";
 					dclass._query( _q, function( status, vehicle_charge ){
 						if( !status ){
 							return cb();
@@ -255,19 +176,18 @@ var currClass = function( params ){
 				// Over Write Charges & Update Ride
 				function( callback ){
 					
-					var charges = _ride.l_data.charges;
-					charges.vehicle_wise_id = _vehicle_wise.id ? _vehicle_wise.id : 0;
+					l_data.charges.vehicle_wise_id = _vehicle_wise.id ? _vehicle_wise.id : 0;
 					
-					var _charge2 = _vehicle_wise.l_data.charges;
-					if( parseFloat( _charge2.max_dry_run_km ) > 0 ){ charges.max_dry_run_km = _charge2.max_dry_run_km; }
-					if( parseFloat( _charge2.max_dry_run_charge ) > 0 ){ charges.max_dry_run_charge = _charge2.max_dry_run_charge; }
+					var chrg = parseFloat( _vehicle_wise.l_data.charges.max_dry_run_km );
+					if( chrg > 0 ){ l_data.charges.max_dry_run_km = chrg; }
+					
+					var chrg = parseFloat( _vehicle_wise.l_data.charges.max_dry_run_charge );
+					if( chrg > 0 ){ l_data.charges.max_dry_run_charge = chrg; }
 					
 					var _ins = [
-						"l_data = l_data || '"+( gnrl._json_encode({
-							'charges' : charges
-						}) )+"'",
+						"l_data = l_data || '"+( gnrl._json_encode( l_data ) )+"'",
 					];
-					dclass._updateJsonb( table, _ins, " AND id = '"+i_ride_id+"' ", function( status, data ){ 
+					dclass._updateJsonb( 'tbl_ride', _ins, " AND id = '"+ride_id+"' ", function( status, data ){ 
 						return cb();
 					});
 				}

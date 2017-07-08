@@ -42,8 +42,7 @@ var currentApi = function( req, res, next ){
 			
 			// Get Ride
 			function( callback ){
-				
-				Ride.get( i_ride_id, function( status, data ){ 
+				dclass._select( '*', 'tbl_ride', " AND id = '"+i_ride_id+"' ", function( status, data ){
 					if( !status ){
 						gnrl._api_response( res, 0, _message );
 					}
@@ -64,7 +63,14 @@ var currentApi = function( req, res, next ){
 						
 						callback( null );
 					}
-					
+				});
+			},
+			
+			// Ride Set Charges
+			function( callback ){
+				Ride.getChargesData( _row.l_data, function( data ){
+					_row.l_data = data;
+					callback( null );
 				});
 			},
 			
@@ -326,7 +332,6 @@ var currentApi = function( req, res, next ){
 				
 				callback( null );
 			},
-			
 			
 		], 
 		function( error, results ){

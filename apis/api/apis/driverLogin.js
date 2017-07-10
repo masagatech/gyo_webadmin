@@ -211,6 +211,24 @@ var currentApi = function( req, res, next ){
 				
 			},
 			
+			
+			// Get City Name
+			function( callback ){
+				_user.city = '';
+				if( _user.i_city_id ){
+					var _q = " SELECT v_name FROM tbl_city WHERE id = '"+_user.i_city_id+"'; ";
+					dclass._query( _q, function( status, data ){
+						if( status && data.length ){
+							_user.city = data[0].v_name;
+						}
+						callback( null );
+					});	
+				}
+				else{
+					callback( null );
+				}
+			},
+			
 		], 
 		function( error, results ){
 			delete _user.v_password;

@@ -156,7 +156,10 @@ $gnrl->check_login();
                             <h3>
                                 <?php 
                                     if($script=='view'){
-                                        echo "View Driver Transaction";
+										
+										$driverName = $dclass->select( '*', 'tbl_user', " AND id = ( SELECT i_user_id FROM tbl_wallet WHERE id = '".$_REQUEST['id']."' ) " );
+										
+                                        echo 'Wallet History Of Driver "'.$driverName[0]['v_name'].'"';
                                     }else{
                                         echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 );
                                     }
@@ -174,7 +177,7 @@ $gnrl->check_login();
                             </h3>
                         </div>
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && 1 ){
+                        if( ( $script == 'add' || $script == 'edit' ) && 1 ){
                            
                             ?>
                             <form role="form" action="#" method="post" parsley-validate novalidate enctype="multipart/form-data" >
@@ -244,24 +247,15 @@ $gnrl->check_login();
                             if( isset( $_REQUEST['keyword'] ) && $_REQUEST['keyword'] != '' ){
                                 $keyword =  trim( $_REQUEST['keyword'] );
                                 $wh .= " AND ( 
-                                   LOWER(v_name) like LOWER('%".$keyword."%')  OR
-                                   LOWER(v_email) like LOWER('%".$keyword."%')  OR
-                                   LOWER(v_role) like LOWER('%".$keyword."%')  OR
-                                   LOWER(v_phone) like LOWER('%".$keyword."%')  OR
-                                     LOWER(e_status) like LOWER('%".$keyword."%')
+                                    v_type = '".$keyword."'
                                 )";
                             }
                             
                             
-                           $ssql = "SELECT t1.*,
-                                        t2.v_name as user_name
-                                    FROM 
-                                        tbl_wallet_transaction  t1
-                                    LEFT JOIN tbl_user as t2 ON t1.i_user_id = t2.id
- 
-                                     WHERE true AND t1.i_wallet_id =".$_REQUEST['id']." ".$wh;
+                           $ssql = "SELECT * FROM tbl_wallet_transaction WHERE true AND i_wallet_id = ".$_REQUEST['id']." ".$wh;
+						   
 
-                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 't1.d_added' );
+                            $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'd_added' );
                             $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );            
                             /*$sortby = ( isset( $_REQUEST['sb'] ) && $_REQUEST['sb'] != '') ? $_REQUEST['sb'] : 'id';
                             $sorttype = ( isset( $_REQUEST['st'] ) && $_REQUEST['st']=='0') ? 'ASC' : 'DESC';*/
@@ -271,6 +265,9 @@ $gnrl->check_login();
                             $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                             $restepm = $dclass->query($sqltepm);
                             $row_Data = $dclass->fetchResults($restepm);
+							
+							
+							
                             ?>
                             <div class="content">
                                 <form name="frm" action="" method="get" >
@@ -294,44 +291,47 @@ $gnrl->check_login();
                                             </div>
                                         </div>
                                         <!-- <?php chk_all('drop');?> -->
+										
+										
+										
+										
                                         <table class="table table-bordered" id="datatable" style="width:100%;" >
                                             <?php
                                                 echo $gnrl->renderTableHeader(array(
-                                                    't2.v_name' => array( 'order' => 1, 'title' => 'Name' ),
-                                                    't1.v_type' => array( 'order' => 1, 'title' => 'Type' ),
-                                                    't1.f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
-                                                    't1.d_added' => array( 'order' => 1, 'title' => 'Date<br> Time' ),
-                                                    'action' => array( 'order' => 0, 'title' => 'Action' ),
+                                                    'v_type' => array( 'order' => 1, 'title' => 'Type' ),
+                                                    'f_receivable' => array( 'order' => 1, 'title' => 'Receivable' ),
+													'f_payable' => array( 'order' => 1, 'title' => 'Payable' ),
+													'f_received' => array( 'order' => 1, 'title' => 'Received' ),
+													'f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
+													'l_data' => array( 'order' => 0, 'title' => 'Information' ),
+													'd_added' => array( 'order' => 1, 'title' => 'Date' ),
                                                 ));
                                             ?> 
                                             <tbody>
                                                 <?php 
-                                                if($nototal > 0){
-                                                    foreach($row_Data as $row){
+                                                if( $nototal > 0 ){
+                                                    foreach( $row_Data as $row){
                                                         ?>
                                                         <tr>
-                                                            <?php $l_data=json_decode($row['l_data'],true); ?>
-                                                            <td><a href="javascript:;" onclick="rideInfo(<?php echo $l_data['ride_id']; ?>);"><?php echo $row['user_name']; ?></a></td>
-
-                                                            <td><?php echo $row['v_type'];?></td>
-                                                            <td><?php echo $row['f_amount'];?></td>
-                                                           
-                                                             <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
-                                                            
+                                                            <?php $l_data = json_decode( $row['l_data'], true );?>
                                                             <td>
-                                                                <div class="btn-group">
-                                                                    <button class="btn btn-default btn-xs" type="button">Actions</button>
-                                                                    <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
-                                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
-                                                                    </button>
-                                                                    <!-- <ul role="menu" class="dropdown-menu pull-right">
-                                                                        <li><a href="<?php echo $page?>.php?a=2&script=edit&id=<?php echo $row['id'];?>">Edit</a></li>
-                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                        <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                        <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
-                                                                    </ul> -->
-                                                                </div>
-                                                            </td>
+																<?php echo $globalWalletActionTypes[$row['v_type']];?>
+																<br>(<?php echo $row['v_type'];?>)
+															</td>
+                                                            <td><?php echo $row['f_receivable'];?></td>
+															<td><?php echo $row['f_payable'];?></td>
+															<td><?php echo $row['f_received'];?></td>
+															<td><?php echo $row['f_amount'];?></td>
+															<td>
+																<?php
+																if( in_array( $row['v_type'], array( 'ride_cancel', 'ride_dry_run', 'ride' ) ) ){
+																	echo "Ride : ".$l_data['ride_code'];
+																}
+																else{
+																	echo $l_data['info'] ? nl2br( $l_data['info'] ) : '-';
+																}?>
+															</td>
+															<td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                         </tr><?php 
                                                     }
                                                 }
@@ -353,6 +353,9 @@ $gnrl->check_login();
                                                 <div class="clearfix"></div>
                                             </div>
                                         </div>
+										
+										<input type="hidden" name="id" value="<?php echo @$_REQUEST['id'];?>" />
+										<input type="hidden" name="script" value="<?php echo @$_REQUEST['script'];?>" />
                                         <input type="hidden" name="a" value="<?php echo @$_REQUEST['a'];?>" />
                                         <input type="hidden" name="st" value="<?php echo @$_REQUEST['st'];?>" />
                                         <input type="hidden" name="sb" value="<?php echo @$_REQUEST['sb'];?>" />
@@ -559,7 +562,7 @@ $gnrl->check_login();
                                                                                              <li><a href="<?php echo $page2?>.php?a=2&script=settle&id=<?php echo $row['id'];?>">Settle</a></li>
                                                                                         <?php }
                                                                                     ?>
-                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['id'];?>">View Transaction</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['id'];?>" target="_blank" >View Transaction</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
                                                                                     <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>

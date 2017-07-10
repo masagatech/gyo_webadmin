@@ -198,6 +198,134 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		var dates = gnrl._db_period_time( params.time );
 		gnrl._api_response( res, 1, 'Done', dates );
 	}
+	
+	else if( action == 'driverWallet' ){
+		
+		var _data = {
+			driver_id : 2,
+		};
+		
+		async.series([
+			
+			// Get Wallet
+			function( callback ){
+				
+				Wallet.get({
+					selection 	: 'id, f_amount',
+					user_id 	: _data.driver_id,
+					role 		: 'driver',
+					wallet_type : 'money'
+				}, function( status, _wallet ){
+					_data._driver_wallet = _wallet;
+					callback( null );
+				});
+				
+			},
+			
+			
+			// Add Transaction For Ride Money
+			function( callback ){
+				
+				var f_receivable 	= 90;
+				var f_payable 		= 10;
+				var f_received 		= 100;
+				var f_amount 		= gnrl._round( f_receivable - f_received );
+				
+				Wallet.addTransaction({
+					
+					i_wallet_id 	: _data._driver_wallet.id, 
+					i_user_id 		: _data.driver_id, 
+					v_type			: 'ride', 
+					
+					f_receivable	: f_receivable,
+					f_payable		: f_payable,
+					f_received		: f_received,
+					f_amount		: f_amount,
+					
+					d_added			: gnrl._db_datetime(), 
+					l_data			: gnrl._json_encode({
+						'ride_id' 		: 0,
+						'ride_code'		: '',
+						'vehicle_type' 	: '',
+					})
+				}, function( status, data ){
+					
+					callback( null );
+					
+				});
+			},
+			
+			
+			/*
+			// Add Dry Run
+			function( callback ){
+				
+				var f_receivable = 5;
+				var f_payable 	 = 0;
+				var f_received 	 = 0;
+				var f_amount 	 = 5;
+				
+				if( _data._driver_wallet.f_amount < 0 ){
+					var temp = ( -1 * _data._driver_wallet.f_amount );
+					if( f_receivable < temp ){
+						f_received = f_receivable;
+					}
+					else{
+						f_received = temp;
+					}
+				}
+				
+				_data.f_receivable = f_receivable;
+				_data.f_payable = f_payable;
+				_data.f_received = f_received;
+				_data.f_amount = f_amount;
+				
+				
+				Wallet.addTransaction({
+					
+					i_wallet_id 	: _data._driver_wallet.id, 
+					i_user_id 		: _data.driver_id, 
+					v_type			: 'ride_dry_run', 
+					
+					f_receivable	: f_receivable,
+					f_payable		: f_payable,
+					f_received		: f_received,
+					f_amount		: f_amount,
+					
+					d_added			: gnrl._db_datetime(), 
+					l_data			: gnrl._json_encode({
+						'ride_id' 		: '',
+						'ride_code'		: '',
+						'vehicle_type' 	: '',
+					})
+				}, function( status, data ){
+					
+					callback( null );
+					
+				});
+				
+				// callback( null );
+				
+			},
+			*/
+			
+			// Refresh
+			function( callback ){
+				Wallet.refreshWallet( _data._driver_wallet.id, function( amount ){ 
+					_data._driver_wallet.f_amount = amount;
+					callback( null );
+				});
+			},
+			
+			
+		
+		], function( error, results ){
+			gnrl._api_response( res, 1, 'Done', _data );	
+		});
+		
+		
+	}
+	
 	else{
 		
 		

@@ -128,7 +128,32 @@ error_reporting( E_ERROR );
 	}
 	
 	
-	global $globalCharges, $globalTrip, $globEmailTypes,$globSmsTypes,$globalRideStatus,$globalShowEstimateCharge,$globalDriverSearchQuery,$globalUserAction,$globalAdminRole,$globNotificationTypes,$globalParentChild,$globalPromotionType,$globalBankInfoArr;
+	global $globalCharges, 
+	$globalTrip, 
+	$globEmailTypes,
+	$globSmsTypes,
+	$globalRideStatus,
+	$globalShowEstimateCharge,
+	$globalDriverSearchQuery,
+	$globalUserAction,
+	$globalAdminRole,
+	$globNotificationTypes,
+	$globalParentChild,
+	$globalPromotionType,
+	$globalBankInfoArr,
+	$globalWalletActionTypes;
+	
+	$globalWalletActionTypes = array(
+		'company_paid' 		=> 'Company Paid',
+		'company_received' 	=> 'Company Received',
+		'payment_method' 	=> 'Payment Method',
+		'payu' 				=> 'PayUmoney',
+		'ride_cancel' 		=> 'Ride Cancel',
+		'ride_dry_run' 		=> 'Ride Dry Run',
+		'ride' 				=> 'Ride',
+		'referral' 			=> 'Referral',
+	);
+	
 
 	// {"day_km_end": "", "day_km_start": "", "night_km_end": "", "": "", "day_km_charges": "", "": "", "night_km_start": "", "": "", "": "", "night_km_charges": "", "": "", "": "", "day_km_after_charge": "", "night_km_after_charge": ""}
 	$globalPromotionType=array(

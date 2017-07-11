@@ -128,10 +128,11 @@ var currClass = function( params ){
 				actual_distance : 0,
 			};
 			
-			var _q = "";
-			_q += " SELECT ";
-			_q += " ( SELECT COALESCE( SUM( ( l_data->>'distance' )::numeric ), 0 ) FROM tbl_track_vehicle_location WHERE l_data->>'run_type' = 'ride' AND l_data->>'i_ride_id' = '"+ride_id+"' ) AS actual_distance ";
-			_q += " , ( SELECT COALESCE( SUM( ( l_data->>'distance' )::numeric ), 0 ) FROM tbl_track_vehicle_location WHERE l_data->>'run_type' = 'dry_run' AND l_data->>'i_ride_id' = '"+ride_id+"' ) AS actual_dry_run ";
+			var _q = " SELECT ";
+			_q += " COALESCE( SUM( CASE WHEN l_data->>'run_type' = 'ride' THEN ( l_data->>'distance' )::numeric ELSE 0 END ), 0 ) AS actual_distance, ";
+			_q += " COALESCE( SUM( CASE WHEN l_data->>'run_type' = 'dry_run' THEN ( l_data->>'distance' )::numeric ELSE 0 END ), 0 ) AS actual_dry_run ";
+			_q += " FROM tbl_track_vehicle_location WHERE l_data->>'i_ride_id' = '"+ride_id+"' ";
+			_q += " GROUP BY l_data->>'i_ride_id' ";
 			
 			dclass._query( _q, function( status, data ){
 				if( status && data.length ){

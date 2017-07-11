@@ -74,7 +74,7 @@ var currentApi = function( req, res, next ){
 					else if( !validator.equals( md5( v_password ), user[0].v_password ) ){ 
 						gnrl._api_response( res, 0, 'err_invalid_password', {} ); 
 					}
-					else if( user[0].v_token != '' && user[0].v_token != null ){ 
+					else if( user[0].v_token != v_imei_number && user[0].v_token != '' && user[0].v_token != null ){ 
 						gnrl._api_response( res, 0, 'err_msg_already_login', {} ); 
 					}
 					else{

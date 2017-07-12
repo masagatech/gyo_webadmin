@@ -72,7 +72,7 @@ var currentApi = function( req, res, next ){
 				
 				// Check, if ride exists
 				function( callback ){
-					dclass._select( 'id,i_driver_id', 'tbl_ride', " AND id = '"+i_ride_id+"' " , function( status, data ){ 
+					dclass._select( 'id, i_driver_id', 'tbl_ride', " AND id = '"+i_ride_id+"' " , function( status, data ){ 
 						if( !status ){
 							gnrl._api_response( res, 0, 'error', {} );
 						}
@@ -88,13 +88,21 @@ var currentApi = function( req, res, next ){
 					});
 				},
 				
+				/*// Make Other Buzz Inactive
+				function( callback ){
+					var _q = "UPDATE tbl_buzz SET i_status = '-3', d_modified = '"+gnrl._db_datetime()+"' WHERE id != '"+buzzID+"' AND i_status = '0' AND i_ride_id = '"+i_ride_id+"'; ";
+					dclass._query( _q, function( status, data ){ 
+						callback( null );
+					});
+				},*/
+				
 				// Accept Buzz
 				function( callback ){
 					
 					var _q = [];
 					
 					// Update Ride Table
-					_q.push( " UPDATE tbl_ride SET e_status = 'confirm', i_driver_id = '"+login_id+"', i_vehicle_id = '"+i_vehicle_id+"' WHERE id = '"+i_ride_id+"'; ");
+					_q.push( "UPDATE tbl_ride SET e_status = 'confirm', i_driver_id = '"+login_id+"', i_vehicle_id = '"+i_vehicle_id+"' WHERE id = '"+i_ride_id+"'; " );
 					
 					// Update Driver On Ride
 					_q.push( "UPDATE tbl_user SET is_onride = 1, is_buzzed = 0 WHERE id = '"+login_id+"'; " );
@@ -103,7 +111,7 @@ var currentApi = function( req, res, next ){
 					_q.push( "UPDATE tbl_buzz SET i_status = 1, d_modified = '"+gnrl._db_datetime()+"' WHERE id = '"+buzzID+"'; " );
 					
 					// Update Buzz [accepted by other]
-					_q.push( " UPDATE tbl_buzz SET i_status = '-3', d_modified = '"+gnrl._db_datetime()+"' WHERE id != '"+buzzID+"' AND i_status = '0' AND i_ride_id = '"+i_ride_id+"'; ");
+					_q.push( "UPDATE tbl_buzz SET i_status = '-3', d_modified = '"+gnrl._db_datetime()+"' WHERE id != '"+buzzID+"' AND i_status = '0' AND i_ride_id = '"+i_ride_id+"'; " );
 					
 					dclass._query( _q.join(';'), function( status, data ){ 
 						if( !status ){

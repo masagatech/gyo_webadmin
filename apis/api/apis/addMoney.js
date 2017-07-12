@@ -62,8 +62,6 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
-			
-			
 			// Get User
 			function( callback ){
 				dclass._select( "id, v_name, v_email, v_phone, v_device_token, lang", "tbl_user", " AND id = '"+login_id+"' ", function( status, data ){	
@@ -79,8 +77,6 @@ var currentApi = function( req, res, next ){
 					}
 				});
 			},
-			
-			
 			
 			// Get Wallet
 			function( callback ){
@@ -205,6 +201,7 @@ var currentApi = function( req, res, next ){
 
 		], 
 		function( error, results ){
+			
 			var _data = {};
 			_data._payment_method = _payment_method;
 			_data._user = _user;

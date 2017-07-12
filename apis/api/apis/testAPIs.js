@@ -199,8 +199,68 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		gnrl._api_response( res, 1, 'Done', dates );
 	}
 	
+	else if( action == 'buzz1' ){
+		
+		var _data = {};
+		var login_id = 292;
+		var i_ride_id = 1330;
+		
+		async.series( [
+		
+			// Check, If driver get buzz
+			function( callback ){
+				dclass._select( 'id, i_status', 'tbl_buzz', " AND i_ride_id = '"+i_ride_id+"' AND i_driver_id = '"+login_id+"' " , function( status, data ){ 
+					_data.buzz = data[0];
+					callback( null );
+				});
+			},
+			
+			// Check, if ride exists
+			function( callback ){
+				dclass._select( 'id,i_driver_id', 'tbl_ride', " AND id = '"+i_ride_id+"' " , function( status, data ){ 
+					_data.ride = data[0];
+					callback( null );
+				});
+			},
+			
+		], function( error, results ){
+			gnrl._api_response( res, 1, 'Done', _data );
+		});
+	}
+	
+	else if( action == 'buzz2' ){
+		
+		var _data = {};
+		var login_id = 292;
+		var i_ride_id = 1330;
+		
+		var _q = " select ";
+		_q += " a.id as ride_id ";
+		_q += " , b.id as buzz_id, b.i_status as buzz_status, b.i_driver_id as i_driver_id ";
+		_q += " from tbl_ride a ";
+		_q += " left join tbl_buzz b on b.i_ride_id = a.id ";
+		_q += " where b.i_ride_id = '"+i_ride_id+"' AND b.i_driver_id = '"+login_id+"'; ";
+		
+		async.series( [
+		
+			// Check, If driver get buzz
+			function( callback ){
+				dclass._query( _q, function( status, data ){ 
+					_data._q = _q;
+					_data.data = data;
+					callback( null );
+				});
+			},
+			
+		], function( error, results ){
+			gnrl._api_response( res, 1, 'Done', _data );
+		});
+	}
 	
 	else{
+		
+		
+			
 		
 		
 	}

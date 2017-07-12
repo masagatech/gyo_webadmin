@@ -91,6 +91,8 @@ var currentApi = function( req, res, next ){
 		var destin_Address = '';
 		var vehicle_type = '';
 		
+		var driverIDs = [];
+		
 		var mainData = {
 			
 			'isDirectAssign' : 0,
@@ -104,8 +106,6 @@ var currentApi = function( req, res, next ){
 			'_q_Arr' : [],
 			'buzzSentDriverIDs' : [],
 		};
-		
-		var _qUnBuzzed = " UPDATE tbl_user SET is_buzzed = '0' WHERE is_buzzed = '1' AND id IN ( SELECT i_driver_id FROM tbl_buzz WHERE i_ride_id = '"+i_ride_id+"' ); ";
 		
 		async.series([
 			
@@ -306,6 +306,8 @@ var currentApi = function( req, res, next ){
 						
 						mainData._processedQueries.push( _q );
 						
+						
+						
 						dclass._query( _q, function( status, data ){ 
 						
 							if( status && data.length ){
@@ -339,6 +341,17 @@ var currentApi = function( req, res, next ){
 										'i_status' : 1,
 									});
 									
+									if( mainData.isDirectAssign && directBuzzQuery.length ){
+										driverIDs = [];
+										driverIDs.push( _driverArr[0].id );
+									}
+									else{
+										driverIDs = [];
+										for( var i = 0; i < _driverArr.length; i++ ){
+											driverIDs.push( _driverArr[i].id );
+										}
+									}
+									
 								}
 								
 								callback( null );
@@ -355,6 +368,7 @@ var currentApi = function( req, res, next ){
 					
 					// Direct Assign [PREMIUM MEMBERS]
 					processArr.push( function( callback ){
+						
 						if( mainData.isDirectAssign && directBuzzQuery.length ){
 							
 							var buzzIns = directBuzzQuery[0];							
@@ -446,7 +460,8 @@ var currentApi = function( req, res, next ){
 											
 											// Make Drivers UnBuzzed
 											function( callback ){
-												dclass._query( _qUnBuzzed, function( status, data ){
+												var _q = " UPDATE tbl_user SET is_buzzed = '0' WHERE id IN ("+driverIDs.join(',')+"); ";
+												dclass._query( _q, function( status, data ){
 													callback( null );
 												});
 											},
@@ -479,6 +494,7 @@ var currentApi = function( req, res, next ){
 					processArr.push( function( callback ){
 						
 						isMultiBuzzSent = 0;
+						
 						
 						if( multiBuzzQuery.length ){
 							
@@ -566,6 +582,8 @@ var currentApi = function( req, res, next ){
 								// Checking Buzz, IF Any Accepted
 								function( callback ){
 									
+									
+									
 									if( !isMultiBuzzSent ){
 										
 										callback( null );
@@ -628,7 +646,7 @@ var currentApi = function( req, res, next ){
 																});
 																
 															},
-														
+															
 															// Overwrite Vehicle wise charges, IF Found
 															function( callback ){
 																Ride.overWriteChargeVehicleWise( i_ride_id, i_vehicle_id, _ride.l_data, function(){
@@ -638,9 +656,12 @@ var currentApi = function( req, res, next ){
 															
 															// Make Drivers UnBuzzed
 															function( callback ){
-																dclass._query( _qUnBuzzed, function( status, data ){
+																
+																var _q = " UPDATE tbl_user SET is_buzzed = '0' WHERE id IN ("+driverIDs.join(',')+"); ";
+																dclass._query( _q, function( status, data ){
 																	callback( null );
 																});
+																
 															},
 															
 														], function( error, results ){
@@ -653,7 +674,9 @@ var currentApi = function( req, res, next ){
 														
 													}
 													else{
+														
 														callback( null );
+														
 													}
 												});
 												
@@ -665,7 +688,8 @@ var currentApi = function( req, res, next ){
 										
 										async.series( buzzAcceptArray, function( error, results ){
 											
-											dclass._query( _qUnBuzzed, function( status, data ){
+											var _q = " UPDATE tbl_user SET is_buzzed = '0' WHERE id IN ("+driverIDs.join(',')+"); ";
+											dclass._query( _q, function( status, data ){
 												callback( null );
 											});
 											
@@ -673,10 +697,9 @@ var currentApi = function( req, res, next ){
 										
 									}
 									
-									
 								}
 								
-							], function( error, results){
+							], function( error, results ){
 								callback( null );
 							});
 							

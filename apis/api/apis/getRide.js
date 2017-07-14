@@ -40,26 +40,174 @@ var currentApi = function( req, res, next ){
 		
 		async.series([
 			
+			
 			// Get Ride
 			function( callback ){
-				dclass._select( '*', 'tbl_ride', " AND id = '"+i_ride_id+"' ", function( status, data ){
+				
+				var _q = " SELECT ";
+				_q += " rd.* ";
+				
+				_q += " , COALESCE( vt.l_data->>'list_icon', '' ) AS list_icon ";
+				_q += " , COALESCE( vt.l_data->>'plotting_icon', '' ) AS plotting_icon ";
+				
+				_q += " , COALESCE( ur.id, 0 ) AS user_id ";
+				_q += " , COALESCE( ur.v_name, '' ) AS user_v_name ";
+				_q += " , COALESCE( ur.v_email, '' ) AS user_v_email ";
+				_q += " , COALESCE( ur.v_phone, '' ) AS user_v_phone ";
+				_q += " , COALESCE( ur.v_image, '' ) AS user_v_image ";
+				_q += " , COALESCE( ur.v_id, '' ) AS user_v_id ";
+				
+				_q += " , COALESCE( dr.id, 0 ) AS driver_id";
+				_q += " , COALESCE( dr.v_image, '' ) AS driver_v_image";
+				_q += " , COALESCE( dr.v_name, '' ) AS driver_v_name";
+				_q += " , COALESCE( dr.v_email, '' ) AS driver_v_email";
+				_q += " , COALESCE( dr.v_phone, '' ) AS driver_v_phone";
+				_q += " , COALESCE( dr.v_id, '' ) AS driver_v_id";
+				
+				_q += " , COALESCE( vh.id, 0 ) AS vehicle_id ";
+				_q += " , COALESCE( vh.v_image_rc_book, '' ) AS v_image_rc_book ";
+				_q += " , COALESCE( vh.v_image_puc, '' ) AS v_image_puc ";
+				_q += " , COALESCE( vh.v_image_insurance, '' ) AS v_image_insurance ";
+				_q += " , COALESCE( vh.v_image_license, '' ) AS v_image_license ";
+				_q += " , COALESCE( vh.v_image_adhar_card, '' ) AS v_image_adhar_card ";
+				_q += " , COALESCE( vh.v_image_permit_copy, '' ) AS v_image_permit_copy ";
+				_q += " , COALESCE( vh.v_image_police_copy, '' ) AS v_image_police_copy ";
+				
+				_q += " , COALESCE( rr.i_rate, 0 ) AS i_rate";
+				_q += " , COALESCE( rr.l_comment, '' ) AS rate_cmment";
+				
+				_q += " , COALESCE( drr.i_rate, 0 ) AS driver_i_rate";
+				_q += " , COALESCE( drr.l_comment, '' ) AS driver_rate_cmment";
+				
+				
+				_q += " FROM tbl_ride rd ";
+				
+				_q += " LEFT JOIN tbl_vehicle_type vt ON vt.v_type = rd.l_data->>'vehicle_type' ";
+				
+				_q += " LEFT JOIN tbl_user ur ON ur.id = rd.i_user_id ";
+				
+				_q += " LEFT JOIN tbl_user dr ON dr.id = rd.i_driver_id ";
+				
+				_q += " LEFT JOIN tbl_vehicle vh ON vh.i_driver_id = dr.id ";
+				
+				_q += " LEFT JOIN tbl_ride_rate rr ON rr.i_ride_id = rd.id AND rr.i_target_user_id = dr.id ";
+				
+				_q += " LEFT JOIN tbl_ride_rate drr ON drr.i_ride_id = rd.id AND drr.i_target_user_id = ur.id ";
+				
+				_q += " WHERE rd.id = '"+i_ride_id+"' ";
+				
+				_q += " AND ( rd.i_user_id = '"+login_id+"' OR rd.i_driver_id = '"+login_id+"' ) ";
+				
+				dclass._query( _q, function( status, data ){
+					
 					if( !status ){
-						gnrl._api_response( res, 0, _message );
+						gnrl._api_response( res, 0, 'error', _row );
 					}
 					else if( !data.length ){
-						gnrl._api_response( res, 0, 'err_no_ride', {} );
-					}
-					else if( data[0].i_user_id != login_id && data[0].i_driver_id != login_id ){
-						gnrl._api_response( res, 0, 'err_no_ride', {} );
+						gnrl._api_response( res, 0, 'err_no_ride', _row );
 					}
 					else{
-						_row = data[0];
-						_row.d_time  = gnrl._timestamp( _row.d_time );
-						_row.d_start = _row.d_start ? gnrl._timestamp( _row.d_start ) : '';
-						_row.d_end 	 = _row.d_end ? gnrl._timestamp( _row.d_end ) : '';
 						
-						var temp_v_pin = _row.v_pin.toString();
-						_row.v_pin = temp_v_pin[0]+temp_v_pin[1]+temp_v_pin[2]+temp_v_pin[3]+'-'+temp_v_pin[4]+temp_v_pin[5]+temp_v_pin[6]+temp_v_pin[7];
+						_row 			= data[0];
+						
+						_row.d_time  	= gnrl._timestamp( _row.d_time );
+						_row.d_start 	= _row.d_start ? gnrl._timestamp( _row.d_start ) : '';
+						_row.d_end 	 	= _row.d_end ? gnrl._timestamp( _row.d_end ) : '';
+						
+						_row.v_pin		= _row.v_pin.toString();
+						_row.v_pin 		= _row.v_pin.substring(0,4)+"-"+_row.v_pin.substring(4,8);
+						
+						// Vehicle Type Icons
+						_row.vehicle_type_data = {
+							list_icon 		: gnrl._uploads( 'vehicle_type/'+_row.list_icon ),
+							plotting_icon 	: gnrl._uploads( 'vehicle_type/'+_row.plotting_icon ),
+						};
+						
+						// User Data
+						_row.user_data = {
+							"id"		: _row.user_id,
+							"v_name"	: _row.user_v_name,
+							"v_email"	: _row.user_v_email,
+							"v_phone"	: _row.user_v_phone,
+							"v_image"	: _row.user_v_image ? gnrl._uploads( 'users/'+_row.user_v_image ) : '',
+							"v_id"		: _row.user_v_id
+						};
+						
+						// Driver Data
+						_row.driver_data = {
+							
+							"id"					: _row.driver_id,
+							"driver_name"			: _row.driver_v_name,
+							"driver_email"			: _row.driver_v_email,
+							"driver_phone"			: _row.driver_v_phone,
+							"driver_image"			: _row.driver_v_image ? gnrl._uploads( 'drivers/'+_row.driver_v_image ) : '',
+							"v_id"					: _row.driver_v_id,
+							
+							"vehicle_id"			: _row.vehicle_id,
+							"v_image_rc_book"		: _row.v_image_rc_book 		? gnrl._uploads( 'drivers/'+_row.v_image_rc_book ) : '',
+							"v_image_puc"			: _row.v_image_puc 			? gnrl._uploads( 'drivers/'+_row.v_image_puc ) : '',
+							"v_image_insurance"		: _row.v_image_insurance 	? gnrl._uploads( 'drivers/'+_row.v_image_insurance ) : '',
+							"v_image_license"		: _row.v_image_license 		? gnrl._uploads( 'drivers/'+_row.v_image_license ) : '',
+							"v_image_adhar_card"	: _row.v_image_adhar_card 	? gnrl._uploads( 'drivers/'+_row.v_image_adhar_card ) : '',
+							"v_image_permit_copy"	: _row.v_image_permit_copy 	? gnrl._uploads( 'drivers/'+_row.v_image_permit_copy ) : '',
+							"v_image_police_copy"	: _row.v_image_police_copy 	? gnrl._uploads( 'drivers/'+_row.v_image_police_copy ) : ''
+							
+						};
+						
+						// Rate
+						_row.rate = {
+							"i_rate"		: _row.i_rate,
+							"rate_cmment"	: _row.rate_cmment,
+						};
+						
+						_row.user_rate = {
+							"i_rate"		: _row.i_rate,
+							"rate_cmment"	: _row.rate_cmment,
+						};
+						
+						_row.driver_rate = {
+							"i_rate"		: _row.driver_i_rate,
+							"rate_cmment"	: _row.driver_rate_cmment,
+						};
+						
+						
+						var _deletable = [
+							'list_icon',
+							'plotting_icon',
+							
+							'user_id',
+							'user_v_name',
+							'user_v_email',
+							'user_v_phone',
+							'user_v_image',
+							'user_v_id',
+							
+							'driver_id',
+							'driver_v_name',
+							'driver_v_email',
+							'driver_v_phone',
+							'driver_v_image',
+							'driver_v_id',
+							'vehicle_id',
+							'v_image_rc_book',
+							'v_image_puc',
+							'v_image_insurance',
+							'v_image_license',
+							'v_image_adhar_card',
+							'v_image_permit_copy',
+							'v_image_police_copy',
+							
+							'i_rate',
+							'rate_cmment',
+							
+							'driver_i_rate',
+							'driver_rate_cmment',
+							
+						];
+						
+						for( var k in _deletable ){
+							delete _row[_deletable[k]];
+						}
 						
 						callback( null );
 					}
@@ -74,186 +222,22 @@ var currentApi = function( req, res, next ){
 				});
 			},
 			
-			// Get Vehicle Icon
-			function( callback ){
-				_row.vehicle_type_data = {
-					list_icon : '',
-					plotting_icon : '',
-				};
-				
-				var _q = " SELECT ";
-				_q += " l_data->>'list_icon' AS list_icon ";
-				_q += " , l_data->>'plotting_icon' AS plotting_icon ";
-				_q += " FROM tbl_vehicle_type WHERE v_type = '"+_row.l_data.vehicle_type+"'; ";
-				
-				dclass._query( _q, function( status, data ){ 
-					if( status && data.length ){
-						var temp = data[0];
-						if( temp.list_icon ){ _row.vehicle_type_data.list_icon = gnrl._uploads( 'vehicle_type/'+temp.list_icon ); }
-						if( temp.plotting_icon ){ _row.vehicle_type_data.plotting_icon = gnrl._uploads( 'vehicle_type/'+temp.plotting_icon ); }
-						callback( null );
-					}
-					else{
-						callback( null );
-					}
-				});
-			},
-			
-			// Get Driver
-			function( callback ){
-				
-				_row.driver_data = {
-					'driver_name' : 'Not Assigned'
-				};
-				
-				if( !_row.i_driver_id ){
-					callback( null );
-				}
-				else{
-					
-					var _q = "SELECT ";
-					
-					_q += " a.id";
-					_q += " , a.v_image AS driver_image";
-					_q += " , a.v_name AS driver_name";
-					_q += " , a.v_phone AS driver_phone";
-					_q += " , a.v_id";
-					
-					_q += " , b.id AS vehicle_id";
-					
-					_q += " , b.v_image_rc_book";
-					_q += " , b.v_image_puc";
-					_q += " , b.v_image_insurance";
-					_q += " , b.v_image_license";
-					_q += " , b.v_image_adhar_card";
-					_q += " , b.v_image_permit_copy";
-					_q += " , b.v_image_police_copy";
-					
-					_q += " FROM ";
-					_q += " tbl_user AS a ";
-					_q += " LEFT JOIN tbl_vehicle AS b ON a.id = b.i_driver_id ";
-					_q += " WHERE a.id = '"+_row.i_driver_id+"' ";
-					
-					dclass._query( _q, function( driver_status, driver_data ){
-						
-						if( !driver_status ){
-							callback( null );
-						}
-						else if( !driver_data.length ){
-							callback( null );
-						}
-						else if( driver_data.length ){
-							driver_data = driver_data[0];
-							
-							var imagesArr = [
-								'driver_image',
-								'v_image_puc',
-								'v_image_insurance',
-								'v_image_license',
-								'v_image_adhar_card',
-								'v_image_permit_copy',
-								'v_image_police_copy',
-							];
-							for( var k in imagesArr ){
-								if( driver_data[imagesArr[k]] != null ){
-									driver_data[imagesArr[k]] = gnrl._uploads( 'drivers/'+driver_data[imagesArr[k]] );
-								}
-								else {
-									driver_data[imagesArr[k]] = '';
-								}
-							}
-							
-							_row.driver_data = driver_data;
-							
-							callback( null );
-						}
-					});
-					
-				}
-			},
-			
-			// Get User
-			function( callback ){
-				
-				_row.user_data = {};
-				
-				var _q = "SELECT ";
-					_q += " id ";
-					_q += " ,v_name ";
-					_q += " ,v_email ";
-					_q += " ,v_phone ";
-					_q += " ,v_image ";
-					_q += " ,v_id ";
-					_q += " FROM ";
-					_q += " tbl_user ";
-					_q += " WHERE id = '"+_row.i_user_id+"' ";
-					
-				dclass._query( _q, function( status, data ){ 
-					if( !status ){
-						callback( null );
-					}
-					else if( !data.length ){
-						callback( null );
-					}
-					else{
-						var user_data = data[0];
-						user_data.v_image = gnrl._uploads( 'users/'+user_data.v_image );
-						_row.user_data = user_data;
-						callback( null );
-					}
-					
-				});
-			},
-			
-			// Get Rate & Comment
-			function( callback ){
-				
-				_row.rate = {
-					'i_rate' : 0,
-					'rate_cmment' : '',
-				};
-				if( !_row.i_driver_id ){
-					callback( null );
-				}
-				else{
-					
-					var _q = " SELECT ";
-						_q += " i_rate, l_comment ";
-						_q += " FROM ";
-						_q += " tbl_ride_rate ";
-						_q += " WHERE i_ride_id = '"+i_ride_id+"' AND i_target_user_id = '"+_row.i_driver_id+"' ";
-						
-					dclass._query( _q, function( status, data ){ 
-						if( status && data.length ){
-							_row.rate = {
-								'i_rate' : data[0].i_rate,
-								'rate_cmment' : data[0].l_comment,
-							};
-							callback( null );
-						}
-						else{
-							callback( null );
-						}
-					});
-				}
-			},
-			
 			// Get Estimated Prices
 			function( callback ){
 				
-				var estimate_km = parseFloat( _row.l_data.estimate_km );
-				var estimate_time = parseFloat( _row.l_data.estimate_time );
+				var estimate_km 	= parseFloat( _row.l_data.estimate_km );
+				var estimate_time 	= parseFloat( _row.l_data.estimate_time );
 				
 				var estimation = {
-					estimate_km : estimate_km,
-					estimate_time : estimate_time,
-					min_charge : 0,
-					base_fare : 0,
-					total_fare : 0,
+					estimate_km 	 : estimate_km,
+					estimate_time 	 : estimate_time,
+					min_charge 		 : 0,
+					base_fare 		 : 0,
+					total_fare 		 : 0,
 					ride_time_charge : 0,
-					service_tax : 0,
-					surcharge : 0,
-					final_total : 0,
+					service_tax 	 : 0,
+					surcharge 		 : 0,
+					final_total 	 : 0,
 				};
 				
 				// Min Charge
@@ -271,17 +255,17 @@ var currentApi = function( req, res, next ){
 				// Total Fare
 				if( estimate_km > 0 ){
 					
-					var upto_km = parseFloat( _row.l_data.charges.upto_km );
-					var upto_km_charge = parseFloat( _row.l_data.charges.upto_km_charge );
+					var upto_km 		= parseFloat( _row.l_data.charges.upto_km );
+					var upto_km_charge 	= parseFloat( _row.l_data.charges.upto_km_charge );
 					var after_km_charge = parseFloat( _row.l_data.charges.after_km_charge );
 					
 					var amt = 0; 
-					if( estimate_km <= upto_km ){ 
-						amt += ( upto_km_charge * estimate_km ); 
-					}
-					else{
+					if( estimate_km > upto_km ){ 
 						amt += ( upto_km_charge * upto_km ); 
 						amt += ( after_km_charge * ( estimate_km - upto_km ) ); 
+					}
+					else{
+						amt += ( upto_km_charge * estimate_km ); 
 					}
 					
 					estimation.total_fare = amt;
@@ -337,7 +321,10 @@ var currentApi = function( req, res, next ){
 		function( error, results ){
 			
 			gnrl._api_response( res, 1, '', _row );
+			
 		});
+		
+		
 	}
 	else{
 		gnrl._api_response( res, 0, _message );

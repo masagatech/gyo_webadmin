@@ -77,6 +77,7 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'driverDutyStatusUpdate', _is_login, require('./apis/driverDutyStatusUpdate') );
 	app.all(gnrl._api_base+'driverForgotPassword', require('./apis/driverForgotPassword') );
 	app.all(gnrl._api_base+'driverGetDashboard', _is_login, require('./apis/driverGetDashboard') );
+	app.all(gnrl._api_base+'driverGetTeriffCard', _is_login, require('./apis/driverGetTeriffCard') );
 	app.all(gnrl._api_base+'driverLocationUpdate', _is_login, require('./apis/driverLocationUpdate') );
 	app.all(gnrl._api_base+'driverLogin', require('./apis/driverLogin') );
 	app.all(gnrl._api_base+'driverPasswordUpdate', _is_login, require('./apis/driverPasswordUpdate') );

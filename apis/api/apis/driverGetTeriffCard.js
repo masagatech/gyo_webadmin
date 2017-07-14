@@ -39,7 +39,8 @@ var currentApi = function( req, res, next ){
 				
 				var _q = "SELECT ";
 				
-				_q += " vt.l_data ";
+				_q += " COALESCE( vt.l_data->>'list_icon', '' ) AS list_icon ";
+				_q += " , COALESCE( ( vt.l_data->>'driver_charges' )::jsonb, '{}' ) AS charges ";
 				_q += " , COALESCE( ( city_wise.l_data->>'driver_charges' )::jsonb, '{}' ) AS city_wise_charges ";
 				
 				_q += " FROM tbl_vehicle_type vt ";
@@ -64,23 +65,17 @@ var currentApi = function( req, res, next ){
 						gnrl._api_response( res, 0, 'err_no_records', {} );
 					}
 					else{
-						
 						_data = data[0];
-						
-						_data.l_data.list_icon = _data.l_data.list_icon ? gnrl._uploads( 'vehicle_type/'+_data.l_data.list_icon ) : '';
-						_data.l_data.plotting_icon = _data.l_data.plotting_icon ? gnrl._uploads( 'vehicle_type/'+_data.l_data.plotting_icon ) : '';
+						_data.list_icon = _data.list_icon ? gnrl._uploads( 'vehicle_type/'+_data.list_icon ) : '';
 						
 						var temp = _data.city_wise_charges;
 						for( var k in temp ){
 							if( temp[k] ){
-								_data.l_data.charges[k] = temp[k];
+								_data.charges[k] = temp[k];
 							}
 						}
-						if( _data.city_wise_charges ){ delete _data.city_wise_charges; }
-						if( _data.l_data.driver_charges ){ delete _data.l_data.driver_charges; }
-						if( _data.l_data.other ){ delete _data.l_data.other; }
-						if( _data.l_data.plotting_icon ){ delete _data.l_data.plotting_icon; }
-						if( _data.l_data.active_icon ){ delete _data.l_data.active_icon; }
+						
+						delete _data.city_wise_charges;
 						
 						callback( null );
 					}
@@ -88,8 +83,8 @@ var currentApi = function( req, res, next ){
 			},
 			
 		], function( error, results ){
-			_data.l_data.charges.surcharge = _data.l_data.charges.surcharge+'%';
-			_data.l_data.charges.service_tax = _data.l_data.charges.service_tax+'%';
+			_data.charges.surcharge = _data.charges.surcharge+'%';
+			_data.charges.service_tax = _data.charges.service_tax+'%';
 			gnrl._api_response( res, 1, '', _data );
 			
 		});

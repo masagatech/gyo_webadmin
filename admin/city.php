@@ -11,7 +11,6 @@ $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_
 
 ## Insert Record in database starts
 if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
-	$temp="";
 	
 	$is_exists = $dclass->select( '*', $table, " AND v_code = '".$v_code."' " );
 
@@ -23,7 +22,7 @@ if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
 		'v_code'  => $v_code,
         'd_added' => date('Y-m-d H:i:s'),
         'd_modified' => date('Y-m-d H:i:s'),
-        'l_data' => json_encode($temp),
+        'l_data' => json_encode( $l_data ? $l_data : array() ),
         'e_status'  => $e_status,
 	);
     $id = $dclass->insert( $table, $ins );
@@ -76,14 +75,13 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
 		$id = $_REQUEST['id'];
 		if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
 			$is_exists = $dclass->select( '*', $table, " AND id != '".$id."' AND v_code = '".$v_code."' " );
-
-	
 			if( count( $is_exists ) ){
 				$gnrl->redirectTo($page.'.php?succ=0&msg=codeexists&a=2&script=edit&id='.$_REQUEST['id']);
 			}
 			$ins = array(
                 'v_name'  => $v_name,
 				'v_code'  => $v_code,
+				'l_data' => json_encode( $l_data ? $l_data : array() ),
                 'e_status'  => $e_status,
                 'd_modified' => date('Y-m-d H:i:s')
             );
@@ -94,7 +92,7 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
 			$row = $dclass->select('*',$table," AND id = '".$id."'");
 			$row = $row[0];
 			extract( $row );
-            // $l_data=json_decode($l_data,true);
+			$l_data = json_decode( $l_data, true );
 		}
 	}
 }
@@ -140,20 +138,44 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="content">
-                                            <div class="form-group">
-                                                <label>Name <span>*</span></label>
-                                                <input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
-                                            </div>
-											<div class="form-group">
-                                                <label>Code <span>*</span></label>
-                                                <input type="text" class="form-control" id="v_code" name="v_code" value="<?php echo $v_code; ?>" required />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Status</label>
-                                                <select class="select2" name="e_status" id="e_status">
-                                                    <?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
-                                                </select>
-                                            </div>
+											
+											<div class="row">
+												<div class="form-group col-md-12">
+													<label>Name <span>*</span></label>
+													<input type="text" class="form-control" id="v_name" name="v_name" value="<?php echo $v_name; ?>" required />
+												</div>
+											</div>
+											<div class="row">
+												<div class="form-group col-md-12">
+													<label>Code <span>*</span></label>
+													<input type="text" class="form-control" id="v_code" name="v_code" value="<?php echo $v_code; ?>" required />
+												</div>
+											</div>
+											
+											<div class="row">
+												<div class="form-group col-md-12">
+													<label>Status</label>
+													<select class="select2" name="e_status" id="e_status">
+														<?php $gnrl->getDropdownList(array('active','inactive'),$e_status); ?>
+													</select>
+												</div>
+											</div>
+											
+											
+											<div class="row">
+												<div class="form-group col-md-4">
+													<label>City Center Point Latitude <span>*</span></label>
+													<input type="text" class="form-control" name="l_data[latitude]" value="<?php echo $l_data['latitude']; ?>" required />
+												</div>
+												<div class="form-group col-md-4">
+													<label>City Center Point Longitude <span>*</span></label>
+													<input type="text" class="form-control" name="l_data[longitude]" value="<?php echo $l_data['longitude']; ?>" required />
+												</div>
+												<div class="form-group col-md-4">
+													<label>City Center Point Radius <span>*</span></label>
+													<input type="text" class="form-control" name="l_data[radius]" value="<?php echo $l_data['radius']; ?>" required />
+												</div>
+											</div>
                                             <div class="form-group">
                                                 <button class="btn btn-primary" type="submit" name="submit_btn" value="<?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?>"><?php echo ( $script == 'edit' ) ? 'Update' : 'Submit'; ?></button>
                                                 <a href="<?php echo $page?>.php"><button class="btn fright" type="button" name="submit_btn">Cancel</button></a> 

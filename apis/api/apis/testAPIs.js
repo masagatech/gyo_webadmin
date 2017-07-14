@@ -257,13 +257,7 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		});
 	}
 	
-	else{
-		
-		
-			
-		
-		
-	}
+	else{}
 	
 	
 	

@@ -89,13 +89,24 @@
 				url 	: 'getCities',
 				name 	: 'Get Cities',
 				method 	: 'GET / POST',
-				params 	: [],
+				params 	: [
+					{ name : 'city', required : false, info : 'City Name, If not passed than it will return all Cities Array.' },
+				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : City ID,'
-							+BR+'v_name : City Name,'
-						+BR+'}'
+					{ 
+						name : 'data', 
+						info : ( JSON.stringify( [
+							{
+								"id": "1",
+								"v_name": "CityName",
+								"v_code": "CityCode",
+								"l_data": {
+									"radius": "In Km",
+									"latitude": "Center Point Latitude",
+									"longitude": "Center Point Longitude"
+								}
+							},
+						] )
 					) }
 				],
 			},
@@ -351,6 +362,46 @@
 					) }
 				],
 			},
+			
+			
+			{
+				id 		: 'driverGetTeriffCard',
+				url 	: 'driverGetTeriffCard',
+				name 	: 'Driver Get Teriff Card',
+				method 	: 'GET / POST',
+				params 	: [
+					{ name : 'login_id', required : true, info : 'Login ID' },
+					{ name : 'v_token', required : true, info : 'Auth Token' },
+					{ name : 'i_city_id', required : true, info : 'City ID' },
+					{ name : 'i_vehicle_type_id', required : true, info : 'Vehicle Type ID' },
+				],
+				response   : [
+					{ 
+						name : 'data', 
+						info : ( JSON.stringify({
+							"list_icon": "http://192.168.0.222:3000/uploads/vehicle_type/1496657185-1493288195-03-B.png",
+							"charges": {
+								"upto_km": "11",
+								"base_fare": "6",
+								"surcharge": "2.2%",
+								"min_charge": "11",
+								"service_tax": "2%",
+								"max_dry_run_km": "3",
+								"upto_km_charge": "9",
+								"after_km_charge": "11",
+								"ride_time_charge": "2",
+								"cancel_charge_user": "11",
+								"company_commission": "6%",
+								"max_dry_run_charge": "4",
+								"cancel_charge_driver": "11",
+								"ride_time_pick_charge": "2"
+							}
+						}) ) 
+					}
+				],
+			},
+			
+			
 			{
 				id 		: 'driverProfileGet',
 				url 	: 'driverProfileGet',
@@ -798,30 +849,31 @@
 					{ name : 'i_vehicle_type_id', required : true, info : 'Vehicle Type ID' },
 				],
 				response   : [
-					{ name : 'data.day_charges', info : (
-						'{'
-							+BR+'min_charge : Min Charge,'
-							+BR+'base_fare : Base Fare'
-							+BR+'upto_km : Up To KM'
-							+BR+'upto_km_charge : Up Tp KM Charge'
-							+BR+'after_km_charge : After KM Charge'
-							+BR+'ride_time_pick_charge : Ride Time Pick Time'
-							+BR+'ride_time_charge : Ride Time Charge'
-							+BR+'service_tax : Service tex'
-						+BR+'}'
-					) },
-					{ name : 'data.night_charges', info : (
-						'{'
-							+BR+'min_charge : Min Charge,'
-							+BR+'base_fare : Base Fare'
-							+BR+'upto_km : Up To KM'
-							+BR+'upto_km_charge : Up Tp KM Charge'
-							+BR+'after_km_charge : After KM Charge'
-							+BR+'ride_time_pick_charge : Ride Time Pick Time'
-							+BR+'ride_time_charge : Ride Time Charge'
-							+BR+'service_tax : Service tex'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : ( JSON.stringify({
+							"l_data": {
+								"charges": {
+									"upto_km": "11",
+									"base_fare": "6",
+									"surcharge": "2.2%",
+									"min_charge": "11",
+									"service_tax": "2%",
+									"max_dry_run_km": "3",
+									"upto_km_charge": "9",
+									"after_km_charge": "11",
+									"ride_time_charge": "2",
+									"cancel_charge_user": "11",
+									"company_commission": "6%",
+									"max_dry_run_charge": "4",
+									"cancel_charge_driver": "11",
+									"ride_time_pick_charge": "2",
+									"i_show_estimate_charge": "1"
+								},
+								"list_icon": "http://192.168.0.222:3000/uploads/vehicle_type/1496657185-1493288195-03-B.png"
+							}
+						}) ) 
+					}
 				],
 			},
 			{

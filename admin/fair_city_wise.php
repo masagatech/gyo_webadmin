@@ -268,6 +268,23 @@ $gnrl->check_login();
 													</div>
 												</div>
 											</div>
+											
+											<div class="row">
+												<div class="col-md-12">
+													<h3>Driver Charges For Tarrif Card</h3>
+													<div class="row" >
+														<div class="col-md-12">
+															<?php 
+															foreach( $globalCharges as $chargeKey => $chargeVal ) { ?>
+																<div class="form-group">
+																	<label><?php echo $chargeVal;?> <?php echo $gnrl->getAstric(); ?></label>
+																	<input type="text" class="form-control" name="l_data[driver_charges][<?php echo $chargeKey;?>]" value="<?php echo $l_data['driver_charges'][$chargeKey];?>" required=""  />
+																</div> <?php 
+															}?>		
+														</div>
+													</div>
+												</div>
+											</div>
 
 											<div class="row">
 												<div class="col-md-12">

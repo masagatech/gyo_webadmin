@@ -32,7 +32,6 @@ var currentApi = function( req, res, next ){
 		async.series([
 			
 			function( callback ){
-				
 				var _ins = [
 					" l_latitude = '"+l_latitude+"' ",
 					" l_longitude = '"+l_longitude+"' ",
@@ -40,7 +39,6 @@ var currentApi = function( req, res, next ){
 						'last_location_update' : gnrl._db_datetime(),
 					}) )+"' ",
 				];
-				
 				dclass._updateJsonb( 'tbl_user', _ins, " AND id = '"+login_id+"' ", function( status, data ){
 					callback( null );	
 				});

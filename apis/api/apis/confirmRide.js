@@ -246,6 +246,9 @@ var currentApi = function( req, res, next ){
 								_q += " AND U.v_token != '' ";
 							_q += " ) a ";
 							_q += " WHERE true ";
+							if( _entity.max_dry_run.check ){ 
+								_q += " AND a.distance <= '"+_entity.max_dry_run.value+"' "; 
+							}
 							_q += " ORDER BY a.distance ASC";
 							_q += " LIMIT "+_round.l_data.buzz_count; 
 							
@@ -282,6 +285,7 @@ var currentApi = function( req, res, next ){
 							_q += " ) a ";
 							_q += " WHERE true ";
 							_q += " AND a.same_ride_buzz_count <= '0' ";
+							
 							
 							mainData.isDirectAssign = _entity.premium_driver.check;
 							if( _entity.premium_driver.check ){ _q += " AND a.is_premium = '1' "; }

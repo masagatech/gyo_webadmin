@@ -122,12 +122,15 @@ $gnrl->check_login();
 			$id = $_REQUEST['id'];
 			if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'Update' ) {
 				
+				// _p( $_REQUEST ); exit;
+				
 				$if_exist = $dclass->select('*',$table," AND v_type = '".$v_type."' AND v_name = '".$v_name."' AND id !=".$id." ");
 				if(empty($if_exist)){
 					$ins = array(
 						" v_name = '".$v_name."' ",
 						" v_type = '".$v_type."' ",
 						" d_modified = '".date('Y-m-d H:i:s')."' ",
+						" l_data = l_data || '".json_encode( $l_data )."' ",
 						" e_status =	'".$e_status."'	",
 					);
 					$dclass->updateJsonb( $table, $ins, " id = '".$id."' ");
@@ -186,6 +189,7 @@ $gnrl->check_login();
                 $row = $row[0];
                	extract( $row );
                	$l_data = json_decode( $l_data, true );
+				//_p( $l_data ); exit;
 
 			}
 		}
@@ -292,6 +296,24 @@ $gnrl->check_login();
 																<div class="form-group">
 																	<label><?php echo $chargeVal;?> <?php echo $gnrl->getAstric(); ?></label>
 																	<input type="text" class="form-control" name="l_data[charges][<?php echo $chargeKey;?>]" value="<?php echo $l_data['charges'][$chargeKey];?>"  required/>
+																</div> <?php 
+															}?>		
+														</div>
+													</div>
+												</div>
+											</div>
+											
+											
+											<div class="row">
+												<div class="col-md-12">
+													<h3>Driver Charges For Tarrif Card</h3>
+													<div class="row" >
+														<div class="col-md-12">
+															<?php 
+															foreach( $globalCharges as $chargeKey => $chargeVal ) { ?>
+																<div class="form-group">
+																	<label><?php echo $chargeVal;?> <?php echo $gnrl->getAstric(); ?></label>
+																	<input type="text" class="form-control" name="l_data[driver_charges][<?php echo $chargeKey;?>]" value="<?php echo $l_data['driver_charges'][$chargeKey];?>"  required/>
 																</div> <?php 
 															}?>		
 														</div>

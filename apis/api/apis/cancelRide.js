@@ -35,7 +35,7 @@ var currentApi = function( req, res, next ){
 		var _user = {};
 		var v_role = '';
 		var cancel_reason_id_text = '';
-		var isDay = 1;
+		
 		var _ride = [];
 		var deduct_amount = 0;
 		

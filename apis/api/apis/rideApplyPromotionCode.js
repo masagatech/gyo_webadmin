@@ -74,7 +74,16 @@ var currentApi = function( req, res, next ){
 			function( callback ){
 				
 				var _q = " SELECT ";
-				_q += " id, i_user_ids, i_city_ids, v_code, discount_amount, upto_amount, d_start_date, d_end_date, v_type, e_status ";
+				_q += " id ";
+				_q += " , i_user_ids ";
+				_q += " , i_city_ids";
+				_q += " , v_code";
+				_q += " , discount_amount";
+				_q += " , upto_amount";
+				_q += " , d_start_date";
+				_q += " , d_end_date";
+				_q += " , v_type";
+				_q += " , e_status";
 				_q += " FROM tbl_coupon_code WHERE i_delete = '0' AND LOWER( v_code ) = '"+v_code.toLowerCase()+"'; ";
 				
 				dclass._query( _q, function( status, data ){
@@ -91,7 +100,9 @@ var currentApi = function( req, res, next ){
 						gnrl._api_response( res, 0, 'err_invalid_promotion_code', {} );
 					}
 					else{
+						
 						_data.promotion_code = data[0];
+						
 						callback( null );
 					}
 				});
@@ -125,10 +136,16 @@ var currentApi = function( req, res, next ){
 			// Check Other Validation
 			function( callback ){
 				
-				var cityIDs = _data.promotion_code.i_city_ids ? _data.promotion_code.i_city_ids.split(',') : [];
-				var currTime = gnrl._timestamp( gnrl._db_ymd() );
-				var startTime = gnrl._timestamp( _data.promotion_code.d_start_date );
-				var endTime = gnrl._timestamp( _data.promotion_code.d_end_date );
+				var currTime 	= gnrl._timestamp( gnrl._db_ymd() );
+				var startTime 	= gnrl._timestamp( _data.promotion_code.d_start_date );
+				var endTime 	= gnrl._timestamp( _data.promotion_code.d_end_date );
+				
+				var cityIDs 	= _data.promotion_code.i_city_ids ? _data.promotion_code.i_city_ids.split(',') : [];
+				_data.ride.l_data.i_city_id = 3;
+				_data.ride.l_data.i_city_id = parseInt( _data.ride.l_data.i_city_id );
+				for( var k in cityIDs ){
+					cityIDs[k] = parseInt( cityIDs[k] );
+				}
 				
 				if( !gnrl._inArray( _data.ride.l_data.i_city_id, cityIDs ) ){
 					gnrl._api_response( res, 0, 'err_promotion_code_not_in_city', {} );
@@ -139,6 +156,8 @@ var currentApi = function( req, res, next ){
 				else{
 					callback( null );
 				}
+				
+				
 			},
 			
 			
@@ -164,6 +183,7 @@ var currentApi = function( req, res, next ){
 						callback( null );
 					}
 				});
+				
 				
 			},
 			

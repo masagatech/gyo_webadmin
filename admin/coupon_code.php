@@ -199,8 +199,10 @@ $gnrl->check_login();
                                             </div>
                                             <?php 
                                                 if($script=="edit"){
-                                                    $d_start_date=$gnrl->displaySiteDate($d_start_date);
-                                                    $d_end_date=$gnrl->displaySiteDate($d_end_date);
+													
+													$d_start_date = date('Y-m-d H:i:s', strtotime($d_start_date));
+													$d_end_date = date('Y-m-d H:i:s', strtotime($d_end_date));
+													
                                                 }else{
                                                     $d_start_date='';
                                                     $d_end_date='';
@@ -210,16 +212,16 @@ $gnrl->check_login();
                                             <div class="form-group">
                                                 <label>Start Date <?php echo $gnrl->getAstric(); ?></label>
                                                 <input class="form-control" size="16" type="text" id="d_start_date" name="d_start_date" 
-												value="<?php echo $d_start_date ? $d_start_date : date('Y-m-d H:i'); ?>" readonly="" 
-												data-date-format="yyyy-mm-dd hh:ii"
+												value="<?php echo $d_start_date ? $d_start_date : date('Y-m-d H:i:s'); ?>" readonly="" 
+												data-date-format="yyyy-mm-dd hh:ii:ss"
 												/>
 												
                                             </div>
                                             <div class="form-group">
                                                 <label>End Date</label>
                                                 <input class="form-control" size="16" type="text" id="d_end_date" name="d_end_date" 
-												value="<?php echo $d_end_date ? $d_end_date : date('Y-m-d H:i'); ?>" readonly="" 
-												data-date-format="yyyy-mm-dd hh:ii"
+												value="<?php echo $d_end_date ? $d_end_date : date('Y-m-d H:i:s'); ?>" readonly="" 
+												data-date-format="yyyy-mm-dd hh:ii:ss"
 												/>
                                             </div>
 											

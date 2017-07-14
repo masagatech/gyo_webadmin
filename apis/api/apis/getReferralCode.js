@@ -61,6 +61,12 @@ var currentApi = function( req, res, next ){
 					}
 					_data.earn_money = parseFloat( _settings.money ? _settings.money : _settings.coupon );
 					_data.message = gnrl._lbl('msg_refer_code_string_on').split('[amount]').join( _data.earn_money );
+					
+					_data.referral_message = gnrl._lbl('msg_referral_link').split('[amount]').join( _data.earn_money );
+					_data.referral_message = _data.referral_message.split('[referral_code]').join( '('+_data.v_referral_code+')' );
+					
+					
+					
 					callback( null );
 				})
 			},

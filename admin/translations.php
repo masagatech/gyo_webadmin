@@ -309,6 +309,9 @@ $file = str_replace( 'uploads/', '', UPLOAD_PATH ).'translation.json';
 		"msg_wallet_user_ride" => "Message! Wallet User Ride",
 		"msg_wallet_user_ride_cancel" => "Message! Wallet User Ride Cancel",
 		"msg_wallet_user_ride_dry_run" => "Message! Wallet User Ride Dry Run",
+		
+		"msg_referral_link" => "Message! Referral Link",
+		
 		"succ_account_verified" => "Success Message! Account Verified",
 		"succ_feedback_successfully" => "Success Message! Feedback Successfully",
 		"succ_location_updated" => "Success Message! Location Updated",

@@ -48,8 +48,7 @@ $gnrl->check_login();
         $restepm = $dclass->query($ssql);
         $wallet_data = $dclass->fetchResults($restepm);
         $wallet_data=$wallet_data[0];
-        _P($wallet_data);
-        exit;
+        _P($wallet_data); exit;
         // $i_user_id=$_REQUEST['id'];
         if($amount < 0){
             
@@ -219,6 +218,7 @@ $gnrl->check_login();
     
     ## Edit Process
     if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
+
         if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 
             $id = $_REQUEST['id'];
@@ -393,7 +393,7 @@ $gnrl->check_login();
                                         tbl_wallet_transaction  t1
                                     LEFT JOIN tbl_user as t2 ON t1.i_user_id = t2.id
  
-                                     WHERE true AND t1.i_wallet_id =".$_REQUEST['id']." ".$wh;
+                                    WHERE true AND t1.i_wallet_id =".$_REQUEST['id']." ".$wh;
 
                             $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 't1.d_added' );
                             $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );            
@@ -688,8 +688,8 @@ $gnrl->check_login();
                                                                                     <li><a href="javascript:;" onclick="confirm_restore('<?php echo $page;?>','<?php echo $row['id'];?>');">Restore</a></li>
                                                                                 <?php  
                                                                                 }else{ ?>
-                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['id'];?>">View Transaction</a></li>
-                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=manual&id=<?php echo $row['id'];?>">Manual adjustment</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['id'];?>"  target="_blank">View Transaction</a></li>
+                                                                                    <li><a href="<?php echo $page?>.php?a=2&script=manual&id=<?php echo $row['id'];?>" target="_blank">Manual adjustment</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
                                                                                     <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
                                                                                     <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>

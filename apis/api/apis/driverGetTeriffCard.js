@@ -57,6 +57,7 @@ var currentApi = function( req, res, next ){
 				_q += " AND vt.e_status = 'active' ";
 				_q += " AND vt.id = '"+i_vehicle_type_id+"'; ";
 				
+				
 				dclass._query( _q, function( status, data ){ 
 					if( !status ){
 						gnrl._api_response( res, 0, '', {} );
@@ -76,15 +77,20 @@ var currentApi = function( req, res, next ){
 						}
 						
 						delete _data.city_wise_charges;
-						
+						//_data._q = _q;
 						callback( null );
 					}
 				});
 			},
 			
 		], function( error, results ){
-			_data.charges.surcharge = _data.charges.surcharge+'%';
-			_data.charges.service_tax = _data.charges.service_tax+'%';
+			if( _data.charges.surcharge ){
+				_data.charges.surcharge = _data.charges.surcharge+'%';
+			}
+			if( _data.charges.surcharge ){
+				_data.charges.service_tax = _data.charges.service_tax+'%';
+			}
+			
 			gnrl._api_response( res, 1, '', _data );
 			
 		});

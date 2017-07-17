@@ -41,6 +41,8 @@ var currentApi = function( req, res, next ){
 		_q += " , rd.v_ride_code ";
 		_q += " , rd.l_data->>'final_amount' AS final_amount ";
 		_q += " , rd.l_data->>'payment_mode' AS payment_mode ";
+		_q += " , rd.l_data->>'ride_paid_by_wallet' AS ride_paid_by_wallet ";
+		_q += " , rd.l_data->>'ride_paid_by_cash' AS ride_paid_by_cash ";
 		_q += " , rd.e_status ";
 		
 		_q += " , ur.v_id AS user_v_id ";
@@ -83,6 +85,15 @@ var currentApi = function( req, res, next ){
 					
 					data[i].final_amount = data[i].final_amount ? data[i].final_amount : 0;
 					data[i].d_time = gnrl._timestamp( data[i].d_time );
+					
+					data[i].payment_mode = [];
+					if( parseFloat( data[i].ride_paid_by_wallet ) > 0 ){
+						data[i].payment_mode.push('Wallet');
+					}
+					if( parseFloat( data[i].ride_paid_by_cash ) > 0 ){
+						data[i].payment_mode.push('Cash');
+					}
+					data[i].payment_mode = data[i].payment_mode.join(', ');
 					
 				}
 				

@@ -109,6 +109,17 @@ var currentApi = function( req, res, next ){
 						
 						_data = data[0];
 						
+						var tempPaymentMethod = [];
+						_data.ride_l_data.ride_paid_by_wallet = gnrl._round( _data.ride_l_data.ride_paid_by_wallet );
+						if( _data.ride_l_data.ride_paid_by_wallet > 0 ){
+							tempPaymentMethod.push('Wallet');
+						}
+						
+						_data.ride_l_data.ride_paid_by_cash = gnrl._round( _data.ride_l_data.ride_paid_by_cash );
+						if( _data.ride_l_data.ride_paid_by_cash > 0 ){
+							tempPaymentMethod.push('Cash');
+						}
+						
 						_keywords = {
 							'[user_name]' : _data.user_name,
 							'[i_ride_id]' : i_ride_id,
@@ -117,13 +128,14 @@ var currentApi = function( req, res, next ){
 							'[ride_total]' : _data.ride_l_data.final_amount,
 							'[ride_total_time]' : _data.ride_l_data.trip_time_in_min,
 							'[ride_discount]' : _data.ride_l_data.promocode_code_discount,
-							'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.d_start ) ),
-							'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( _data.d_end ) ),
+							'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_start ) ) ),
+							'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_end ) ) ),
+							
 							'[ride_start_address]' : _data.ride_l_data.pickup_address,
 							'[ride_end_address]' : _data.ride_l_data.destination_address,
 							'[ride_distance]' : _data.ride_l_data.actual_distance,
 							'[ride_promocode_code]' : _data.ride_l_data.promocode_code,
-							'[ride_payment_method]' : _data.ride_l_data.payment_mode,
+							'[ride_payment_method]' : tempPaymentMethod.join( ', ' ),
 							'[ride_bill_table]' : '',
 							'[city]' : _data.ride_l_data.city,
 							'[driver_name]' : _data.driver_name,

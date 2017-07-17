@@ -125,7 +125,7 @@ var currentApi = function( req, res, next ){
 							'[i_ride_id]' : i_ride_id,
 							'[ride_pin]' : _data.v_pin,
 							'[ride_code]' : _data.v_ride_code,
-							'[ride_total]' : _data.ride_l_data.final_amount,
+							'[ride_total]' : gnrl._round( _data.ride_l_data.final_amount ),
 							'[ride_total_time]' : _data.ride_l_data.trip_time_in_min,
 							'[ride_discount]' : _data.ride_l_data.promocode_code_discount,
 							

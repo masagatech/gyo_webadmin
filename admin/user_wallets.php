@@ -13,157 +13,76 @@ $gnrl->check_login();
     // $v_role ='user';
     $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' || $_REQUEST['script'] == 'manual' ) ) ? $_REQUEST['script'] : "";
     
-    ## Insert Record in database starts
-    if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
+    if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'manual_submit' ){
+		
+        $i_wallet_id = $_REQUEST['id'];
         
-        $email_exit = $dclass->select('*',$table," AND v_email = '".$v_email."'");
+		## Sum of all transaction 
+        $ssql 			= "SELECT * from ".$table." where id = ".$i_wallet_id." ";
+        $restepm 		= $dclass->query($ssql);
+        $wallet_data 	= $dclass->fetchResults($restepm);
+        $wallet_data	= $wallet_data[0];
+        // _p( $wallet_data ); exit;
         
-        if(count($email_exit) && !empty($email_exit)){
+        if( $amount < 0 ){
             
-             $gnrl->redirectTo($page.".php?succ=0&script=add&msg=email_exit");
-        }else{
-            $ins = array(
-                'v_name'  => $v_name,
-                'v_email' =>$v_email,
-                'v_phone'   => $v_phone,
-                'v_password'  => $v_password ? md5($v_password):'',
-                'v_role'=> $v_role,
-                'e_status' => $e_status ,
-                'd_added' => date('Y-m-d H:i:s'),
-                'd_modified' => date('Y-m-d H:i:s')
-            );
-            $id = $dclass->insert( $table, $ins );
-            $gnrl->redirectTo($page.".php?succ=1&msg=add");
+        } 
+		else if( $amount > 0 ){
+            
         }
-        
-    }
-
-    if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='manual_submit'){
-
-        $i_wallet_id=$_REQUEST['id'];
-        _P($i_wallet_id);
-
-        ##Sum of all transaction 
-        $ssql = "SELECT * from ".$table." where id = ".$i_wallet_id." ";
-        $restepm = $dclass->query($ssql);
-        $wallet_data = $dclass->fetchResults($restepm);
-        $wallet_data=$wallet_data[0];
-        _P($wallet_data); exit;
-        // $i_user_id=$_REQUEST['id'];
-        if($amount < 0){
-            
-        }elseif ($amount > 0) {
-            
-        }else{
-            $gnrl->redirectTo($page.".php?succ=0&msg=wallet_error&a=2&script=manual&id=".$_REQUEST['id']);
+		else{
+            $gnrl->redirectTo( $page.".php?succ=0&msg=wallet_error&a=2&script=manual&id=".$_REQUEST['id'] );
         }
         $ins = array(
-            'i_user_id'  => $wallet_data['i_user_id'],
-            'v_type' =>'custom',
-
-            'f_amount'=> $amount,
-            'l_data'=> json_encode($l_data),
-            'd_added' => date('Y-m-d H:i:s'),
-            'i_wallet_id' => $i_wallet_id,
+            'i_user_id' 	=> $wallet_data['i_user_id'],
+            'v_type' 		=> 'custom',
+            'f_amount'		=> $amount,
+            'l_data'		=> json_encode( $l_data ),
+            'd_added' 		=> date('Y-m-d H:i:s'),
+            'i_wallet_id' 	=> $i_wallet_id,
         );
-      
         $id = $dclass->insert( $table2, $ins );
-
-        if($id > 0){
-
-            
-            ##Sum of all transaction 
-            $ssql = "SELECT SUM(f_amount) as TOTAL from ".$table2." where id = ".$i_wallet_id." ";
-            $restepm = $dclass->query($ssql);
-            $row = $dclass->fetchResults($restepm);
-            $row = $row[0];
-            ## update the wallet
-            $ssql2="UPDATE ".$table." SET f_amount =  ".$row['total']." WHERE id = ".$i_wallet_id." ";
-            $restepm2 = $dclass->update_sql($ssql2);
-
-
-            #get user data
-            $user_info = $dclass->select('*','tbl_user'," AND id = '".$wallet_data['i_user_id']."'");
-            $user_info = $user_info[0];
-            
-            #get notification template data
-            $notification_template = $dclass->select('*','tbl_push_notification'," AND v_type = 'user_manual_update'");
-            $notification_template = $notification_template[0];
-            $j_title =json_decode($notification_template['j_title'],true);
-            $j_content =json_decode($notification_template['j_content'],true);
-            
-            $notification_data=array(
-                'type' => 'user_manual_update',
-                'title' => $j_title['en'],
-                'body' => $l_data['description'],
-            );
-            
-            #send push notification
-            $is_send=$gnrl->sendNotificationManual($user_info['v_device_token'],$notification_data,USER_NOTIFICATION_KEY);
-            $is_send=json_decode($is_send,true);
-            if($is_send['success']=='1'){
-                $i_status=1;
-            }else{
-                $i_status=0;
-            }
-            $ins = array(
-                'i_user_id'  => $i_user_id,
-                'i_push_notification_id' =>$notification_template['id'],
-                'i_status'  => $i_status,
-                'd_added' => date('Y-m-d H:i:s'),
-                'l_data'=> json_encode($notification_data),
-                'v_type'=> 'user_manual_update',
-            );
-            #notification track entry
-            $id = $dclass->insert( 'tbl_track_push_notification', $ins );
-            
-
-
-            #send message
-            $sms_template = $dclass->select('*','tbl_sms'," AND v_key = 'user_manual_update'");
-            $sms_template = $sms_template[0];
-            $l_message= json_decode($sms_template['j_sms'],true);
-            $url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user='.SMS_USERNAME.'&pwd='.SMS_PASSWORD.'&sender='.SMS_SENDERNAME.'';
-            $url .= '&mt=2';
-            $url .= '&mobile='.$user_info['v_phone'].'';
-            $url .= '&msg='.urlencode($l_data['description']).'';  //8758857048
-            try{
-                $is_send=$gnrl->sendSMS( $url );
-                if((substr($is_send, 0, 3) == 'MSP')){
-                    $i_status='1';
-                }else{
-                    $i_status='0';
-                }
-            }
-            catch( Exception $e ){
-                _p($e);
-            }
-            $l_message=array(
-                'lang' => 'en',
-                'i_view' => '0',
-                'j_message' => $l_message['en'],
-            );
-            $ins = array(
-                'i_user_id'  => $i_user_id,
-                'i_messages_id' =>$sms_template['id'],
-                'i_status'  => $i_status,
-                'd_added' => date('Y-m-d H:i:s'),
-                'l_data'=> json_encode($l_message),
-            );
-            #messages track entry
-            $id = $dclass->insert( 'tbl_track_push_messages', $ins );
-
-            #email send
-            // $email_template = $dclass->select('*','tbl_email'," AND v_name = 'user_manual_update'");
-            // $email_template = $email_template[0];
-            $email_data=$gnrl->get_email_data('user_manual_update');
-            $email_data['email_to']=$user_info['v_email'];
-            $replacer_arr['[free_text]']=$l_data['description'];
-            $is_send=$gnrl->prepare_and_send_email($email_data,$replacer_arr);
-
-            // $is_send=$gnrl->custom_email($user_info['v_email'],$email_from = "", $reply_to = "", $email_cc = "", $email_bcc = "", $email_subject, $l_data['description'], $email_format = "", $attachments = array());
-            $gnrl->redirectTo($page.".php?succ=1&msg=wallet_upd");
-        }
+		
+		##Sum of all transaction 
+		$ssql 		= "SELECT SUM( f_amount ) as TOTAL from ".$table2." where i_wallet_id = ".$i_wallet_id." ";
+		$restepm 	= $dclass->query($ssql);
+		$row 		= $dclass->fetchResults($restepm);
+		$row 		= $row[0];
+		
+		## update the wallet
+		$ssql2 		= "UPDATE ".$table." SET f_amount = ".$row['total']." WHERE id = ".$i_wallet_id." ";
+		$restepm2 	= $dclass->update_sql( $ssql2 );
+		
+		#get user data
+		$user_info = $dclass->select( '*', 'tbl_user', " AND id = '".$wallet_data['i_user_id']."' " );
+		$user_info = $user_info[0];
+		
+		$isSMSSend = $gnrl->_SMS( array(
+			'_to' 			=> $user_info['v_phone'],
+			'_key' 			=> 'user_manual_wallet_update',
+			'_body' 		=> '',
+			'_user_id' 		=> $user_info['id'],
+			'_user_lang' 	=> $user_info['lang'],
+			'_replace_arr' 	=> array(
+				'[user_name]' => $user_info['v_name'],
+				'[free_text]' => $l_data['description'],
+			),
+		) );
+		
+		$isSendEmail = $gnrl->_EMAIL( array(
+			'_to' 			=> $user_info['v_email'],
+			'_key' 			=> 'user_manual_wallet_update',
+			'_subject' 		=> '',
+			'_body' 		=> '',
+			'_user_id' 		=> $user_info['id'],
+			'_user_lang' 	=> $user_info['lang'],
+			'_replace_arr' 	=> array(
+				'[user_name]' => $user_info['v_name'],
+				'[free_text]' => $l_data['description'],
+			),
+		) );
+		
+		$gnrl->redirectTo($page.".php?succ=1&msg=wallet_upd");
             
     }
 
@@ -569,7 +488,7 @@ $gnrl->check_login();
                                        LOWER(v_email) like LOWER('%".$keyword."%')  OR
                                        LOWER(v_role) like LOWER('%".$keyword."%')  OR
                                        LOWER(v_phone) like LOWER('%".$keyword."%')  OR
-                                         LOWER(e_status) like LOWER('%".$keyword."%')
+                                       LOWER(e_status) like LOWER('%".$keyword."%')
                                     )";
                                 }
                                 if( isset( $_REQUEST['deleted'] ) ){
@@ -670,13 +589,11 @@ $gnrl->check_login();
                                                             
                                                             ?>
                                                             <tr>
-                                                                <td>
-                                                                    <?php echo $row['user_name']; ?>
-                                                                </td>
+                                                                <td><?php echo $row['user_name'];?></td>
                                                                 <td><?php echo $row['v_wallet_type'];?></td>
                                                                 <td><?php echo $row['f_amount'];?></td>
-                                                                <td class="pull-right">
-                                                                    <div class="btn-group">
+                                                                <td>
+                                                                    <div class="btn-group pull-right">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>
                                                                         <button data-toggle="dropdown" class="btn btn-xs btn-primary dropdown-toggle" type="button">
                                                                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
@@ -690,9 +607,6 @@ $gnrl->check_login();
                                                                                 }else{ ?>
                                                                                     <li><a href="<?php echo $page?>.php?a=2&script=view&id=<?php echo $row['id'];?>"  target="_blank">View Transaction</a></li>
                                                                                     <li><a href="<?php echo $page?>.php?a=2&script=manual&id=<?php echo $row['id'];?>" target="_blank">Manual adjustment</a></li>
-                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=active&amp;id=<?php echo $row['id'];?>">Active</a></li>
-                                                                                    <li><a href="<?php echo $page;?>.php?a=3&amp;chkaction=inactive&amp;id=<?php echo $row['id'];?>">Inactive</a></li>
-                                                                                    <li><a href="javascript:;" onclick="confirm_delete('<?php echo $page;?>','<?php echo $row['id'];?>');">Delete</a></li>
                                                                                 <?php }
                                                                             ?>
                                                                             

@@ -533,6 +533,9 @@ $mail = new PHPMailer();
 				'[ride_payment_method]' => 'Ride Payment Methods',
 				'[ride_bill_table]' 	=> 'Ride Bill Table',
 				
+				'[ride_paid_by_wallet]' => 'Ride Paid By Wallet',
+				'[ride_paid_by_cash]' 	=> 'Ride Paid By Cash',
+				
 				'[city]' 				=> 'City',
 				
 				'[otp]' 				=> 'OTP',

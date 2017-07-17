@@ -128,15 +128,23 @@ var currentApi = function( req, res, next ){
 							'[ride_total]' : _data.ride_l_data.final_amount,
 							'[ride_total_time]' : _data.ride_l_data.trip_time_in_min,
 							'[ride_discount]' : _data.ride_l_data.promocode_code_discount,
+							
 							'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_start ) ) ),
 							'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_end ) ) ),
 							
 							'[ride_start_address]' : _data.ride_l_data.pickup_address,
 							'[ride_end_address]' : _data.ride_l_data.destination_address,
+							
 							'[ride_distance]' : _data.ride_l_data.actual_distance,
 							'[ride_promocode_code]' : _data.ride_l_data.promocode_code,
+							
 							'[ride_payment_method]' : tempPaymentMethod.join( ', ' ),
+							
+							'[ride_paid_by_wallet]' : _data.ride_l_data.ride_paid_by_wallet,
+							'[ride_paid_by_cash]' : _data.ride_l_data.ride_paid_by_cash,
+							
 							'[ride_bill_table]' : '',
+							
 							'[city]' : _data.ride_l_data.city,
 							'[driver_name]' : _data.driver_name,
 						};

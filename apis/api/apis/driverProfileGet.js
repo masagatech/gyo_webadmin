@@ -42,6 +42,10 @@ var currentApi = function( req, res, next ){
 		_q += " , b.v_image_adhar_card ";
 		_q += " , b.v_image_permit_copy ";
 		_q += " , b.v_image_police_copy ";
+
+		_q += " , b.v_image_rc_book_2 ";
+		_q += " , b.v_image_adhar_card_2 ";
+		_q += " , b.v_image_license_2 ";
 		
 		_q += " FROM ";
 		_q += " tbl_user AS a ";
@@ -69,6 +73,11 @@ var currentApi = function( req, res, next ){
 						'v_image_adhar_card'	: folder,
 						'v_image_permit_copy'	: folder,
 						'v_image_police_copy' 	: folder,
+						
+						'v_image_rc_book_2' 	: folder,
+						'v_image_adhar_card_2' 	: folder,
+						'v_image_license_2' 	: folder,
+						
 					};
 					for( var k in fileArr ){
 						if( data[0][k] ){ data[0][k] = gnrl._uploads( fileArr[k]+'/'+data[0][k] ) }

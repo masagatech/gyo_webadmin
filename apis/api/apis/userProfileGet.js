@@ -32,12 +32,13 @@ var currentApi = function( req, res, next ){
 				if( data[0].v_image ){
 					data[0].v_image = gnrl._uploads( 'users/'+data[0].v_image )
 				}
+				delete data[0].v_password;
 				gnrl._api_response( res, 1, '', data[0] );
 			}
 		});
 	}
 	else{
-		gnrl._api_response( res, 0, _message );
+		gnrl._api_response( res, 0, _message, {} );
 	}
 };
 

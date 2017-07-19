@@ -83,7 +83,7 @@ var currentApi = function( req, res, next ){
 				];
 				dclass._updateJsonb( 'tbl_ride', _ins, " AND id = '"+i_ride_id+"' ", function( status, data ){
 					if( !status ){
-						gnrl._api_response( res, 0, 'error', { status : status, data : data } );
+						gnrl._api_response( res, 0, 'error', {} );
 					}
 					else{
 						callback( null );

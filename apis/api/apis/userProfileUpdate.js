@@ -71,7 +71,7 @@ var currentApi = function( req, res, next ){
 				dclass._select( '*', 'tbl_user', " AND id != '"+login_id+"' AND v_email = '"+v_email+"' ", function( status, data ){ 
 					if( !status ){
 						gnrl._remove_loop_file( fs, fileArr );
-						gnrl._api_response( res, 0, '', {} );
+						gnrl._api_response( res, 0, 'error', {} );
 					}
 					else if( data.length ){
 						gnrl._remove_loop_file( fs, fileArr );
@@ -82,7 +82,7 @@ var currentApi = function( req, res, next ){
 						dclass._select( '*', 'tbl_user', " AND id != '"+login_id+"' AND v_phone = '"+v_phone+"' ", function( status, data ){ 
 							if( !status ){
 								gnrl._remove_loop_file( fs, fileArr );
-								gnrl._api_response( res, 0, '', {} );
+								gnrl._api_response( res, 0, 'error', {} );
 							}
 							else if( data.length ){
 								gnrl._remove_loop_file( fs, fileArr );
@@ -93,7 +93,7 @@ var currentApi = function( req, res, next ){
 									
 									if( !status ){
 										gnrl._remove_loop_file( fs, fileArr );
-										gnrl._api_response( res, 0, '', {} );
+										gnrl._api_response( res, 0, 'error', {} );
 									}
 									else if( !data.length ){
 										gnrl._remove_loop_file( fs, fileArr );
@@ -108,7 +108,6 @@ var currentApi = function( req, res, next ){
 											'v_gender'	: v_gender,
 											'i_city_id' : i_city_id,
 											'v_image' 	: fileArr['v_image'].name ? fileArr['v_image'].name : _row.v_image,
-											
 											'd_modified': gnrl._db_datetime(),
 										};
 										dclass._update( 'tbl_user', _ins, " AND id = '"+login_id+"' ", function( status, data ){ 
@@ -118,7 +117,7 @@ var currentApi = function( req, res, next ){
 											}
 											else{
 												gnrl._remove_loop_file( fs, fileArr );
-												gnrl._api_response( res, 0, _message );
+												gnrl._api_response( res, 0, 'error', {} );
 											}
 										});
 									}
@@ -134,7 +133,7 @@ var currentApi = function( req, res, next ){
 			}
 			else{
 				gnrl._remove_loop_file( fs, fileArr );
-				gnrl._api_response( res, 0, _message );
+				gnrl._api_response( res, 0, _message, {} );
 			}
 		}
 	});

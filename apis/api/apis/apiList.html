@@ -39,7 +39,16 @@
 				name 	: 'Get App Languages',
 				method 	: 'GET / POST',
 				params 	: [],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : [{
+							"id": "2",
+							"v_key": "en",
+							"v_name": "English"
+						}]
+					}
+				],
 			},
 			{
 				id 		: 'getLables',
@@ -49,7 +58,15 @@
 				params 	: [
 					{ name : 'lang', required : true, info : 'Language Code [en, gu, hi]' },
 				],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : {
+							"Lable 1": "Value",
+							"Lable 2": "Value",
+						}
+					}
+				],
 			},
 			{
 				id 		: 'getRideCancelReasons',
@@ -61,18 +78,13 @@
 					{ name : 'v_type', required : true, info : '[driver / user]' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						JSON.stringify([
-							{
-								"id": "1",
-								"j_title": "Reason 1"
-							},
-							{
-								"id": "2",
-								"j_title": "Reason 2"
-							}
-						])
-					) }
+					{ 
+						name : 'data', 
+						info : [{
+							"id": "1",
+							"j_title": "Reason 1"
+						}]
+					}
 					
 				],
 			},
@@ -82,7 +94,18 @@
 				name 	: 'Get Best Sarathi',
 				method 	: 'GET / POST',
 				params 	: [],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : [{
+							"v_name": "Driver Name",
+							"v_image": "Driver Image",
+							"rate": "0",
+							"v_type": "Vehicle Type",
+							"v_vehicle_number": "Vehicle Number"
+						}]
+					}
+				],
 			},
 			{
 				id 		: 'getCities',
@@ -95,19 +118,17 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : ( JSON.stringify( [
-							{
-								"id": "1",
-								"v_name": "CityName",
-								"v_code": "CityCode",
-								"l_data": {
-									"radius": "In Km",
-									"latitude": "Center Point Latitude",
-									"longitude": "Center Point Longitude"
-								}
-							},
-						] )
-					) }
+						info : [{
+							"id": "1",
+							"v_name": "CityName",
+							"v_code": "CityCode",
+							"l_data": {
+								"radius": "In Km",
+								"latitude": "Center Point Latitude",
+								"longitude": "Center Point Longitude"
+							}
+						}]
+					}
 				],
 			},
 			
@@ -119,7 +140,18 @@
 				params 	: [
 					{ name : 'key', required : true, info : 'Key' },
 				],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : { 
+							"id" : "",
+							"v_key" : "Key",
+							"j_title" : {},
+							"j_content" : {},
+							"i_delete" : 0,
+						}
+					}
+				],
 			},
 			{
 				id 		: 'getSettings',
@@ -129,7 +161,16 @@
 				params 	: [
 					{ name : 'key[]', required : true, info : 'Array of Keys' },
 				],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : { 
+							"Key 1" : "Value",
+							"Key 2" : "Value",
+							"Key 3" : "Value"
+						}
+					}
+				],
 			},
 			
 			{
@@ -144,16 +185,14 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : JSON.stringify([
-							{
-								"id": "1",
-								"v_name": "Payment Method Name",
-								"v_type": "Payment Method Type",
-								"v_mode": "sandbox OR live",
-								"v_image": "Payment Method Icon",
-								"l_data": "{}, Object with different payment configuration"
-							}
-						])
+						info : [{
+							"id": "1",
+							"v_name": "Payment Method Name",
+							"v_type": "Payment Method Type",
+							"v_mode": "sandbox OR live",
+							"v_image": "Payment Method Icon",
+							"l_data": "{}, Object with different payment configuration"
+						}]
 					}
 				],
 				
@@ -171,7 +210,9 @@
 					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'resendOtp',
@@ -196,7 +237,21 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'v_type', required : true, info : 'pending(default), viewed, all' },
 				],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : [{
+							"id": "",
+							"i_user_id": "",
+							"i_push_notification_id": "",
+							"i_status": "0 / 1",
+							"d_added": "",
+							"l_data": {},
+							"v_type": "Types",
+							"i_delete": "0"
+						}]
+					}
+				],
 			},
 			{
 				id 		: 'getNotificationInfo',
@@ -208,7 +263,21 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'notification_id', required : true, info : 'Notification ID' },
 				],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : {
+							"id": "",
+							"i_user_id": "",
+							"i_push_notification_id": "",
+							"i_status": "0 / 1",
+							"d_added": "",
+							"l_data": {},
+							"v_type": "Types",
+							"i_delete": "0"
+						}
+					}
+				],
 			},
 			
 
@@ -254,7 +323,15 @@
 					{ name : 'refferal_code', required : false, info : 'Refferal Code' },
 					{ name : 'lang', required : false, info : 'Language' },
 				],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : { 
+							"id" : "1",
+							"v_phone" : "Phone",
+						}
+					}
+				],
 			},
 			{
 				id 		: 'driverLogin',
@@ -268,15 +345,17 @@
 					{ name : 'v_device_token', required : true, info : '' },
 					{ name : 'v_imei_number', required : true, info : 'Primary IMEI Number [SIM1 for dual sim]' },
 				],
+				
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : 1,'
-							+BR+'v_token : Auth Token,'
-							+BR+'vehicle_id : Vehicle ID'
-							+BR+'lang : Language'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : { 
+							"id" : "1",
+							"v_token" : "Auth Token",
+							"vehicle_id" : "Vehicle ID",
+							"lang" : "Language",
+						}
+					}
 				],
 				
 			},
@@ -290,12 +369,14 @@
 					{ name : 'v_username', required : true, info : 'email or phone' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'v_otp : OTP,'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : { 
+							"v_otp" : "OTP"
+						}
+					}
 				],
+				
 			},
 			{
 				id 		: 'driverResetPassword',
@@ -308,7 +389,9 @@
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_otp', required : true, info : '' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			
@@ -322,11 +405,12 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'e_status : [active / inactive]'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : { 
+							"e_status" : "[active / inactive]"
+						}
+					}
 				],
 			},
 			{
@@ -342,7 +426,9 @@
 					{ name : 'l_latitude', required : false, info : 'Latitude' },
 					{ name : 'l_longitude', required : false, info : 'Longitude' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -356,15 +442,14 @@
 					{ name : 'period', required : false, info : 'daily(default), weekly, monthly' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : 1,'
-							+BR+'.'
-							+BR+'.'
-							+BR+'.'
-							+BR+'All Driver Fields'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : {
+							"my_trips": "Total Trips",
+							"my_earning": "Total Earning",
+							"ride_driver_payable": "Total Payable To Company"
+						}
+					}
 				],
 			},
 			
@@ -383,7 +468,7 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : ( JSON.stringify({
+						info : {
 							"list_icon": "http://192.168.0.222:3000/uploads/vehicle_type/1496657185-1493288195-03-B.png",
 							"charges": {
 								"upto_km": "11",
@@ -401,7 +486,7 @@
 								"cancel_charge_driver": "11",
 								"ride_time_pick_charge": "2"
 							}
-						}) ) 
+						}
 					}
 				],
 			},
@@ -418,15 +503,31 @@
 					{ name : 'id', required : true, info : 'Driver ID' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : 1,'
-							+BR+'.'
-							+BR+'.'
-							+BR+'.'
-							+BR+'All Driver Fields'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : { 
+							"v_image": "Image Path",
+							"v_name": "",
+							"v_email": "",
+							"v_phone": "",
+							"v_password": "",
+							"v_gender": "Male",
+							"v_token": "",
+							"i_city_id": 1,
+							"v_vehicle_type": "Bike",
+							"v_vehicle_number": "",
+							"v_image_rc_book": "Image Path",
+							"v_image_puc": "Image Path",
+							"v_image_insurance": "Image Path",
+							"v_image_license": "Image Path",
+							"v_image_adhar_card": "Image Path",
+							"v_image_permit_copy": "Image Path",
+							"v_image_police_copy": "Image Path",
+							"v_image_rc_book_2": "Image Path",
+							"v_image_adhar_card_2": "Image Path",
+							"v_image_license_2": "Image Path",
+						} 
+					}
 				],
 			},
 			{
@@ -442,7 +543,7 @@
 					{ name : 'v_image_insurance', required : true, info : 'Image Insurance' },
 				],
 				response   : [
-					{ name : 'data', info : JSON.stringify({ }) }
+					{ name : 'data', info : { } }
 				],
 			},
 			{
@@ -456,7 +557,9 @@
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_old_password', required : true, info : 'must be 6 to 10 characters' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'driverReachAtPickup',
@@ -468,7 +571,9 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			
@@ -485,21 +590,17 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : (
-							JSON.stringify([
-								{
-									"id": "Ride ID [111]",
-									"d_time": "Ride Time Stamp [1499245061000]",
-									"v_ride_code": "Ride Code [RD00000000]",
-									"final_amount": "Ride Amount [100.00]",
-									"payment_mode": "Ride Payment Mode",
-									"e_status": "Ride Amount",
-									"user_v_id": "User ID",
-									"user_v_name": "User Name",
-									"user_v_image": "User Image"
-								}
-							])
-						) 
+						info : [{
+							"id": "Ride ID [111]",
+							"d_time": "Ride Time Stamp [1499245061000]",
+							"v_ride_code": "Ride Code [RD00000000]",
+							"final_amount": "Ride Amount [100.00]",
+							"payment_mode": "Ride Payment Mode",
+							"e_status": "Ride Amount",
+							"user_v_id": "User ID",
+							"user_v_name": "User Name",
+							"user_v_image": "User Image"
+						}]
 					}
 				]
 			},
@@ -517,18 +618,16 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : (
-							JSON.stringify({
-								"wallet_amount": "587.43",
-								"wallet_history": [{
-									"from": "Trasaction Type",
-									"message": "Message"
-								},{
-									"from": "Trasaction Type",
-									"message": "Message"
-								}]
-							})
-						) 
+						info : {
+							"wallet_amount": "587.43",
+							"wallet_history": [{
+								"from": "Trasaction Type",
+								"message": "Message"
+							},{
+								"from": "Trasaction Type",
+								"message": "Message"
+							}]
+						}
 					}
 				]
 			},		
@@ -550,7 +649,9 @@
 					{ name : 'start_address', required : false, info : '' },
 					{ name : 'end_address', required : false, info : '' },
 				],
-				response   : []
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},	
 			{
 				id 		: 'getDriverLocation',
@@ -560,7 +661,17 @@
 				params 	: [
 					{ name : 'i_driver_id', required : true, info : 'Driver ID' },
 				],
-				response   : []
+				response   : [
+					{ 
+						name : 'data', 
+						info : { 
+							"l_latitude": "23.0402166",
+							"l_longitude": "72.5187843",
+							"list_icon": "Image Path",
+							"plotting_icon": "Image Path"
+						}
+					}
+				],
 			},	
 			{
 				id 		: 'getDriverEarning',
@@ -576,25 +687,20 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : (
-							JSON.stringify({
-								"wallet_history": [{
-									"from": "Wallet Trasaction Type",
-									"message": "Message",
-									"details": {
-										"i_ride_id": "Ride Code",
-										"ride_date": "Ride Timestamp",
-										"vehicle_type": "Ride Vehicle Type [Not Used]",
-										"action": "Wallet Trasaction Type",
-										"action_amount": "Wallet Trasaction Amount",
-										"balance": "Wallet Balance"
-									}
-								},{
-									"from": "Trasaction Type",
-									"message": "Message"
-								}]
-							})
-						) 
+						info : {
+							"wallet_history": [{
+								"from": "Wallet Trasaction Type",
+								"message": "Message",
+								"details": {
+									"i_ride_id": "Ride Code",
+									"ride_date": "Ride Timestamp",
+									"vehicle_type": "Ride Vehicle Type [Not Used]",
+									"action": "Wallet Trasaction Type",
+									"action_amount": "Wallet Trasaction Amount",
+									"balance": "Wallet Balance"
+								}
+							}]
+						}
 					}
 				]
 			},	
@@ -608,7 +714,15 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 				],
-				response   : []
+				response   : [
+					{ 
+						name : 'data', 
+						info : { 
+							"ride": "Ride Data",
+							"_payment_data": "Payment List Array"
+						}
+					}
+				],
 			},	
 			
 
@@ -631,7 +745,15 @@
 					{ name : 'refferal_code', required : false, info : 'Refferal Code' },
 					{ name : 'lang', required : false, info : 'Language' },
 				],
-				response   : [],
+				response   : [
+					{ 
+						name : 'data', 
+						info : { 
+							"id" : "1",
+							"v_phone" : "Phone"
+						} 
+					}
+				],
 			},
 			{
 				id 		: 'userLogin',
@@ -645,14 +767,16 @@
 					{ name : 'v_imei_number', required : true, info : 'Primary IMEI Number [SIM1 for dual sim]' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : 1,'
-							+BR+'v_token : Auth Token'
-							+BR+'lang : Language'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : { 
+							"id" : "1",
+							"v_token" : "Auth Token",
+							"lang" : "Language"
+						} 
+					}
 				],
+				
 			},
 			{
 				id 		: 'userForgotPassword',
@@ -664,12 +788,14 @@
 					{ name : 'v_username', required : true, info : 'email or phone' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'v_otp : OTP,'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : { 
+							"v_otp" : "OTP"
+						} 
+					}
 				],
+				
 			},
 			{
 				id 		: 'userResetPassword',
@@ -681,7 +807,9 @@
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_otp', required : true, info : '' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'userProfileGet',
@@ -691,19 +819,50 @@
 				params 	: [
 					{ name : 'login_id', required : false, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
-					
 					{ name : 'id', required : true, info : 'User ID' },
 				],
+				
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : 1,'
-							+BR+'.'
-							+BR+'.'
-							+BR+'.'
-							+BR+'All User Fields'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : {
+							"id": "User ID",
+							"v_name": "User Name",
+							"v_email": "",
+							"v_phone": "",
+							"v_otp": "",
+							"d_added": "",
+							"d_modified": "",
+							"e_status": "",
+							"v_device_token": "",
+							"d_last_login": "",
+							"v_role": "user",
+							"v_image": "",
+							"l_data": {
+								"rate": "0",
+								"rate_total": "0",
+								"referral_code": "",
+								"is_otp_verified": "0",
+								"referral_amount": "0",
+								"referral_code_id": "0",
+								"referral_user_id": "0",
+								"last_location_update": ""
+							},
+							"v_token": "",
+							"v_imei_number": "",
+							"v_gender": "male / female",
+							"is_premium": "0 / 1",
+							"l_latitude": "00.000000",
+							"l_longitude": "00.000000",
+							"is_onduty": "0",
+							"i_city_id": "0",
+							"is_onride": "0",
+							"is_buzzed": "0",
+							"i_delete": "0",
+							"v_id": "User ID",
+							"lang": "en"
+						} 
+					}
 				],
 			},
 			{
@@ -723,15 +882,7 @@
 					{ name : 'v_image', required : true, info : 'Image File' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : 1,'
-							+BR+'.'
-							+BR+'.'
-							+BR+'.'
-							+BR+'All User Fields'
-						+BR+'}'
-					) }
+					{ name : 'data', info : { } }
 				],
 			},
 			{
@@ -745,7 +896,9 @@
 					{ name : 'v_password', required : true, info : 'must be 6 to 10 characters' },
 					{ name : 'v_old_password', required : true, info : 'must be 6 to 10 characters' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'getUserRides',
@@ -757,8 +910,8 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 				],
 				response   : [
-					
-				]
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -773,8 +926,8 @@
 					{ name : 'l_comment', required : true, info : 'Comment text' },
 				],
 				response   : [
-					
-				]
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'userLocationUpdate',
@@ -787,7 +940,9 @@
 					{ name : 'l_latitude', required : true, info : 'Latitude' },
 					{ name : 'l_longitude', required : true, info : 'Longitude' },
 				],
-				response   : []
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			
@@ -802,25 +957,20 @@
 					{ name : 'wallet_type', required : true, info : 'money (default) / coupon' },
 				],
 				response   : [
-					{ name : 'data.wallet_amount', info : ('Wallet Amount') },
-					{ name : 'data.wallet_history', info : (
-						'['
-							+BR+'{'
-								+BR+'id : 1,'
-								+BR+'message : Message,'
-								+BR+'from : Wallet etc,'
-								+BR+'d_added : 2017-04-11T08:20:18.000Z,'
-							+BR+'},'
-							+BR+'{'
-								+BR+'id : 2,'
-								+BR+'message : Message,'
-								+BR+'from : Wallet etc,'
-								+BR+'d_added : 2017-04-11T08:20:18.000Z,'
-							+BR+'}'
-						+BR+
-						']'
-					) }
-				]
+					{ 
+						name : 'data', 
+						info : {
+							"wallet_amount" : "Wallet Amount",
+							"wallet_history" : [{
+								"id" : "ID",
+								"message" : "Message",
+								"from" : "Wallet, Referral etc",
+								"d_added" : "Date Timestamp",
+							}]
+						}
+					}
+				],
+				
 			},
 
 			{
@@ -837,7 +987,7 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : ( JSON.stringify({
+						info : {
 							"l_data": {
 								"charges": {
 									"upto_km": "11",
@@ -858,7 +1008,7 @@
 								},
 								"list_icon": "http://192.168.0.222:3000/uploads/vehicle_type/1496657185-1493288195-03-B.png"
 							}
-						}) ) 
+						}
 					}
 				],
 			},
@@ -871,14 +1021,17 @@
 					{ name : 'login_id', required : true, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 				],
+				
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'v_referral_code : Referral Code,'
-							+BR+'earn_money : Earn Money When Share'
-						+BR+'}'
-					) }
-				]
+					{ 
+						name : 'data', 
+						info : {
+							"v_referral_code" : "Referral Code",
+							"earn_money" : "Earn Money When Share",
+						}
+					}
+				],
+				
 			},
 			{
 				id 		: 'getPromotionCodes',
@@ -890,21 +1043,20 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'city', required : true, info : 'City Name' },	
 				],
+				
 				response   : [
-					{ name : 'data', info : (
-						'['
-							+BR+'{'
-								+BR+'id : Code ID,'
-								+BR+'v_title : Code Title,'
-								+BR+'v_code : Code,'
-								+BR+'d_start_date : Start Date,'
-								+BR+'d_end_date : End Date / Valid Till,'
-								+BR+'l_description : Code Description'
-							+BR+'},'
-						+BR+
-						']'
-					) }
-				]
+					{ 
+						name : 'data', 
+						info : [{
+							"id" : "Code ID",
+							"v_title" : "Code Title",
+							"v_code" : "Code",
+							"d_start_date" : "Start Date",
+							"d_end_date" : "End Date / Valid Till",
+							"l_description" : "Code Description",
+						}]
+					}
+				],
 			},
 			
 			{
@@ -920,7 +1072,9 @@
 					
 					{ name : 'transaction_id', required : false, info : 'Transaction ID [Mandatory for PayUmoney]' },
 				],
-				response   : []
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'rideSOS',
@@ -936,7 +1090,9 @@
 					{ name : 'city', required : false, info : 'City' },
 					
 				],
-				response   : []
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 { id : 'br', name : 'Ride APIs', },
@@ -972,12 +1128,13 @@
 					
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'i_ride_id : Ride ID,'
-							+BR+'v_pin : Ride Pin'
-						+BR+'}'
-					) }
+					{ 
+						name : 'data', 
+						info : { 
+							"i_ride_id" : "Ride ID",
+							"v_pin" : "Ride Pin",
+						}
+					}
 				],
 			},
 			{
@@ -990,7 +1147,9 @@
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'confirmRide',
@@ -1003,7 +1162,9 @@
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 					{ name : 'payment_mode', required : true, info : 'cash(default)' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -1021,12 +1182,12 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : JSON.stringify({
+						info : {
 							"promocode_id" : "Code ID",
 							"promocode_code" : "Code",
 							"promocode_code_discount" : "(Flat) OR (In %)",
 							"promocode_code_discount_upto" : "Max Discount"
-						})
+						}
 					}
 				]
 			},
@@ -1043,15 +1204,8 @@
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'promocode_id : Code ID,'
-							+BR+'promocode_code : Code,'
-							+BR+'promocode_code_discount : (Flat) OR (In %)'
-							+BR+'promocode_code_discount_upto : Max Discount'
-						+BR+'},'
-					) }
-				]
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'buzzAction',
@@ -1067,8 +1221,8 @@
 					{ name : 'action', required : true, info : 'Buzz Action from (accept,denied,close)' },
 				],
 				response   : [
-					
-				]
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -1083,7 +1237,9 @@
 					{ name : 'cancel_reason_id', required : true, info : 'Cancel Reason ID' },
 					{ name : 'cancel_reason_text', required : true, info : 'Cancel Reason Text' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'rideRate',
@@ -1098,7 +1254,9 @@
 					{ name : 'l_comment', required : true, info : 'Comment text' },
 					{ name : 'v_type', required : true, info : '[user / driver]' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -1114,8 +1272,8 @@
 					{ name : 'i_vehicle_id', required : true, info : 'Vehicle ID' },
 				],
 				response   : [
-					
-				]
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -1124,7 +1282,9 @@
 				name 	: 'Get Ride Charge Types',
 				method 	: 'GET / POST',
 				params 	: [],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -1140,7 +1300,9 @@
 					{ name : 'v_charge_info', required : false, info : 'Charge Info' },
 					{ name : 'f_amount', required : true, info : 'Amount' },	
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			
@@ -1154,7 +1316,9 @@
 					{ name : 'v_token', required : false, info : 'Auth Token' },
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },	
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'rideComplete',
@@ -1171,7 +1335,9 @@
 					{ name : 'estimate_dry_run', required : false, info : 'Estimate Driver Dry Run' },
 					
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'rideConfirmPayment',
@@ -1183,7 +1349,9 @@
 					{ name : 'v_token', required : false, info : 'Auth Token' },
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			
@@ -1200,7 +1368,9 @@
 					{ name : 'i_ride_id', required : true, info : 'Ride ID' },
 					{ name : 'v_phone', required : true, info : 'Phone' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'rideTrack',
@@ -1212,7 +1382,9 @@
 					{ name : 'v_token', required : false, info : 'Auth Token' },
 					{ name : 'v_track_code', required : true, info : 'Ride Track Code' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			
@@ -1226,7 +1398,9 @@
 					{ name : 'login_id', required : true, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'faqGetTypes',
@@ -1237,7 +1411,9 @@
 					{ name : 'login_id', required : true, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -1252,7 +1428,9 @@
 					{ name : 'i_type_id', required : true, info : 'Type ID [FAQ / Support Type]' },
 					{ name : 'v_support_text', required : true, info : 'Support Text' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'getMyTickets',
@@ -1263,7 +1441,9 @@
 					{ name : 'login_id', required : true, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			
@@ -1282,7 +1462,9 @@
 					{ name : 'estimate_km', required : false, info : 'Estimate Kilometers' },
 					{ name : 'estimate_time', required : false, info : 'Estimate Time (in minits)' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'getVehicleTypes',
@@ -1292,7 +1474,9 @@
 				params 	: [
 					{ name : 'city', required : true, info : 'City Name' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			{
 				id 		: 'getVehiclesList',
@@ -1305,7 +1489,9 @@
 					{ name : 'l_latitude', required : true, info : 'Current Latitude' },
 					{ name : 'l_longitude', required : true, info : 'Current Longitude' },
 				],
-				response   : [],
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 			
 			{
@@ -1317,7 +1503,9 @@
 					{ name : 'v_username', info : 'Email / Phone' },
 					{ name : 'v_otp', info : 'otp' },
 				],
-				response   : []
+				response   : [
+					{ name : 'data', info : { } }
+				],
 			},
 
 		];
@@ -1403,25 +1591,18 @@
 									apiStr_2 += '<td width="70%" >Info</td>';
 								apiStr_2 += '</tr>';
 								
-								apiStr_2 += '<tr>';
-									apiStr_2 += '<td>status</td>';
-									apiStr_2 += '<td>1 OR 0</td>';
-								apiStr_2 += '</tr>';
 								
-								apiStr_2 += '<tr>';
-									apiStr_2 += '<td>message</td>';
-									apiStr_2 += '<td>Success OR Error message</td>';
-								apiStr_2 += '</tr>';
-								
+								apiStr_2 += '<tr><td>status</td><td>1 OR 0</td></tr>';
+								apiStr_2 += '<tr><td>message</td><td>Success OR Error message</td></tr>';
 								if( obj.response.length ){
-									for( cnt_params = 0; cnt_params < obj.response.length; cnt_params++ ){
-										var thisParam = obj.response[ cnt_params ];
-										apiStr_2 += '<tr>';
-											apiStr_2 += '<td>'+thisParam.name+'</td>';
-											apiStr_2 += '<td>'+( thisParam.info ? thisParam.info : '-' )+'</td>';
-										apiStr_2 += '</tr>';
+									for( var k in obj.response ){
+										apiStr_2 += 
+										'<tr><td>'+obj.response[k].name+'</td><td>'+JSON.stringify( obj.response[k].info )+'</td></tr>';
 									}	
 								}
+								
+								
+								
 								apiStr_2 += '';
 							apiStr_2 += '</table>';
 						apiStr_2 += '</td>';

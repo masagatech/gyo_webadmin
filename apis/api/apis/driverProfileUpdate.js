@@ -53,17 +53,10 @@ var currentApi = function( req, res, next ){
 		
 		var login_id 	= gnrl._is_undf( params.login_id );
 		var v_token 	= gnrl._is_undf( params.v_token );
-		var v_name 		= gnrl._is_undf( params.v_name );
-		var v_email 	= gnrl._is_undf( params.v_email );
-		var v_phone 	= gnrl._is_undf( params.v_phone );
 		var i_city_id 	= gnrl._is_undf( params.i_city_id );
 		
 		if( !login_id.trim() ){ _status = 0; _message = 'err_req_id'; }
 		if( _status && !v_token ){ _status = 0; _message = 'err_req_auth_token'; }
-		if( _status && !v_name.trim() ){ _status = 0; _message = 'err_req_name'; }
-		if( _status && !v_email.trim() ){ _status = 0; _message = 'err_req_email'; }
-		if( _status && !v_phone.trim() ){ _status = 0; _message = 'err_req_phone'; }
-		if( _status && !validator.isEmail( v_email ) ){ _status = 0; _message = 'err_invalid_email'; }
 		if( _status && !i_city_id ){ _status = 0; _message = 'err_req_city'; }
 		
 		var folder = 'drivers';
@@ -97,35 +90,9 @@ var currentApi = function( req, res, next ){
 					});
 				},
 				
-				// Check Email + Phone
-				function( callback ){
-					var _q = " SELECT id, v_email ";
-					_q += " FROM tbl_user WHERE true ";
-					_q += " AND id != '"+login_id+"' ";
-					_q += " AND ( LOWER( v_email ) = '"+v_email.toLowerCase()+"' OR v_phone = '"+v_phone+"' ); ";
-					dclass._query( _q, function( status, data ){ 
-						if( status && data.length ){
-							gnrl._remove_loop_file( fs, fileArr );
-							if( v_email == data[0].v_email ){
-								gnrl._api_response( res, 0, 'err_msg_exists_email', {} );
-							}
-							else{
-								gnrl._api_response( res, 0, 'err_msg_exists_phone', {} );
-							}
-						}
-						else{
-							callback( null );
-						}
-					});
-				},
-				
-				
 				// Update User
 				function( callback ){
 					var _ins = {
-						'v_name' : v_name,
-						'v_email' : v_email,
-						'v_phone' : v_phone,
 						'i_city_id' : i_city_id,
 						'd_modified' : gnrl._db_datetime(),
 					};

@@ -44,6 +44,10 @@ var currentApi = function( req, res, next ){
 			'v_image_adhar_card'	: { 'name' : '', 'path' : '', },
 			'v_image_permit_copy'	: { 'name' : '', 'path' : '', },
 			'v_image_police_copy' 	: { 'name' : '', 'path' : '', },
+			
+			'v_image_rc_book_2' 	: { 'name' : '', 'path' : '', },
+			'v_image_adhar_card_2' 	: { 'name' : '', 'path' : '', },
+			'v_image_license_2' 	: { 'name' : '', 'path' : '', },
 		};
 		
 		for( var k in req.files ){
@@ -93,10 +97,14 @@ var currentApi = function( req, res, next ){
 		
 		if( _status && !fileArr['v_image'].name ){ _status = 0; _message = 'err_req_profile_image'; }
 		if( _status && !fileArr['v_image_rc_book'].name ){ _status = 0; _message = 'err_req_rc_book_image'; }
+		if( _status && !fileArr['v_image_rc_book_2'].name ){ _status = 0; _message = 'err_req_rc_book_image'; }
+		
 		if( _status && !fileArr['v_image_puc'].name ){ _status = 0; _message = 'err_req_puc_image'; }
 		if( _status && !fileArr['v_image_insurance'].name ){ _status = 0; _message = 'err_req_insurance_image'; }
 		if( _status && !fileArr['v_image_license'].name ){ _status = 0; _message = 'err_req_image_license'; }
+		if( _status && !fileArr['v_image_license_2'].name ){ _status = 0; _message = 'err_req_image_license'; }
 		if( _status && !fileArr['v_image_adhar_card'].name ){ _status = 0; _message = 'err_req_image_adhar_card'; }
+		if( _status && !fileArr['v_image_adhar_card_2'].name ){ _status = 0; _message = 'err_req_image_adhar_card'; }
 		if( _status && !fileArr['v_image_permit_copy'].name ){ _status = 0; _message = 'err_req_image_permit_copy'; }
 		if( _status && !fileArr['v_image_police_copy'].name ){ _status = 0; _message = 'err_req_image_police_copy'; }
 		
@@ -244,6 +252,10 @@ var currentApi = function( req, res, next ){
 									'v_image_adhar_card' 	: fileArr['v_image_adhar_card'].name,
 									'v_image_permit_copy' 	: fileArr['v_image_permit_copy'].name,
 									'v_image_police_copy' 	: fileArr['v_image_police_copy'].name,
+									
+									'v_image_rc_book_2' 	: fileArr['v_image_rc_book_2'].name,
+									'v_image_license_2' 	: fileArr['v_image_license_2'].name,
+									'v_image_adhar_card_2' 	: fileArr['v_image_adhar_card_2'].name,
 								}, 
 								function( vehicle_status, vehicle_data ){ 
 									if( vehicle_status ){
@@ -254,6 +266,9 @@ var currentApi = function( req, res, next ){
 										fs.rename( fileArr['v_image_adhar_card'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_adhar_card'].name, function(err){});
 										fs.rename( fileArr['v_image_permit_copy'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_permit_copy'].name, function(err){});
 										fs.rename( fileArr['v_image_police_copy'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_police_copy'].name, function(err){});
+										fs.rename( fileArr['v_image_rc_book_2'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_rc_book_2'].name, function(err){});
+										fs.rename( fileArr['v_image_license_2'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_license_2'].name, function(err){});
+										fs.rename( fileArr['v_image_adhar_card_2'].path, dirUploads+'/'+folder+'/'+fileArr['v_image_adhar_card_2'].name, function(err){});
 										callback( null );
 									}
 									else{

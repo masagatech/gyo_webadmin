@@ -22,7 +22,13 @@ $gnrl->check_login();
         'v_image_adhar_card',
         'v_image_permit_copy',
         'v_image_police_copy',
+		
+		'v_image_rc_book_2',
+		'v_image_license_2',
+		'v_image_adhar_card_2',
     );
+	
+	
 	## Insert Record in database starts
 	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
         
@@ -52,62 +58,34 @@ $gnrl->check_login();
                 'd_added' => date('Y-m-d H:i:s'),
                 'd_modified' => date('Y-m-d H:i:s')
             );
-            $id = $dclass->insert( $table, $ins );
-            $id=$id['0'];
-            $keyVal = array();
-            if( isset( $_FILES['v_image']['name'] ) && $_FILES['v_image']['name'] != "" ) {
+            
+			if( isset( $_FILES['v_image']['name'] ) && $_FILES['v_image']['name'] != "" ) {
                 $dest = UPLOAD_PATH.$folder."/";
                 $file_name = $gnrl->removeChars( time().'-'.$_FILES['v_image']['name'] ); 
                 if( move_uploaded_file( $_FILES['v_image']['tmp_name'], $dest.$file_name ) ){
-                    $keyVal['v_image'] = $file_name;
-                    // @unlink( $dest.$OLDNAME );
+                    $ins['v_image'] = $file_name;
                 }
             }
-            if( count( $keyVal ) ){
-                $upd['v_image'] = $file_name;
-                $upd['d_modified'] = date('Y-m-d H:i:s');
-                $dclass->update( $table, $upd, " id = '".$id."' ");   
-            }
-            ##IN VEHICLE TABLE ENTRY
+			
+			$id = $dclass->insert( $table, $ins );
+			$id = $id['0'];
+			
+			
+            ## IN VEHICLE TABLE ENTRY
             $ins2 = array(
-                'i_driver_id'  => $id,
-                'v_name' =>$vehicle_name,
-                'v_type' =>$v_type,
-                'v_vehicle_number'   => $v_vehicle_number,
-                
+                'i_driver_id'  		=> $id,
+                'v_name' 			=> $vehicle_name,
+                'v_type' 			=> $v_type,
+                'v_vehicle_number'  => $v_vehicle_number,
             );
-            
+			
             ## FOR PROOF 
-            $keyVal = array();
             foreach( $filesArray as $imgKey ){
                 if( isset( $_FILES[$imgKey]['name'] ) && $_FILES[$imgKey]['name'] != "" ) {
                     $dest = UPLOAD_PATH.$folder."/";
                     $file_name = $gnrl->removeChars( time().'-'.$_FILES[$imgKey]['name'] ); 
                     if( move_uploaded_file( $_FILES[$imgKey]['tmp_name'], $dest.$file_name ) ){
-                        $keyVal[$imgKey] = $file_name;
                         $ins2[$imgKey] = $file_name;
-                        if($imgKey=='v_image_rc_book'){
-                            $OLDNAME= $oldname_rc_book;
-                        }
-                        if($imgKey=='v_image_puc'){
-                            $OLDNAME= $oldname_puc;
-                        }
-                        if($imgKey=='v_image_insurance'){
-                            $OLDNAME= $oldname_insurance;
-                        }
-                        if($imgKey=='v_image_license'){
-                            $OLDNAME= $oldname_license;
-                        }
-                        if($imgKey=='v_image_adhar_card'){
-                            $OLDNAME= $oldname_adhar_card;
-                        }
-                        if($imgKey=='v_image_permit_copy'){
-                            $OLDNAME= $oldname_permit_copy;
-                        }
-                        if($imgKey=='v_image_police_copy'){
-                            $OLDNAME= $oldname_police_copy;
-                        }
-                        @unlink( $dest.$OLDNAME );
                     }
                 }
             }
@@ -239,7 +217,7 @@ $gnrl->check_login();
                         'v_name' 			=> $vehicle_name,
 						'v_vehicle_number' 	=> $v_vehicle_number,
                     );
-                    $keyVal = array();
+                    
                     foreach( $filesArray as $imgKey ){
                         if( isset( $_FILES[$imgKey]['name'] ) && $_FILES[$imgKey]['name'] != "" ) {
                             $dest = UPLOAD_PATH.$folder."/";
@@ -423,9 +401,16 @@ $gnrl->check_login();
 										<?php
 										$vehicleImages = array(
 											'v_image_license' => 'Driving license',
+											'v_image_license_2' => 'Driving license Back Side',
+											
 											'v_image_adhar_card' => 'Adhar Card',
+											'v_image_adhar_card_2' => 'Adhar Card Back Side',
+											
 											'v_image_permit_copy' => 'Permit Copy',
+											
 											'v_image_rc_book' => 'RC Book',
+											'v_image_rc_book_2' => 'RC Book Back Side',
+											
 											'v_image_puc' => 'PUC Image',
 											'v_image_insurance' => 'Insurance Image',
 											'v_image_police_copy' => 'Police Verification',

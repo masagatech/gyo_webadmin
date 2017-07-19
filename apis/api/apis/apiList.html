@@ -221,6 +221,7 @@
 				method 	: 'GET / POST',
 				params 	: [
 					{ name : 'login_id', required : false, info : 'Login ID' },
+					
 					{ name : 'v_name', required : true, info : '' },
 					{ name : 'v_email', required : true, info : '' },
 					{ name : 'v_phone', required : true, info : '' },
@@ -243,7 +244,11 @@
 					{ name : 'v_image_permit_copy', required : true, info : 'Image' },
 					{ name : 'v_image_police_copy', required : true, info : 'Image' },
 					
+					{ name : 'v_image_rc_book_2', required : true, info : 'Image' },
+					{ name : 'v_image_license_2', required : true, info : 'Image' },
+					{ name : 'v_image_adhar_card_2', required : true, info : 'Image' },
 					
+					{ name : 'i_city_id', required : true, info : 'City ID' },
 					{ name : 'l_latitude', required : true, info : 'Latitude' },
 					{ name : 'l_longitude', required : true, info : 'Longitude' },
 					{ name : 'refferal_code', required : false, info : 'Refferal Code' },
@@ -435,28 +440,12 @@
 					{ name : 'v_name', required : true, info : '' },
 					{ name : 'v_email', required : true, info : '' },
 					{ name : 'v_phone', required : true, info : '' },
-					{ name : 'v_gender', required : false, info : 'male / female' },
-					{ name : 'v_image', required : true, info : 'Image File' },
-					{ name : 'v_type', required : true, info : 'Vehicle type' },
-					{ name : 'v_vehicle_number', required : true, info : 'Vehicle number' },
-					{ name : 'v_image_rc_book', required : true, info : 'Image RC book file' },
+					{ name : 'i_city_id', required : true, info : 'City ID' },
 					{ name : 'v_image_puc', required : true, info : 'Image PUC' },
 					{ name : 'v_image_insurance', required : true, info : 'Image Insurance' },
-					{ name : 'v_image_license', required : true, info : 'Image' },
-					{ name : 'v_image_adhar_card', required : true, info : 'Image' },
-					{ name : 'v_image_permit_copy', required : true, info : 'Image' },
-					{ name : 'v_image_police_copy', required : true, info : 'Image' },
 				],
 				response   : [
-					{ name : 'data', info : (
-						'{'
-							+BR+'id : 1,'
-							+BR+'.'
-							+BR+'.'
-							+BR+'.'
-							+BR+'All Driver Fields'
-						+BR+'}'
-					) }
+					{ name : 'data', info : JSON.stringify({ }) }
 				],
 			},
 			{

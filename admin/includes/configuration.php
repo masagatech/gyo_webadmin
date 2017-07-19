@@ -233,8 +233,8 @@ error_reporting( E_ERROR );
 		'ride_alert_sos' 				=> 'Ride Alert SOS',
 		'ticket_resolved' 				=> 'Ticket Resolved',
 		
-		## Saperate
-		'driver_ride_complete' 			=> 'Driver : Ride Complete',
+		
+		'testing' 						=> 'Testing Email Template',
 		
 	);
 	

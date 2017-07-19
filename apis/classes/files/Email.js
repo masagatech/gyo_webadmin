@@ -27,6 +27,8 @@ var currClass = function( params ){
 				template : {},
 			};
 			
+			_keywords['[date]'] = gnrl._db_ymd( 'sitedate' );
+			
 			async.series([
 				
 				// Check Requirnments
@@ -109,7 +111,7 @@ var currClass = function( params ){
 						temp2 = temp2.split( k ).join( _keywords[k] );
 					}
 					
-					_result.email.j_title = temp1.replace(/\\/g, '' );
+					_result.email.j_title 			= temp1.replace(/\\/g, '' );
 					_result.settings.email_template = temp2.replace(/\\/g, '' );
 
 					callback( null );

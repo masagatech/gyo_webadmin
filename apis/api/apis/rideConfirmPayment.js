@@ -59,6 +59,7 @@ var currentApi = function( req, res, next ){
 				_q += " dr.id AS driver_id ";
 				_q += " , dr.v_name AS driver_name ";
 				_q += " , dr.v_email AS driver_email ";
+				_q += " , dr.v_device_token AS driver_device_token ";
 				_q += " , COALESCE( dr.l_data->>'referral_code', '' ) AS driver_referral_code ";
 				_q += " , COALESCE( ( dr.l_data->>'referral_amount' )::numeric, 0 ) AS driver_referral_amount ";
 				_q += " , COALESCE( ( dr.l_data->>'referral_user_id' )::numeric, 0 ) AS driver_referral_user_id ";
@@ -85,10 +86,13 @@ var currentApi = function( req, res, next ){
 				_q += " , rd.d_end ";
 				_q += " , rd.l_data AS ride_l_data ";
 				
+				_q += " , vh.v_vehicle_number AS vehicle_number ";
+				
 				_q += " FROM tbl_ride rd ";
 				
 				_q += " LEFT JOIN tbl_user ur ON ur.id = rd.i_user_id ";
 				_q += " LEFT JOIN tbl_user dr ON dr.id = rd.i_driver_id ";
+				_q += " LEFT JOIN tbl_vehicle vh ON vh.i_driver_id = rd.i_driver_id ";
 				
 				_q += " WHERE true ";
 				_q += " AND rd.id = '"+i_ride_id+"' ";
@@ -121,32 +125,41 @@ var currentApi = function( req, res, next ){
 						}
 						
 						_keywords = {
-							'[user_name]' : _data.user_name,
-							'[i_ride_id]' : i_ride_id,
-							'[ride_pin]' : _data.v_pin,
-							'[ride_code]' : _data.v_ride_code,
-							'[ride_total]' : gnrl._round( _data.ride_l_data.final_amount ),
-							'[ride_total_time]' : _data.ride_l_data.trip_time_in_min,
-							'[ride_discount]' : _data.ride_l_data.promocode_code_discount,
 							
-							'[ride_start_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_start ) ) ),
-							'[ride_end_time]' : gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_end ) ) ),
+							'[user_name]' 			: _data.user_name,
+							'[i_ride_id]' 			: i_ride_id,
+							'[ride_pin]' 			: _data.v_pin,
+							'[ride_code]' 			: _data.v_ride_code,
 							
-							'[ride_start_address]' : _data.ride_l_data.pickup_address,
-							'[ride_end_address]' : _data.ride_l_data.destination_address,
+							'[ride_distance]' 		: _data.ride_l_data.actual_distance,
+							'[ride_total_time]' 	: _data.ride_l_data.trip_time_in_min,
 							
-							'[ride_distance]' : _data.ride_l_data.actual_distance,
+							'[base_fare]' 			: gnrl._round( _data.ride_l_data.display_base_fare ),
+							'[min_charge]' 			: gnrl._round( _data.ride_l_data.display_min_charge ),
+							'[ride_time_charge]'	: gnrl._round( _data.ride_l_data.display_ride_time_charge ),
+							'[total_fare]' 			: gnrl._round( _data.ride_l_data.display_total_fare ),
+							'[service_tax]' 		: gnrl._round( _data.ride_l_data.display_service_tax ),
+							'[surcharge]' 			: gnrl._round( _data.ride_l_data.display_surcharge ),
+							'[other_charges]' 		: gnrl._round( _data.ride_l_data.display_other_charges ),
+							'[discount]' 			: gnrl._round( _data.ride_l_data.display_discount ),
+							
+							'[final_total]' 		: gnrl._round( _data.ride_l_data.final_amount ),
+							
+							'[ride_start_time]' 	: gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_start ) ) ),
+							'[ride_end_time]' 		: gnrl._db_ymd('Y-m-d h:i A', new Date( gnrl._timestamp( _data.d_end ) ) ),
+							
+							'[ride_start_address]' 	: _data.ride_l_data.pickup_address,
+							'[ride_end_address]' 	: _data.ride_l_data.destination_address,
+							
 							'[ride_promocode_code]' : _data.ride_l_data.promocode_code,
-							
 							'[ride_payment_method]' : tempPaymentMethod.join( ', ' ),
-							
 							'[ride_paid_by_wallet]' : _data.ride_l_data.ride_paid_by_wallet,
-							'[ride_paid_by_cash]' : _data.ride_l_data.ride_paid_by_cash,
+							'[ride_paid_by_cash]' 	: _data.ride_l_data.ride_paid_by_cash,
+							'[ride_bill_table]' 	: '',
 							
-							'[ride_bill_table]' : '',
-							
-							'[city]' : _data.ride_l_data.city,
-							'[driver_name]' : _data.driver_name,
+							'[city]' 				: _data.ride_l_data.city,
+							'[driver_name]' 		: _data.driver_name,
+							'[vehicle_number]' 		: _data.vehicle_number,
 						};
 						
 						callback( null );
@@ -239,18 +252,8 @@ var currentApi = function( req, res, next ){
 					// Email
 					function( callback ){
 						
-						_keywords['[user_name]'] = _keywords['[driver_name]'];
+						callback( null );
 						
-						Email.send({
-							_to : _data.driver_email,
-							_lang : _data.driver_lang,
-							_key : 'driver_ride_complete',
-							_keywords : _keywords,
-						}, function( error_mail, error_info ){
-							
-							callback( null );
-							
-						});
 					},
 					
 					// SMS
@@ -259,6 +262,31 @@ var currentApi = function( req, res, next ){
 						callback( null );
 						
 					},
+					
+					// Notification
+					function( callback ){
+						
+						Notification.send({
+							_key 	: 'driver_ride_complete',
+							_role 	: 'driver',
+							_tokens : [{
+								'id' 	: _data.driver_id,
+								'lang' 	: _data.driver_lang,
+								'token' : _data.driver_device_token,
+							}],
+							_keywords : {},
+							_custom_params : {
+								i_ride_id : i_ride_id,
+								ride_code : _data.v_ride_code,
+							},
+							_need_log : 0,
+						}, function( err, response ){
+							callback( null );
+						});
+						
+					},
+					
+					
 					
 				], function( error, results ){
 					

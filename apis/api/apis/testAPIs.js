@@ -27,11 +27,13 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		gnrl._api_response( res, 1, 'Done', gnrl._timestamp( '2017-04-21 12:50:55+05:30' ) );
 	}
 	
+	
+	
 	if( action == 'sendMail' ){
 		Email.send({
 			_to 		: 'deven.crestinfotech@gmail.com',
 			_lang 		: 'en',
-			_key 		: '', // driver_ride_complete
+			_key 		: '', 
 			_title 		: 'Testing Email From GoYo',
 			_body 		: 'Testing Email From GoYo',
 			_keywords 	: {},
@@ -42,13 +44,14 @@ var currentApi = function saveDriverInfo( req, res, done ){
 			});
 		});
 	}
-	if( action == 'sendSMS' ){
-		SMS.send({
-			_to : '8866207256',
-			_lang : 'en',
-			_key : '', // resend_otp
-			_body : 'Testing Email From GoYo',
-			_keywords : {},
+	
+	else if( action == 'sendTestingMail' ){
+		var email = gnrl._is_undf( params.email, 'deven.crestinfotech@gmail.com' );
+		Email.send({
+			_to 		: email,
+			_lang 		: _lang,
+			_key 		: 'testing',
+			_keywords 	: {},
 		}, function( error_mail, error_info ){
 			gnrl._api_response( res, 1, 'Done', {
 				error_mail : error_mail,
@@ -56,7 +59,42 @@ var currentApi = function saveDriverInfo( req, res, done ){
 			});
 		});
 	}
+	else if( action == 'sendTestingMailTemplates' ){
+		var email = 'deven.crestinfotech@gmail.com';
+		Email.send({
+			_to 		: email,
+			_lang 		: _lang,
+			_key 		: 'user_ride_complete',
+			_keywords 	: {},
+		}, function( error_mail, error_info ){
+			gnrl._api_response( res, 1, 'Done', {
+				status : error_mail,
+				info : error_info
+			});
+		});
+	}
 	
+	else if( action == 'fcm' ){
+		
+		
+		var fcm = new FCM( 'AIzaSyCU8agC8CBQ4h1STU969yQaFCOwtXxeziE' );
+		fcm.send({
+			registration_ids : [
+				'cdf7SeEmlJI:APA91bF9-wVwFVTFqagJX5qJKh-3afiasEhrJkkv3Bgkm1f8iHy6rJSovs6aKrzyX52uTQsTsntBz4Xd7jcEwpq64q-n1JSxdXeCHJSfuILqva5Atve2sDbJpYiuSgtnacwYn5xTGEpx'
+			],
+			notification : {
+				title : 'Testing Demo',
+				body : 'Testing Demo',
+			},
+			data : {}
+		}, function( err, response ){
+			gnrl._api_response( res, 1, 'Done', {
+				err : err, 
+				response : response,
+			});
+		});
+	
+	}
 	else if( action == 'fcm2' ){
 		var tokens = [];
 		tokens.push({
@@ -84,27 +122,6 @@ var currentApi = function saveDriverInfo( req, res, done ){
 			});
 		});
 	}
-	else if( action == 'fcm' ){
-		
-		
-		var fcm = new FCM( 'AIzaSyCU8agC8CBQ4h1STU969yQaFCOwtXxeziE' );
-		fcm.send({
-			registration_ids : [
-				'cdf7SeEmlJI:APA91bF9-wVwFVTFqagJX5qJKh-3afiasEhrJkkv3Bgkm1f8iHy6rJSovs6aKrzyX52uTQsTsntBz4Xd7jcEwpq64q-n1JSxdXeCHJSfuILqva5Atve2sDbJpYiuSgtnacwYn5xTGEpx'
-			],
-			notification : {
-				title : 'Testing Demo',
-				body : 'Testing Demo',
-			},
-			data : {}
-		}, function( err, response ){
-			gnrl._api_response( res, 1, 'Done', {
-				err : err, 
-				response : response,
-			});
-		});
-	
-	}
 	
 	else if( action == 'free_drivers'  ){
 		var _q = [];
@@ -126,6 +143,7 @@ var currentApi = function saveDriverInfo( req, res, done ){
 			gnrl._api_response( res, 1, 'Tables Truncated', {});
 		})
 	}
+	
 	else if( action == 'sms1' ){
 	
 		var url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user=Goyo&pwd=goyo123&sender=GoYooo';
@@ -151,6 +169,13 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		}
 	}
 	else if( action == 'sms2' ){
+		/*{
+			_to : '8866207256',
+			_lang : 'en',
+			_key : '', // resend_otp
+			_body : 'Testing Email From GoYo',
+			_keywords : {},
+		},*/
 		var params = {
 			_to      	: '8866207256',
 			_lang 		: _lang,
@@ -169,47 +194,11 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		
 	}
 	
-	else if( action == 'commission' ){
-		var company_commission = '5%';
-		gnrl._api_response( res, 1, 'Done', { 
-			'company_commission' : gnrl._isPercent( 200, company_commission ),
-		});
-	}
-	else if( action == 'waterfall' ){
-		async.waterfall([
-			function( callback ){
-				callback( null, { 'data_1' : 1 });
-			},
-			function( arg1, callback ){
-				Object.assign( arg1, { 'data_2' : 2 });
-				callback( null, arg1 );
-			},
-			function( arg1, callback ){
-				Object.assign( arg1, {'data_3' : 3 });
-				callback( null, arg1 );
-			}
-		], 
-		function( error, results ){
-			gnrl._api_response( res, 1, 'Done', results );
-		});
+	else if( action == 'sitedate' ){
 	}
 	
-	else if( action == '_db_period_time' ){
-		var dates = gnrl._db_period_time( params.time );
-		gnrl._api_response( res, 1, 'Done', dates );
-	}
-	else if( action == 'times' ){
-		// 
-		
-		var dt = gnrl._db_ymd('Y-m-d h:i A', new Date( 1500268149000 ) )
-		
-		gnrl._api_response( res, 1, 'Done', {
-			dt : dt
-		});
-	}
 	else{
 	}
-	
 	
 };
 module.exports = currentApi;

@@ -127,6 +127,7 @@ var currentApi = function( req, res, next ){
 			// Refresh Wallet
 			function( callback ){
 				Wallet.refreshWallet( _wallet.id, function( amount ){ 
+					_wallet.f_amount = amount;
 					callback( null );
 				});
 			},
@@ -143,9 +144,12 @@ var currentApi = function( req, res, next ){
 							_lang 		: _user.lang,
 							_key 		: 'user_add_money',
 							_keywords 	: {
-								'[user_name]' : _user.v_name,
-								'[amount]' : f_amount,
-								'[from]' : _payment_method.v_name,
+								'[user_name]' 		: _user.v_name,
+								'[amount]' 			: f_amount,
+								'[from]' 			: _payment_method.v_name,
+								'[balance]' 		: _wallet.f_amount,
+								'[transaction_id]' 	: transaction_id,
+								
 							},
 						}, function( error_mail, error_info ){
 							callback( null );
@@ -159,9 +163,12 @@ var currentApi = function( req, res, next ){
 							_lang 		: _user.lang,
 							_key 		: 'user_add_money',
 							_keywords 	: {
-								'[user_name]' : _user.v_name,
-								'[amount]' : f_amount,
-								'[from]' : _payment_method.v_name,
+								'[user_name]' 		: _user.v_name,
+								'[amount]' 			: f_amount,
+								'[from]' 			: _payment_method.v_name,
+								'[balance]' 		: _wallet.f_amount,
+								'[transaction_id]' 	: transaction_id,
+								
 							},
 						}, function( error_sms, error_info ){
 							callback( null );
@@ -179,9 +186,11 @@ var currentApi = function( req, res, next ){
 								token : _user.v_device_token 
 							}],
 							_keywords : {
-								'[user_name]' : _user.v_name,
-								'[amount]' : f_amount,
-								'[from]' : _payment_method.v_name,
+								'[user_name]' 		: _user.v_name,
+								'[amount]' 			: f_amount,
+								'[from]' 			: _payment_method.v_name,
+								'[balance]' 		: _wallet.f_amount,
+								'[transaction_id]' 	: transaction_id,
 							},
 							_custom_params : {},
 							_need_log : 1,
@@ -203,16 +212,16 @@ var currentApi = function( req, res, next ){
 		function( error, results ){
 			
 			var _data = {};
-			_data._payment_method = _payment_method;
-			_data._user = _user;
-			_data._wallet = _wallet;
+			//_data._payment_method = _payment_method;
+			//_data._user = _user;
+			//_data._wallet = _wallet;
 			
 			gnrl._api_response( res, 1, 'succ_money_added', _data );
 			
 		});
 	}
 	else{
-		gnrl._api_response( res, 0, _message );
+		gnrl._api_response( res, 0, _message, {} );
 	}
 };
 

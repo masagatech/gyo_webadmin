@@ -193,9 +193,14 @@ var gnrl = {
 	    return text;
 	},
 	
+	_curr_date : function(){
+		// return new Date( new Date().toLocaleString( "en-US", { timeZone: "Europe/London" }) );
+		return new Date( new Date().toLocaleString( "en-US", { timeZone: "Asia/Kolkata" }) );
+	},
+	
 	_db_ymd : function( format = '', DT = '' ){
 		
-		DT = DT ? DT : new Date();
+		DT = DT ? DT : this._curr_date();
 		
 		var	Y = DT.getFullYear();
 		var	M = DT.getMonth() + 1;
@@ -203,6 +208,7 @@ var gnrl = {
 		var	H = DT.getHours();
 		var	I = DT.getMinutes();
 		var	S = DT.getSeconds();
+		var	DY = DT.getDay();
 		
 		var hours = H;
 		var minutes = I;
@@ -217,6 +223,20 @@ var gnrl = {
 		if( S < 10 ) S = '0'+S;
 		if( hours < 10 ) hours = '0'+hours;
 		if( minutes < 10 ) minutes = '0'+minutes;
+		
+		var weekdayArr = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
+		var monthArr = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
+		
+		if( format == 'sitedate' ){
+			// Tuesday, 18 July 2017, 06:30 PM
+			var temp = weekdayArr[parseInt(DY)];
+			temp += ', '+D;
+			temp += ' '+monthArr[parseInt(M)-1];
+			temp += ' '+Y;
+			temp += ', '+hours+':'+minutes+' '+ampm;
+			
+			return temp;
+		}
 		
 		if( format == 'Y-m-d' ){ return Y+'-'+M+'-'+D; }
 		else if( format == 'Y-m-d H:i' ){ return Y+'-'+M+'-'+D+' '+H+':'+I; }
@@ -262,59 +282,6 @@ var gnrl = {
 		return gnrl._db_ymd();
 	},
 
-	// Get Datetime, date array
-	_db_date : function(){
-		
-		var DT 		= new Date();
-		var	Y = DT.getFullYear();
-		var	M = ''+( DT.getMonth() + 1 );
-		var	D = ''+( DT.getDate() );
-		var	H = ''+( DT.getHours() );
-		var	I = ''+( DT.getMinutes() );
-		var	S = ''+( DT.getSeconds() );
-		
-		if( M.length < 2) M = '0'+M;
-		if( D.length < 2) D = '0'+D;
-		if( H.length < 2) H = '0'+H;
-		if( I.length < 2) I = '0'+I;
-		if( S.length < 2) S = '0'+S;
-
-		var firstday = new Date(DT.setDate(DT.getDate() - DT.getDay()));
-		var FWDT_Y = firstday.getFullYear();
-		var	FWDT_M = ''+( firstday.getMonth() + 1 );
-		var	FWDT_D = ''+( firstday.getDate() );
-		if( FWDT_M.length < 2) FWDT_M = '0'+FWDT_M;
-		if( FWDT_D.length < 2) FWDT_D = '0'+FWDT_D;
-
-		var lastday = new Date(DT.setDate(DT.getDate() - DT.getDay()+6));
-		var LWDT_Y = lastday.getFullYear();
-		var	LWDT_M = ''+( lastday.getMonth() + 1 );
-		var	LWDT_D = ''+( lastday.getDate() );
-		if( LWDT_M.length < 2) LWDT_M = '0'+LWDT_M;
-		if( LWDT_D.length < 2) LWDT_D = '0'+LWDT_D;
-			
-		var date = {};
-		date['Y'] = Y;
-		date['M'] = M;
-		date['D'] = D;
-		date['H'] = H;
-		date['I'] = I;
-		date['S'] = S;
-		
-		date['WEEK_FIRST_DATE'] = {};
-		date['WEEK_FIRST_DATE']['Y'] = FWDT_Y;
-		date['WEEK_FIRST_DATE']['M'] = FWDT_M;
-		date['WEEK_FIRST_DATE']['D'] = FWDT_D;
-		
-		date['WEEK_LAST_DATE'] = {};
-		date['WEEK_LAST_DATE']['Y'] = LWDT_Y;
-		date['WEEK_LAST_DATE']['M'] = LWDT_M;
-		date['WEEK_LAST_DATE']['D'] = LWDT_D;
-
-		return date;
-		
-	},
-	
 	_getLangWiseData : function( data, lang, lang_columns ){
 		if( lang_columns.length ){
 			if( Array.isArray( data ) && data.length ){
@@ -345,8 +312,6 @@ var gnrl = {
 		return val;
 	},
 
-	
-	
 	// Check Is Json Data
 	_isJson : function( data ){
 		try{ JSON.parse( data ); } catch( e ){ return false; }

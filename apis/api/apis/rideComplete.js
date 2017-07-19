@@ -214,8 +214,11 @@ var currentApi = function( req, res, next ){
 							var dryCharge 	= l_data.charges.max_dry_run_charge;
 							var dryRun 		= ( l_data.actual_dry_run <= l_data.charges.max_dry_run_km ) ? l_data.actual_dry_run : l_data.charges.max_dry_run_km;
 							
-							l_data.apply_dry_run = dryRun;
+							l_data.apply_dry_run 		= dryRun;
 							l_data.apply_dry_run_amount = gnrl._round( dryRun * dryCharge );
+							
+							l_data.display_apply_dry_run = dryRun;
+							l_data.display_apply_dry_run_amount = gnrl._round( dryRun * dryCharge );
 							
 							callback( null );
 						}
@@ -227,6 +230,9 @@ var currentApi = function( req, res, next ){
 					
 					// Other Charges
 					function( callback ){
+						
+						l_data.display_other_charges = gnrl._round( l_data.charges.other_charge );
+						
 						l_data.final_amount += l_data.charges.other_charge;
 						callback( null );
 					},
@@ -237,6 +243,8 @@ var currentApi = function( req, res, next ){
 						var chrg = gnrl._round( l_data.charges.min_charge );
 						
 						l_data.final_amount += chrg;
+						
+						l_data.display_min_charge = gnrl._round( chrg );
 						
 						var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
 						_q += " ( "+i_ride_id+", 'min_charge', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
@@ -256,6 +264,8 @@ var currentApi = function( req, res, next ){
 						var chrg = gnrl._round( l_data.charges.base_fare );
 						
 						l_data.final_amount += chrg;
+						
+						l_data.display_base_fare = gnrl._round( chrg );
 						
 						var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
 						_q += " ( "+i_ride_id+", 'base_fare', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
@@ -279,6 +289,8 @@ var currentApi = function( req, res, next ){
 							chrg = gnrl._round( chrg * l_data.trip_time_in_min );
 							
 							l_data.final_amount += chrg;
+							
+							l_data.display_ride_time_charge = gnrl._round( chrg );
 							
 							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
 							_q += " ( "+i_ride_id+", 'ride_time_charge', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
@@ -307,7 +319,13 @@ var currentApi = function( req, res, next ){
 							chrg += ( l_data.charges.after_km_charge * ( l_data.actual_distance - l_data.charges.upto_km ) );
 						}
 						
+						
+						
 						chrg = chrg > 0 ? gnrl._round( chrg ) : 0;
+						
+						l_data.charges.charge_total_fare = chrg;
+						
+						l_data.display_total_fare = gnrl._round( chrg );
 						
 						if( chrg > 0 ){
 							
@@ -334,11 +352,15 @@ var currentApi = function( req, res, next ){
 						
 						var chrg = l_data.charges.service_tax;
 						
+						l_data.display_service_tax = 0;
+						
 						if( chrg ){
 							
 							chrg = gnrl._round( parseFloat( ( tempTotal * chrg ) / 100 ) );
 							
 							l_data.final_amount += chrg;
+							
+							l_data.display_service_tax = chrg;
 							
 							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
 							_q += " ( "+i_ride_id+", 'service_tax', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
@@ -361,11 +383,15 @@ var currentApi = function( req, res, next ){
 						
 						var chrg = l_data.charges.surcharge;
 						
+						l_data.display_surcharge = 0;
+						
 						if( chrg ){
 							
 							chrg = gnrl._round( parseFloat( ( tempTotal * chrg ) / 100 ) );
 							
 							l_data.final_amount += chrg;
+							
+							l_data.display_surcharge = chrg;
 							
 							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
 							_q += " ( "+i_ride_id+", 'surcharge', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
@@ -384,6 +410,8 @@ var currentApi = function( req, res, next ){
 					// Discount
 					function( callback ){
 						
+						l_data.display_discount = 0;
+						
 						if( l_data.charges.promocode_code_discount ){
 							
 							var tempTotal = l_data.final_amount;
@@ -399,6 +427,8 @@ var currentApi = function( req, res, next ){
 							chrg = gnrl._minus( chrg );
 							
 							l_data.final_amount += chrg;
+							
+							l_data.display_discount = chrg;
 							
 							var _q = " INSERT INTO tbl_ride_charges ( i_ride_id, v_charge_type, f_amount, d_added, l_data ) VALUES ";
 							_q += " ( "+i_ride_id+", 'discount', "+chrg+", '"+gnrl._db_datetime()+"', '"+gnrl._json_encode({
@@ -554,28 +584,7 @@ var currentApi = function( req, res, next ){
 						});
 					},
 					
-					/*
-					// To Driver - Not Using
-					function( callback ){
-						Notification.send( {
-							_key : 'driver_ride_complete',
-							_role : 'driver',
-							_tokens : [{
-								'id' : _ride.driver_id,
-								'lang' : _ride.driver_lang,
-								'token' : _ride.driver_device_token,
-							}],
-							_keywords : {},
-							_custom_params : {
-								i_ride_id : i_ride_id,
-								ride_code : _ride.v_ride_code,
-							},
-							_need_log : 0,
-						}, function( err, response ){
-							callback( null );
-						});
-					},
-					*/
+					
 				
 				], function( error, results ){
 					

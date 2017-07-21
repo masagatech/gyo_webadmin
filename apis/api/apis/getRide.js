@@ -65,6 +65,7 @@ var currentApi = function( req, res, next ){
 				_q += " , COALESCE( dr.v_id, '' ) AS driver_v_id";
 				
 				_q += " , COALESCE( vh.id, 0 ) AS vehicle_id ";
+				_q += " , COALESCE( vh.v_vehicle_number, '' ) AS vehicle_number ";
 				_q += " , COALESCE( vh.v_image_rc_book, '' ) AS v_image_rc_book ";
 				_q += " , COALESCE( vh.v_image_puc, '' ) AS v_image_puc ";
 				_q += " , COALESCE( vh.v_image_insurance, '' ) AS v_image_insurance ";
@@ -143,7 +144,9 @@ var currentApi = function( req, res, next ){
 							"driver_image"			: _row.driver_v_image ? gnrl._uploads( 'drivers/'+_row.driver_v_image ) : '',
 							"v_id"					: _row.driver_v_id,
 							
+							
 							"vehicle_id"			: _row.vehicle_id,
+							"vehicle_number"		: _row.vehicle_number,
 							"v_image_rc_book"		: _row.v_image_rc_book 		? gnrl._uploads( 'drivers/'+_row.v_image_rc_book ) : '',
 							"v_image_puc"			: _row.v_image_puc 			? gnrl._uploads( 'drivers/'+_row.v_image_puc ) : '',
 							"v_image_insurance"		: _row.v_image_insurance 	? gnrl._uploads( 'drivers/'+_row.v_image_insurance ) : '',
@@ -189,6 +192,7 @@ var currentApi = function( req, res, next ){
 							'driver_v_image',
 							'driver_v_id',
 							'vehicle_id',
+							'vehicle_number',
 							'v_image_rc_book',
 							'v_image_puc',
 							'v_image_insurance',

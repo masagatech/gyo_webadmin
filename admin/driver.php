@@ -54,6 +54,7 @@ $gnrl->check_login();
                 'l_latitude' => $l_latitude,
 				'l_longitude' => $l_longitude,
                 'e_status' => $e_status ,
+				'i_city_id' => $i_city_id,
                 'l_data' => json_encode($l_data) ,
                 'd_added' => date('Y-m-d H:i:s'),
                 'd_modified' => date('Y-m-d H:i:s')
@@ -183,6 +184,7 @@ $gnrl->check_login();
 						'l_longitude' => $l_longitude,
 						'is_premium' => $is_premium,
 						'v_token' => $v_token,
+						'i_city_id' => $i_city_id,
 						'd_modified' => date('Y-m-d H:i:s'),
 					);
 					if( $v_password ){
@@ -364,6 +366,17 @@ $gnrl->check_login();
 												</select> 
 											</div>
 										</div>
+										<div class="col-md-4">
+											<div class="form-group">
+											   <label>Select City <?php echo $gnrl->getAstric(); ?></label>
+											   <select class="select2" name="i_city_id" id="i_city_id" required="">
+													<option value="" >- Select -</option>
+													<?php $gnrl->getCityDropdownList($i_city_id); ?>
+												</select> 
+											</div>
+										</div>
+										
+										
 										
 										
 									</div>

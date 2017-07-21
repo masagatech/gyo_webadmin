@@ -20,10 +20,8 @@ var currentApi = function( req, res, next ){
 	
 	var login_id = gnrl._is_undf( params.login_id );
 	var i_city_id = gnrl._is_undf( params.i_city_id );
-	var i_vehicle_type_id = gnrl._is_undf( params.i_vehicle_type_id );
 	
 	if( !i_city_id ){ _status = 0; _message = 'err_req_city'; }
-	if( _status && !i_vehicle_type_id ){ _status = 0; _message = 'err_req_vehicle_type'; }
 	
 	var _data = {};
 	
@@ -41,22 +39,21 @@ var currentApi = function( req, res, next ){
 				
 				_q += " COALESCE( vt.l_data->>'list_icon', '' ) AS list_icon ";
 				_q += " , COALESCE( ( vt.l_data->>'driver_charges' )::jsonb, '{}' ) AS charges ";
-				_q += " , COALESCE( ( city_wise.l_data->>'driver_charges' )::jsonb, '{}' ) AS city_wise_charges ";
+				_q += " , COALESCE( ( cw.l_data->>'driver_charges' )::jsonb, '{}' ) AS city_wise_charges ";
 				
 				_q += " FROM tbl_vehicle_type vt ";
 				
-				_q += " LEFT JOIN tbl_vehicle_fairs city_wise ON ( ";
-					_q += " city_wise.v_type = 'city_wise' ";
-					_q += " AND city_wise.i_city_id = '"+i_city_id+"' ";
-					_q += " AND city_wise.i_vehicle_type_id = vt.id ";
+				_q += " LEFT JOIN tbl_vehicle_fairs cw ON ( ";
+					_q += " cw.v_type = 'city_wise' ";
+					_q += " AND cw.i_city_id = '"+i_city_id+"' ";
+					_q += " AND cw.i_vehicle_type_id = vt.id ";
 				_q += " ) ";
 				
 				_q += " WHERE true ";
 				
 				_q += " AND vt.i_delete = '0' ";
 				_q += " AND vt.e_status = 'active' ";
-				_q += " AND vt.id = '"+i_vehicle_type_id+"'; ";
-				
+				_q += " AND vt.v_type = ( SELECT v_type FROM tbl_vehicle WHERE i_driver_id = '"+login_id+"' ); ";
 				
 				dclass._query( _q, function( status, data ){ 
 					if( !status ){

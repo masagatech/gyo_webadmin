@@ -426,7 +426,18 @@ var currentApi = function( req, res, next ){
 							
 							chrg = gnrl._minus( chrg );
 							
+							/*
+							if( ( chrg * -1 ) > l_data.final_amount ){
+								l_data.final_amount = 0;
+							}
+							else{
+								
+							} */
+							
+							
 							l_data.final_amount += chrg;
+							
+							
 							
 							l_data.display_discount = chrg;
 							

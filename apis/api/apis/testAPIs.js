@@ -194,8 +194,7 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		
 	}
 	
-	else if( action == 'sitedate' ){
-	}
+	
 	
 	else{
 	}

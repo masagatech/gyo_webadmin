@@ -350,10 +350,24 @@
 					{ 
 						name : 'data', 
 						info : { 
-							"id" : "1",
-							"v_token" : "Auth Token",
-							"vehicle_id" : "Vehicle ID",
-							"lang" : "Language",
+							"id": "",
+							"v_id": "",
+							"v_name": "",
+							"v_phone": "",
+							"v_role": "driver",
+							"v_imei_number": "",
+							"v_token": "",
+							"e_status": "",
+							"lang": "",
+							"is_otp_verified": "",
+							"city_id": "",
+							"city": "",
+							"vehicle_id": "",
+							"vehicle_name": "",
+							"vehicle_number": "",
+							"vehicle_type": "auto",
+							"vehicle_type_id": "1",
+							"vehicle_type_name": "Auto"
 						}
 					}
 				],
@@ -463,7 +477,6 @@
 					{ name : 'login_id', required : true, info : 'Login ID' },
 					{ name : 'v_token', required : true, info : 'Auth Token' },
 					{ name : 'i_city_id', required : true, info : 'City ID' },
-					{ name : 'i_vehicle_type_id', required : true, info : 'Vehicle Type ID' },
 				],
 				response   : [
 					{ 
@@ -769,11 +782,20 @@
 				response   : [
 					{ 
 						name : 'data', 
-						info : { 
-							"id" : "1",
-							"v_token" : "Auth Token",
-							"lang" : "Language"
-						} 
+						info : {
+							"id": "User ID",
+							"v_id": "Display ID",
+							"v_name": "Name",
+							"v_phone": "Phone",
+							"v_role": "user",
+							"v_imei_number": "",
+							"v_token": "",
+							"e_status": "",
+							"lang": "",
+							"is_otp_verified": "",
+							"city_id": "1",
+							"city": "Ahmedabad"
+						}
 					}
 				],
 				

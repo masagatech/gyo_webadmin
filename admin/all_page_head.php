@@ -29,7 +29,4 @@
 			});
 		},500);
     </script>
-	<style>
-		.edit_img{ max-width:100px; }
-	</style>
-    
+	

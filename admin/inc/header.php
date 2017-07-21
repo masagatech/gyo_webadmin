@@ -25,7 +25,7 @@
     </div>
 </div>
 	<style>
-		.edit_img{ margin:5px 0 0 0; clear:both; background:url(images/transparant_img.png) repeat; max-width:300px; }
+		.edit_img{ margin:5px 0 0 0; clear:both; background:url(images/transparant_img.png) repeat; max-width:100%; }
 		.red_astric_span{ color:#da4932; }
 		.block-flat .header h3{ font-family:Helvetica,sans-serif; font-weight:100; }
 		.block .header h2, .widget-block .header h2, .block-flat .header h2{ font-family:Helvetica,sans-serif; font-weight:100; }

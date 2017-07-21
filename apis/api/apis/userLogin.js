@@ -56,10 +56,29 @@ var currentApi = function( req, res, next ){
 			function( callback ){
 				
 				var _q = " SELECT ";
-					_q += " id ";
-					_q += " , v_id, v_name, v_phone, v_role, v_imei_number, v_password, v_token, e_status, lang ";
-					_q += " , COALESCE( ( l_data->>'is_otp_verified' )::numeric, 0 ) AS is_otp_verified ";
-					_q += " FROM tbl_user WHERE v_role = 'user' AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' ) ";
+
+					_q += " a.id ";
+					_q += " , a.v_id ";
+					_q += " , a.v_name ";
+					_q += " , a.v_phone ";
+					_q += " , a.v_role ";
+					_q += " , a.v_imei_number ";
+					_q += " , a.v_password ";
+					_q += " , a.v_token ";
+					_q += " , a.e_status ";
+					_q += " , a.lang ";
+					_q += " , COALESCE( ( a.l_data->>'is_otp_verified' )::numeric, 0 ) AS is_otp_verified ";
+					_q += " , COALESCE( a.i_city_id, 0 ) AS city_id ";
+					
+					_q += " , COALESCE( ct.v_name, '' ) AS city ";
+					
+					_q += " FROM tbl_user a ";
+					_q += " LEFT JOIN tbl_city ct ON ct.id = a.i_city_id ";
+					
+					_q += " WHERE true ";
+					_q += " AND a.v_role = 'user' ";
+					_q += " AND ( LOWER( a.v_email ) = '"+v_username.toLowerCase()+"' OR a.v_phone = '"+v_username+"' ) ";
+				
 				
 				dclass._query( _q, function( status, user ){
 					if( !status ){
@@ -169,23 +188,6 @@ var currentApi = function( req, res, next ){
 				User.startLog( _user.id, _user.v_role, 'login', function( status, data ){
 					callback( null );
 				});
-			},
-			
-			// Get City Name
-			function( callback ){
-				_user.city = '';
-				if( _user.i_city_id ){
-					var _q = " SELECT v_name FROM tbl_city WHERE id = '"+_user.i_city_id+"'; ";
-					dclass._query( _q, function( status, data ){
-						if( status && data.length ){
-							_user.city = data[0].v_name;
-						}
-						callback( null );
-					});	
-				}
-				else{
-					callback( null );
-				}
 			},
 			
 		], 

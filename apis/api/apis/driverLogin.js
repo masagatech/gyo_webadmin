@@ -52,8 +52,6 @@ var currentApi = function( req, res, next ){
 		var v_otp = gnrl._get_otp();
 		var d_last_login = gnrl._db_datetime();
 		
-		var vehicle_id = 0;
-		
 		async.series([
 		
 			// Get User
@@ -61,11 +59,38 @@ var currentApi = function( req, res, next ){
 				
 				
 				var _q = " SELECT ";
-				// *,
-					_q += " id ";
-					_q += " , v_id, v_name, v_phone, v_role, v_imei_number, v_password, v_token, e_status, lang ";
-					_q += " , COALESCE( ( l_data->>'is_otp_verified' )::numeric, 0 ) AS is_otp_verified ";
-					_q += " FROM tbl_user WHERE v_role = 'driver' AND ( LOWER( v_email ) = '"+v_username.toLowerCase()+"' OR v_phone = '"+v_username+"' ) ";
+
+					_q += " a.id ";
+					_q += " , a.v_id ";
+					_q += " , a.v_name ";
+					_q += " , a.v_phone ";
+					_q += " , a.v_role ";
+					_q += " , a.v_imei_number ";
+					_q += " , a.v_password ";
+					_q += " , a.v_token ";
+					_q += " , a.e_status ";
+					_q += " , a.lang ";
+					_q += " , COALESCE( ( a.l_data->>'is_otp_verified' )::numeric, 0 ) AS is_otp_verified ";
+					_q += " , COALESCE( a.i_city_id, 0 ) AS city_id ";
+					
+					_q += " , COALESCE( ct.v_name, '' ) AS city ";
+					
+					_q += " , COALESCE( vh.id, 0 ) AS vehicle_id ";
+					_q += " , COALESCE( vh.v_vehicle_number, '' ) AS vehicle_number ";
+					_q += " , COALESCE( vh.v_name, '' ) AS vehicle_name ";
+					
+					_q += " , COALESCE( vt.v_type, '' ) AS vehicle_type ";
+					_q += " , COALESCE( vt.id, 0 ) AS vehicle_type_id ";
+					_q += " , COALESCE( vt.v_name, '' ) AS vehicle_type_name ";
+					
+					_q += " FROM tbl_user a ";
+					_q += " LEFT JOIN tbl_city ct ON ct.id = a.i_city_id ";
+					_q += " LEFT JOIN tbl_vehicle vh ON vh.i_driver_id = a.id ";
+					_q += " LEFT JOIN tbl_vehicle_type vt ON vt.v_type = vh.v_type ";
+					
+					_q += " WHERE true ";
+					_q += " AND a.v_role = 'driver' ";
+					_q += " AND ( LOWER( a.v_email ) = '"+v_username.toLowerCase()+"' OR a.v_phone = '"+v_username+"' ) ";
 				
 				
 				dclass._query( _q, function( status, user ){
@@ -193,16 +218,6 @@ var currentApi = function( req, res, next ){
 						});
 					},
 					
-					// Get Vehicle ID
-					function( callback ){
-						dclass._select( 'id', 'tbl_vehicle', " AND i_driver_id = '"+_user.id+"' ", function( status, data ){ 
-							if( status && data.length ){
-								vehicle_id = data[0].id;
-							}
-							callback( null );
-						});
-					}
-					
 				], function( error, results ){
 					
 					callback( null );
@@ -212,29 +227,13 @@ var currentApi = function( req, res, next ){
 			},
 			
 			
-			// Get City Name
-			function( callback ){
-				_user.city = '';
-				if( _user.i_city_id ){
-					var _q = " SELECT v_name FROM tbl_city WHERE id = '"+_user.i_city_id+"'; ";
-					dclass._query( _q, function( status, data ){
-						if( status && data.length ){
-							_user.city = data[0].v_name;
-						}
-						callback( null );
-					});	
-				}
-				else{
-					callback( null );
-				}
-			},
-			
 		], 
 		function( error, results ){
+			
 			delete _user.v_password;
 			
 			_user.v_token 		= v_token;
-			_user.vehicle_id 	= vehicle_id;
+			
 			gnrl._api_response( res, 1, 'succ_login_successfully', _user );
 			
 		});

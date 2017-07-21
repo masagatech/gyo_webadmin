@@ -65,8 +65,6 @@ var currentApi = function( req, res, next ){
 					_data.referral_message = gnrl._lbl('msg_referral_link').split('[amount]').join( _data.earn_money );
 					_data.referral_message = _data.referral_message.split('[referral_code]').join( '('+_data.v_referral_code+')' );
 					
-					
-					
 					callback( null );
 				})
 			},

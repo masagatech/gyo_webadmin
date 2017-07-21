@@ -50,6 +50,7 @@ $gnrl->check_login();
                 'v_gender' => $v_gender,
                 'v_imei_number' =>$v_imei_number,
                 'e_status' => $e_status ,
+				'i_city_id' => $i_city_id,
                 'd_added' => date('Y-m-d H:i:s'),
                 'd_modified' => date('Y-m-d H:i:s')
             );
@@ -144,6 +145,8 @@ $gnrl->check_login();
                     $ins['v_phone'] = $v_phone;
                     $ins['e_status'] = $e_status;
                     $ins['v_gender'] = $v_gender;
+					$ins['i_city_id'] = $i_city_id;
+					
                     $ins['v_token'] = $v_token;
                     $ins['v_imei_number'] =$v_imei_number;
                     //$ins['l_data'] = json_encode($l_data);
@@ -251,10 +254,22 @@ $gnrl->check_login();
                                                     <input type="hidden" name="oldname_v_image" value="<?php echo $v_image; ?>">
                                                 <?php } ?>
                                             </div>
+											
+											
+											<div class="form-group">
+											   <label>Select City <?php echo $gnrl->getAstric(); ?></label>
+											   <select class="select2" name="i_city_id" id="i_city_id" required="">
+													<option value="" >- Select -</option>
+													<?php $gnrl->getCityDropdownList($i_city_id); ?>
+												</select> 
+											</div>
+											
                                             <div class="form-group">
                                                 <label>Login Token</label>
                                                 <input type="text" class="form-control" id="v_token" name="v_token" value="<?php echo $v_token;?>" />
                                             </div>
+											
+											
                                             <div class="form-group">
                                                 <label>IMEI Number</label>
                                                 <input type="text" class="form-control" id="v_imei_number" name="v_imei_number" value="<?php echo $v_imei_number;?>" />

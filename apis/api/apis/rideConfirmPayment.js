@@ -88,11 +88,14 @@ var currentApi = function( req, res, next ){
 				
 				_q += " , vh.v_vehicle_number AS vehicle_number ";
 				
+				_q += " , COALESCE( vt.l_data->>'email_icon', '' ) AS email_icon ";
+				
 				_q += " FROM tbl_ride rd ";
 				
 				_q += " LEFT JOIN tbl_user ur ON ur.id = rd.i_user_id ";
 				_q += " LEFT JOIN tbl_user dr ON dr.id = rd.i_driver_id ";
 				_q += " LEFT JOIN tbl_vehicle vh ON vh.i_driver_id = rd.i_driver_id ";
+				_q += " LEFT JOIN tbl_vehicle_type vt ON vt.v_type = rd.l_data->>'vehicle_type' ";
 				
 				_q += " WHERE true ";
 				_q += " AND rd.id = '"+i_ride_id+"' ";
@@ -113,6 +116,8 @@ var currentApi = function( req, res, next ){
 						
 						_data = data[0];
 						
+						_data.email_icon = gnrl._uploads( 'vehicle_type/'+_data.email_icon );
+						
 						var tempPaymentMethod = [];
 						_data.ride_l_data.ride_paid_by_wallet = gnrl._round( _data.ride_l_data.ride_paid_by_wallet );
 						if( _data.ride_l_data.ride_paid_by_wallet > 0 ){
@@ -125,6 +130,8 @@ var currentApi = function( req, res, next ){
 						}
 						
 						_keywords = {
+							
+							'[email_icon]' 			: '<img src="'+_data.email_icon+'" />',
 							
 							'[user_name]' 			: _data.user_name,
 							'[i_ride_id]' 			: i_ride_id,

@@ -12,6 +12,26 @@ $gnrl->check_login();
 	$title2 = 'Vehicle Type';
 	$folder = 'vehicle_type';
 	
+	$filesArray = array(
+		'list_icon',
+		'plotting_icon',
+		'email_icon',
+	);
+	$filesInfoArray = array(
+		'list_icon' => array(
+			'title' => 'List Icon',
+			'size' => '[70*70]',
+		),
+		'plotting_icon' => array(
+			'title' => 'Plotting Icon',
+			'size' => '[70*70]',
+		),
+		'email_icon' => array(
+			'title' => 'Email Icon',
+			'size' => '[510*50]',
+		),
+	);
+	
 	$script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'citywise' ) ) ? $_REQUEST['script'] : "";
 	## Insert Record in database starts
 	if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
@@ -29,10 +49,7 @@ $gnrl->check_login();
 			);
 			
 			$id = $dclass->insert( $table, $ins );
-			$filesArray = array(
-				'list_icon',
-				'plotting_icon',
-			);
+			
 			$keyVal = array();
 			foreach( $filesArray as $imgKey ){
 				if( isset( $_FILES['l_data']['name'][$imgKey] ) && $_FILES['l_data']['name'][$imgKey] != "" ) {
@@ -44,10 +61,9 @@ $gnrl->check_login();
 					&& $imageFileType == "gif" ) {
 						if( move_uploaded_file( $_FILES['l_data']['tmp_name'][$imgKey], $dest.$file_name ) ){
 							$keyVal[$imgKey] = $file_name;
-							// @unlink( $dest.$OLDNAME );
+							
 						}
 					}else{
-						
 						$dclass->delete( $table ," id = '".$id[0]."'");
 						$gnrl->redirectTo($page.".php?script=add&succ=0&msg=imagetype");
 					}
@@ -136,10 +152,7 @@ $gnrl->check_login();
 					$dclass->updateJsonb( $table, $ins, " id = '".$id."' ");
 					
 					
-					$filesArray = array(
-						'list_icon',
-						'plotting_icon',
-					);
+					
 					$keyVal = array();
 					
 					foreach( $filesArray as $imgKey ){
@@ -156,18 +169,11 @@ $gnrl->check_login();
 							|| $imageFileType == "gif" ) {
 								if( move_uploaded_file( $_FILES['l_data']['tmp_name'][$imgKey], $dest.$file_name ) ){
 									$keyVal[$imgKey] = $file_name;
-									if($imgKey=='list_icon'){
-										$OLDNAME= $oldname_list;
-									}
-									if($imgKey=='plotting_icon'){
-										$OLDNAME= $oldname_plotting;
-									}
-									@unlink( $dest.$OLDNAME );
+									@unlink( $dest.$old_images[$imgKey] );
 								}
 							}else{
 								$gnrl->redirectTo($page.'.php?succ=0&msg=imagetype&a=2&script=edit&id='.$_REQUEST['id']);
 							}
-
 							
 						}
 					}
@@ -248,29 +254,31 @@ $gnrl->check_login();
 												<div class="col-md-12">
 													<h3>Icons</h3>
 													<div class="row" >
-														<div class="col-md-6">
-															<div class="form-group">
-																<label>List Icon [70*70]</label>
-																<input class="form-control" type="file" name="l_data[list_icon]" style="height:auto;"  >
-																<?php 
-																if( $putFile = _is_file( $folder, $l_data['list_icon'] ) ){ //echo $putFile; ?>
-																<img class="edit_img" src="<?php echo $putFile;?>" >
-																<input type="hidden" name="oldname_list" value="<?php echo $l_data['list_icon']; ?>">
-																<?php } ?>
-															</div>
-														</div>
 														
-														<div class="col-md-6">
-															<div class="form-group">
-																<label>Plotting Icon [70*70]</label>
-																<input class="form-control" type="file" name="l_data[plotting_icon]" style="height:auto;"  >
-																<?php 
-																if( $putFile = _is_file( $folder, $l_data['plotting_icon'] ) ){ ?>
-																<img class="edit_img" src="<?php echo $putFile;?>" >
-																<?php } ?>
-																<input type="hidden" name="oldname_plotting" value="<?php echo $l_data['plotting_icon']; ?>">
+														<?php
+														foreach( $filesArray as $fileKey ){
+															?>
+															<div class="col-md-12">
+															
+																<div class="form-group">
+																	<label>
+																		<?php
+																		echo $filesInfoArray[$fileKey]['title'];
+																		echo " ".$filesInfoArray[$fileKey]['size'];
+																		?>
+																	</label>
+																	<input class="form-control" type="file" name="l_data[<?php echo $fileKey;?>]" style="height:auto;"  >
+																	<?php 
+																	if( $putFile = _is_file( $folder, $l_data[ $fileKey ] ) ){ //echo $putFile; ?>
+																	<img class="edit_img" src="<?php echo $putFile;?>" >
+																	<input type="hidden" name="old_images[<?php echo $fileKey;?>]" value="<?php echo $l_data[ $fileKey ]; ?>">
+																	<?php } ?>
+																</div>
 															</div>
-														</div>
+															<?php
+														}
+														?>
+														
 													</div>
 												</div>
 										  </div>

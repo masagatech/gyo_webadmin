@@ -9,6 +9,8 @@ var async = require('async');
 
 var currentApi = function saveDriverInfo( req, res, done ){
 	
+	
+	
 	var classes = req.app.get('classes');
 	classes.gnrl._extract( classes, this ); // Extract Classes
 	var _p = gnrl._p;
@@ -194,9 +196,28 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		
 	}
 	
-	
+	else if( action == 'dbprocdure' ){
+		/*var _q = " SELECT "+gnrl._db_schema("fun_get_vehicle_type_list")+" ( $1, $2::json ); ";
+		var _options = [ 'data', params ];
+		params.e_status = 'active';
+		//_p( params );
+		
+		db.callProcedure( 
+			_q, 
+			_options, 
+			function( data ){
+				gnrl._api_response( res, 1, gnrl._lbl( '', _lang ), data );
+			}, 
+			function( err ){
+				gnrl._api_response( res, 0, _message, err ); 
+			}
+		);*/
+	}
 	
 	else{
+		
+		
+		
 	}
 	
 };

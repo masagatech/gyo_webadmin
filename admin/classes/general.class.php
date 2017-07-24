@@ -720,7 +720,7 @@ $mail = new PHPMailer();
 
 		function displaySiteDate( $d_added = "" ){
 			if( !$d_added ) return '-';
-			$d_added = date('Y-m-d h:i:s A', strtotime($d_added));
+			$d_added = date('d/m/Y h:i A', strtotime($d_added));
 			return $d_added;
 		}
 

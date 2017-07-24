@@ -46,7 +46,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 var classes = require('./classes/index.js');
 app.set( 'classes', classes );
 
-
 var api = require('./api/index.js')( app ); // API Route
 
 // catch 404 and forward to error handler

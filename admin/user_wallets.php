@@ -370,7 +370,7 @@ $gnrl->check_login();
                                                             <td><a href="javascript:;" onclick="rideInfo(<?php echo $l_data['ride_id']; ?>);"><?php echo $row['user_name']; ?></a></td>
 
                                                             <td><?php echo $row['v_type'];?></td>
-                                                            <td><?php echo $row['f_amount'];?></td>
+                                                            <td><?php echo _price($row['f_amount']);?></td>
                                                            
                                                              <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                             
@@ -444,7 +444,10 @@ $gnrl->check_login();
                                         </div>
                                         <div class="form-group">
                                             <label> Amount</label>
-                                            <input type="text"  pattern="\d" title="Only digits" class="form-control" id="amount" name="amount" value="" required />
+                                            <div class="input-group">
+                                                <span class="input-group-addon">₹</span>
+                                                 <input type="text"  pattern="\d" title="Only digits" class="form-control" id="amount" name="amount" value="" required />
+                                            </div>
                                         </div>
                                         <div class="form-group">
                                             <label> Description</label>
@@ -591,7 +594,7 @@ $gnrl->check_login();
                                                             <tr>
                                                                 <td><?php echo $row['user_name'];?></td>
                                                                 <td><?php echo $row['v_wallet_type'];?></td>
-                                                                <td><?php echo $row['f_amount'];?></td>
+                                                                <td><?php echo _price($row['f_amount']);?></td>
                                                                 <td>
                                                                     <div class="btn-group pull-right">
                                                                         <button class="btn btn-default btn-xs" type="button">Actions</button>

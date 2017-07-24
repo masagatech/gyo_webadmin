@@ -68,6 +68,12 @@ error_reporting( E_ERROR );
 	function _p( $str ){
 		echo '<pre>'; print_r( $str ); echo '</pre>';
 	}
+	function _price( $amount ){
+		echo '₹'.round( $amount, 2 );
+	}
+	function _km( $km ){
+		echo $km.' Km';
+	}
 
 	function lang( $data, $lang ){
 		return ( isset( $data[ $lang ] ) && $data[ $lang ] ) ? $data[ $lang ] : $data[ DEFAULT_LANGUAGE ];

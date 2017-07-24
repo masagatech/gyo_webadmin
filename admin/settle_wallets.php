@@ -17,12 +17,13 @@ $gnrl->check_login();
    // exit;
     ## Insert Record in database starts
     if(isset($_REQUEST['submit_btn']) && $_REQUEST['submit_btn']=='Submit'){
+
       
-        $ssql 		= "SELECT * from ".$table." where id = ".$_REQUEST['id']." ";
-        $restepm 	= $dclass->query( $ssql );
-        $row 		= $dclass->fetchResults( $restepm );
-        $row 		= $row[0];
-		
+        $ssql       = "SELECT * from ".$table." where id = ".$_REQUEST['id']." ";
+        $restepm    = $dclass->query( $ssql );
+        $row        = $dclass->fetchResults( $restepm );
+        $row        = $row[0];
+       
         if( $row['f_amount'] > 0 ){
 			$v_type 		= "company_paid";
 			$f_receivable 	= 0;
@@ -111,7 +112,7 @@ $gnrl->check_login();
                             <h3>
                                 <?php echo ucwords($title2);?>
                                 <div class="pull-right">
-                                    Total Amount = <mark><?php echo $f_amount; ?></mark> 
+                                    Total Amount = <mark><?php echo _price($f_amount); ?></mark> 
                                 </div>
                             </h3>
                         </div>
@@ -136,7 +137,11 @@ $gnrl->check_login();
 										</div>
 										<div class="form-group">
 											<label>Paid Amount</label>
-											<input type="text" class="form-control" id="amount" name="amount" value="" required />
+                                             <div class="input-group">
+                                                <span class="input-group-addon">₹</span>
+                                                <input type="text" class="form-control" id="amount" name="amount" value="" required />
+                                               <!--  <span class="input-group-addon">.00</span> -->
+                                            </div>
 										</div>
 										<div class="form-group">
 											<label>Information</label>

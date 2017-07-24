@@ -318,15 +318,16 @@ $gnrl->check_login();
 																<?php echo $globalWalletActionTypes[$row['v_type']];?>
 																<br>(<?php echo $row['v_type'];?>)
 															</td>
-                                                            <td><?php echo $row['f_receivable'];?></td>
-															<td><?php echo $row['f_payable'];?></td>
-															<td><?php echo $row['f_received'];?></td>
-															<td><?php echo $row['f_amount'];?></td>
+                                                            <td><?php echo _price($row['f_receivable']);?></td>
+															<td><?php echo _price($row['f_payable']);?></td>
+															<td><?php echo _price($row['f_received']);?></td>
+															<td><?php echo _price($row['f_amount']);?></td>
 															<td>
 																<?php
-																if( in_array( $row['v_type'], array( 'ride_cancel', 'ride_dry_run', 'ride' ) ) ){
-																	echo "Ride : ".$l_data['ride_code'];
-																}
+																if( in_array( $row['v_type'], array( 'ride_cancel', 'ride_dry_run', 'ride' ) ) ){ ?>
+                                                                   
+																	<a href="driver_trips.php?a=2&script=edit&v_ride_code=<?php echo $l_data['ride_code']; ?>" target="_blank" >Ride : <?php echo $l_data['ride_code']; ?></a>
+																<?php }
 																else{
 																	echo $l_data['info'] ? nl2br( $l_data['info'] ) : '-';
 																}?>
@@ -455,7 +456,6 @@ $gnrl->check_login();
                                 <div class="content">
                                     <form name="frm" action="" method="get" >
                                         <div class="table-responsive">
-                                        
                                             <div class="row">
                                                 <div class="col-sm-12">
                                                     <div class="pull-right">
@@ -483,15 +483,17 @@ $gnrl->check_login();
                                                             <label><?php $pagen->writeLimitBox(); ?></label>
                                                         </div>
                                                     </div>
-
-                                                    <div class="pull-left" style="margin: 20px;">
-                                                        <div>
-                                                         <select class="select2" name="payable" id="payable" onChange="document.frm.submit();">
-                                                         <option value="">-- Select --</option>
-                                                                 <?php  $gnrl->getDropdownList(array('payable','receivable'),$_GET['payable']); ?>
-                                                            </select>
+                                                    <label style="margin-left:15px">Payeble/Receivable: 
+                                                        <div class="clearfix"></div>
+                                                        <div class="pull-left">
+                                                            <div>
+                                                             <select class="select2" name="payable" id="payable" onChange="document.frm.submit();">
+                                                             <option value="">-- Select --</option>
+                                                                     <?php  $gnrl->getDropdownList(array('payable','receivable'),$_GET['payable']); ?>
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </label>
                                                     <label style="margin-left:15px">Driver wise : 
                                                          <div class="clearfix"></div>
                                                             <div class="pull-left" style="">
@@ -543,7 +545,7 @@ $gnrl->check_login();
                                                                     <?php echo $row['user_name']; ?>
                                                                 </td>
                                                                 <td><?php echo $row['v_wallet_type'];?></td>
-                                                                <td><?php echo $row['f_amount'];?></td>
+                                                                <td><?php echo _price($row['f_amount']);?></td>
                                                                 
                                                                 <td>
                                                                     <div class="btn-group">

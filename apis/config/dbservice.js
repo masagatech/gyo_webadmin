@@ -4,8 +4,7 @@ var _config = require('./config.js');
 
 db.constr = _config._db_conn_str;
 
-db.callProcedure = function callProcedure(funName, data, callback, errcallback, refcount) {
-
+db.callProcedure = function callProcedure( funName, data, callback, errcallback, refcount ){
     pg.connect(db.constr, function(err, client, done) {
         
         if (err) {
@@ -20,6 +19,9 @@ db.callProcedure = function callProcedure(funName, data, callback, errcallback, 
                 commit(client, done);
                 return
             }
+			
+			// console.log( data, 'data' );
+			
             client.query(funName, data, function(err, result) {
                 if (err) {
                     // rs.resp(res, 401, "error : " + err);
@@ -27,12 +29,16 @@ db.callProcedure = function callProcedure(funName, data, callback, errcallback, 
                     commit(client, done);
                     return
                 }
+				
+				// console.log( data, 'data' );
 
                 var results = { "rows": [] };
                 var querycount = 0;
                 refcount = refcount === undefined ? 1 : refcount;
                 for (var index = 0; index < refcount; index++) {
                     var element = data[index];
+					
+					// console.log( element, 'element' );
 
                     client.query('FETCH all from ' + element + ' ;', function(err, result) {
                         if (err) {

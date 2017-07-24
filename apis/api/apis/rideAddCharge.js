@@ -32,7 +32,7 @@ var currentApi = function( req, res, next ){
 		_status = 0; _message = 'err_invalid_charge_type';
 	}
 	
-	if( !v_charge_info && ( v_charge_type == 'other_charge' || v_charge_type == 'ride_time_pick_charge' ) ){
+	if( !v_charge_info && ( v_charge_type == 'other_charge' ) ){
 		// _status = 0; _message = 'err_req_charge_info';
 	}
 	if( isNaN( f_amount ) ){

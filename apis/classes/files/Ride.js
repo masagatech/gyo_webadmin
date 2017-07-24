@@ -203,7 +203,6 @@ var currClass = function( params ){
 			var types = {
 				'base_fare' : "Base Fare",
 				'min_charge' : "Minimum Charge",
-				'ride_time_pick_charge' : "Ride Time Pick Charge",
 				'ride_time_charge' : "Ride Time Charge",
 				'toll_charge' : "Toll Charge",
 				'parking_charge' : "Parking Charge",

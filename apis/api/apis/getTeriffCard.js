@@ -40,7 +40,7 @@ var currentApi = function( req, res, next ){
 				var _q = "SELECT ";
 				
 				_q += " vt.l_data ";
-				_q += " , COALESCE( ( city_wise.l_data->>'driver_charges' )::jsonb, '{}' ) AS city_wise_charges ";
+				_q += " , COALESCE( ( city_wise.l_data->>'charges' )::jsonb, '{}' ) AS city_wise_charges ";
 				
 				_q += " FROM tbl_vehicle_type vt ";
 				

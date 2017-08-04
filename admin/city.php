@@ -266,14 +266,16 @@ if(isset($_REQUEST['a']) && $_REQUEST['a']==2) {
                                                             <label><?php $pagen->writeLimitBox(); ?></label>
                                                         </div>
                                                     </div>
-                                                    <label class="pull-left" style="margin: 5px 0px 5px 10px !important;"> </label>
-                                                    <div class="pull-left" style="margin: 20px !important;">
-                                                        <div>
-                                                         <select class="select2" name="city_sel" id="city_sel" onChange="document.frm.submit();">
+                                                   
+                                                    <div class="pull-left" style="margin-left: 10px">
+                                                        <label> City :
+                                                            <div class="clearfix"></div>
+                                                            <select class="select2" name="city_sel" id="city_sel" onChange="document.frm.submit();">
                                                                 <option value="">--Select--</option>
                                                                  <?php echo $gnrl->getCityDropdownList($_GET['city_sel']); ?>
                                                             </select>
-                                                        </div>
+                                                            
+                                                        </label>
                                                     </div>
                                                   
                                                     <div class="clearfix"></div>

@@ -89,6 +89,9 @@ var currentApi = function( req, res, next ){
 		
 		async.series([
 		
+			
+		
+		
 			// Get Ride
 			function( callback ){
 				
@@ -148,6 +151,23 @@ var currentApi = function( req, res, next ){
 				
 			},
 			
+			// Update End Time
+			function( callback ){
+				var _q = " UPDATE tbl_ride SET d_end = '"+end_date+"' WHERE id = '"+i_ride_id+"'; ";
+				dclass._query( _q, function( status, data ){ 
+					callback( null );
+				});
+			},
+			
+			// Get End Time
+			function( callback ){
+				var _q = "SELECT d_end FROM tbl_ride WHERE true AND id = '"+i_ride_id+"';";
+				dclass._query( _q, function( status, data ){ 
+					_ride.d_end = data[0].d_end;
+					callback( null );
+				});
+			},
+			
 			// Ride Set Charges
 			function( callback ){
 				Ride.getChargesData( _ride.l_data, function( data ){
@@ -159,7 +179,7 @@ var currentApi = function( req, res, next ){
 			// Calculate Total Time
 			function( callback ){
 				
-				var temp = gnrl._dateDiff( _ride.d_start, end_date );
+				var temp = gnrl._dateDiff( _ride.d_start, _ride.d_end );
 				var mins = 0;
 				
 				mins += ( temp.days * 60 * 60 );

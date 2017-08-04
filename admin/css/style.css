@@ -1881,6 +1881,12 @@ table.information > tbody > tr > td {
 .jcrop-holder {
   display: inline-block;
 }
+
+.imgset {
+  max-width: 130px;
+  max-height: 130px;
+  box-shadow: 0 0 0 4px #e9e9e9;
+}
 @media (max-width: 767px) {
   table.information .btn span {
     display: none;

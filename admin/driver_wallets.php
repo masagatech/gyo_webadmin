@@ -156,9 +156,9 @@ $gnrl->check_login();
                             <h3>
                                 <?php 
                                     if($script=='view'){
-										
-										$driverName = $dclass->select( '*', 'tbl_user', " AND id = ( SELECT i_user_id FROM tbl_wallet WHERE id = '".$_REQUEST['id']."' ) " );
-										
+                                        
+                                        $driverName = $dclass->select( '*', 'tbl_user', " AND id = ( SELECT i_user_id FROM tbl_wallet WHERE id = '".$_REQUEST['id']."' ) " );
+                                        
                                         echo 'Wallet History Of Driver "'.$driverName[0]['v_name'].'"';
                                     }else{
                                         echo $script ? ucfirst( $script ).' '.ucfirst( $title2 ) : 'List Of '.' '.ucfirst( $title2 );
@@ -253,7 +253,7 @@ $gnrl->check_login();
                             
                             
                            $ssql = "SELECT * FROM tbl_wallet_transaction WHERE true AND i_wallet_id = ".$_REQUEST['id']." ".$wh;
-						   
+                           
 
                             $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'd_added' );
                             $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );            
@@ -265,9 +265,9 @@ $gnrl->check_login();
                             $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                             $restepm = $dclass->query($sqltepm);
                             $row_Data = $dclass->fetchResults($restepm);
-							
-							
-							
+                            
+                            
+                            
                             ?>
                             <div class="content">
                                 <form name="frm" action="" method="get" >
@@ -291,20 +291,20 @@ $gnrl->check_login();
                                             </div>
                                         </div>
                                         <!-- <?php chk_all('drop');?> -->
-										
-										
-										
-										
+                                        
+                                        
+                                        
+                                        
                                         <table class="table table-bordered" id="datatable" style="width:100%;" >
                                             <?php
                                                 echo $gnrl->renderTableHeader(array(
                                                     'v_type' => array( 'order' => 1, 'title' => 'Type' ),
                                                     'f_receivable' => array( 'order' => 1, 'title' => 'Receivable' ),
-													'f_payable' => array( 'order' => 1, 'title' => 'Payable' ),
-													'f_received' => array( 'order' => 1, 'title' => 'Received' ),
-													'f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
-													'l_data' => array( 'order' => 0, 'title' => 'Information' ),
-													'd_added' => array( 'order' => 1, 'title' => 'Date' ),
+                                                    'f_payable' => array( 'order' => 1, 'title' => 'Payable' ),
+                                                    'f_received' => array( 'order' => 1, 'title' => 'Received' ),
+                                                    'f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
+                                                    'l_data' => array( 'order' => 0, 'title' => 'Information' ),
+                                                    'd_added' => array( 'order' => 1, 'title' => 'Date' ),
                                                 ));
                                             ?> 
                                             <tbody>
@@ -315,24 +315,24 @@ $gnrl->check_login();
                                                         <tr>
                                                             <?php $l_data = json_decode( $row['l_data'], true );?>
                                                             <td>
-																<?php echo $globalWalletActionTypes[$row['v_type']];?>
-																<br>(<?php echo $row['v_type'];?>)
-															</td>
+                                                                <?php echo $globalWalletActionTypes[$row['v_type']];?>
+                                                                <br>(<?php echo $row['v_type'];?>)
+                                                            </td>
                                                             <td><?php echo _price($row['f_receivable']);?></td>
-															<td><?php echo _price($row['f_payable']);?></td>
-															<td><?php echo _price($row['f_received']);?></td>
-															<td><?php echo _price($row['f_amount']);?></td>
-															<td>
-																<?php
-																if( in_array( $row['v_type'], array( 'ride_cancel', 'ride_dry_run', 'ride' ) ) ){ ?>
+                                                            <td><?php echo _price($row['f_payable']);?></td>
+                                                            <td><?php echo _price($row['f_received']);?></td>
+                                                            <td><?php echo _price($row['f_amount']);?></td>
+                                                            <td>
+                                                                <?php
+                                                                if( in_array( $row['v_type'], array( 'ride_cancel', 'ride_dry_run', 'ride' ) ) ){ ?>
                                                                    
-																	<a href="driver_trips.php?a=2&script=edit&v_ride_code=<?php echo $l_data['ride_code']; ?>" target="_blank" >Ride : <?php echo $l_data['ride_code']; ?></a>
-																<?php }
-																else{
-																	echo $l_data['info'] ? nl2br( $l_data['info'] ) : '-';
-																}?>
-															</td>
-															<td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
+                                                                    <a href="driver_trips.php?a=2&script=edit&v_ride_code=<?php echo $l_data['ride_code']; ?>" target="_blank" >Ride : <?php echo $l_data['ride_code']; ?></a>
+                                                                <?php }
+                                                                else{
+                                                                    echo $l_data['info'] ? nl2br( $l_data['info'] ) : '-';
+                                                                }?>
+                                                            </td>
+                                                            <td><?php echo $gnrl->displaySiteDate($row['d_added']) ; ?></td>
                                                         </tr><?php 
                                                     }
                                                 }
@@ -354,9 +354,9 @@ $gnrl->check_login();
                                                 <div class="clearfix"></div>
                                             </div>
                                         </div>
-										
-										<input type="hidden" name="id" value="<?php echo @$_REQUEST['id'];?>" />
-										<input type="hidden" name="script" value="<?php echo @$_REQUEST['script'];?>" />
+                                        
+                                        <input type="hidden" name="id" value="<?php echo @$_REQUEST['id'];?>" />
+                                        <input type="hidden" name="script" value="<?php echo @$_REQUEST['script'];?>" />
                                         <input type="hidden" name="a" value="<?php echo @$_REQUEST['a'];?>" />
                                         <input type="hidden" name="st" value="<?php echo @$_REQUEST['st'];?>" />
                                         <input type="hidden" name="sb" value="<?php echo @$_REQUEST['sb'];?>" />
@@ -418,7 +418,8 @@ $gnrl->check_login();
                                     $wh .= " AND t1.i_delete='0'";
                                 }
                                 $ssql = "SELECT t1.*,
-                                            t2.v_name as user_name
+                                            t2.v_name as user_name,
+                                            t2.v_id as driver_id
                                         FROM 
                                             ".$table."  t1
                                         LEFT JOIN tbl_user as t2 ON t1.i_user_id = t2.id
@@ -433,6 +434,10 @@ $gnrl->check_login();
                                 $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                                 $restepm = $dclass->query($sqltepm);
                                 $row_Data = $dclass->fetchResults($restepm);
+                                // if($_REQUEST['test'] == 'test'){
+                                //     _P($row_Data);
+                                //     exit;
+                                // }
 
                                 #USE FOR DRIVER DROPDOWN MENU
                                 $ssql2 = "SELECT id,v_name FROM tbl_user WHERE true AND v_role= 'driver' ORDER BY v_name ASC ";
@@ -525,7 +530,8 @@ $gnrl->check_login();
                                                 <?php
                                                 
                                                 echo $gnrl->renderTableHeader(array(
-                                                    't2.v_name' => array( 'order' => 1, 'title' => 'Name' ),
+                                                    't2.v_id' => array( 'order' => 1, 'title' => 'Driver ID' ),
+                                                    't2.v_name' => array( 'order' => 1, 'title' => 'Driver Name' ),
                                                     't1.v_wallet_type' => array( 'order' => 1, 'title' => 'Wallet Type' ),
                                                     't1.f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
                                                     'action' => array( 'order' => 0, 'title' => 'Action' ),

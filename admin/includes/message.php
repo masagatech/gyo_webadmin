@@ -1,6 +1,9 @@
 <?php
 $mess=array(
 	"imagetype" => "<span style='color:green;'>Sorry, only JPG, JPEG, PNG & GIF files are allowed.</span>",
+	"wallet_unavailable" => "<span style='color:green;'>Sorry, this driver's wallet is not available.</span>",
+	"driver_unavailable" => "<span style='color:green;'>Sorry, this driver is not available or driver id is wrong.</span>",
+	"xlstype" => "<span style='color:green;'>Sorry, only XLSX files are allowed.</span>",
 	"select_msg"=>"<span style='color:green;'>Please select city.</span>",
 	"add_settle"=>"<span style='color:green;'>Record has been settled successfully.</span>",
 	"wallet_upd"=>"<span style='color:green;'>Wallet updated successfully.</span>",

@@ -124,6 +124,27 @@ $mail = new PHPMailer();
 			}
 			return $ip;
 		}
+		function getMultipleSuccessMsg($str){
+			
+			$put_str ='<div class="col-md-6"><div class="alert alert-success">
+						<button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>' ;
+					foreach ($str as $key => $value) {
+						$put_str .=	'<i class="fa fa-check sign"></i><strong>Success!</strong> '. $value.'</br>';
+					}
+					$put_str .= '</div></div>';
+			return $put_str;
+
+		}
+		function getMultipleErrorMsg($str){
+			$put_str ='<div class="col-md-6">
+						<div class="alert alert-danger">
+						<button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>' ;
+						foreach ($str as $key => $value) {
+							$put_str .=	'<i class="fa fa-times-circle sign"></i><strong>Success!</strong> '. $value.'</br>';
+						}
+					$put_str .= '</div></div>';
+			return $put_str;
+		}
 		
 		function getSuccessMsg($str){
 			return '<div class="alert alert-success">

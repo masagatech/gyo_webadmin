@@ -112,6 +112,7 @@ var currentApi = function( req, res, next ){
 					}
 					else{
 						_user = user[0];
+						
 						_user.is_otp_verified = parseInt( _user.is_otp_verified );
 						
 						callback( null );
@@ -186,6 +187,8 @@ var currentApi = function( req, res, next ){
 							_user.v_imei_number = v_imei_number;
 						}
 						
+						
+						
 						v_token = _user.v_imei_number;
 						var _ins = {
 							'is_onduty' : 0,
@@ -197,11 +200,21 @@ var currentApi = function( req, res, next ){
 							'v_imei_number' : _user.v_imei_number,
 						};
 						
+						
 						if( _user.v_imei_number == null || _user.v_imei_number == '' ){ 
 							_ins.v_imei_number = v_imei_number;
 						}
 						
+						
 						dclass._update( 'tbl_user', _ins, " AND id = '"+_user.id+"' ", function( status, data ){ 
+							
+							/*gnrl._api_response( res, 1, 'succ_login_successfully', {
+								_ins  :_ins,
+								_user : _user,
+								status : status,
+								data : data,
+							}); return;*/
+						
 							if( !status ){
 								gnrl._api_response( res, 0, _message, {} );
 							}
@@ -209,12 +222,17 @@ var currentApi = function( req, res, next ){
 								callback( null );
 							}
 						});
+						
+						
+						
 					},
 					
 					// Take Login Log
 					function( callback ){
 						User.startLog( _user.id, _user.v_role, 'login', function( status, data ){
+							
 							callback( null );
+							
 						});
 					},
 					

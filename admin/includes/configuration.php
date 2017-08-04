@@ -71,6 +71,9 @@ error_reporting( E_ERROR );
 	function _price( $amount ){
 		echo '₹'.round( $amount, 2 );
 	}
+	function _price2( $amount ){
+		return 'INR '.round( $amount, 2 );
+	}
 	function _km( $km ){
 		echo $km.' Km';
 	}
@@ -196,7 +199,8 @@ error_reporting( E_ERROR );
 		'upto_km' => 'Upto X Km',
 		'upto_km_charge' => 'Upto X Km Charge (Per Kilometer)',
 		'after_km_charge' => 'After X Km Charges',
-		'ride_time_charge' => 'Ride Time Charge (Per Minite)',
+		'ride_time_charge' => 'Ride Time Charge (Per Minute)',
+		'ride_time_pick_charge' => 'Ride Time Pick Charge (Per Minute)',
 		'service_tax' => 'Service Tax (In %)',
 		'surcharge' => 'Surcharge (In %)',
 		'cancel_charge_driver' => 'Ride Cancellation Charge (Driver)',

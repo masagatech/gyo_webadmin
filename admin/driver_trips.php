@@ -93,6 +93,7 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 		if(isset($_REQUEST['id']) && $_REQUEST['id']!="") {
 
 			$id = $_REQUEST['id'];
+			
 			$ssql = 
 			"SELECT 
 			
@@ -129,6 +130,13 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 			$row = $row[0];
 			extract( $row );
 			$l_data = json_decode( $l_data, true );
+			// if($_REQUEST['test'] == 'test')
+			// {
+			// 	_P($row);
+			// 	_P($l_data);
+			// 	exit;
+			// }
+
 		
 		}
 	}
@@ -237,7 +245,11 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 					   	
 					   
                         <?php 
-                        if( ($script == 'add' || $script == 'edit') && 1 ){?>
+                        if( ($script == 'add' || $script == 'edit') && 1 ){
+							
+							if( $_REQUEST['D'] ){ unset( $row['l_data'] ); _p( $row ); _p( $l_data ); }
+							
+							?>
 						
 							
 							<style>
@@ -251,18 +263,35 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
                                     <div class="col-md-12">
 										<table class="table table-bordered viewtable" style="width:100%;" >
 											<tr><th class="text-center" colspan="2" ><h4><strong>Ride Information</strong></h4></th></tr>
-											<tr><td width="20%" >Code</td><td width="80%" ><?php echo $v_ride_code;?></td></tr>
+											<tr><td width="20%" >Ride ID</td><td width="80%" ><?php echo $v_ride_code;?></td></tr>
 											<tr><td>Status</td><td><?php echo ucfirst( $e_status );?></td></tr>
-											<tr><td>Paid</td><td><?php echo $i_paid ? 'Yes' : 'No';?></td></tr>
 											<tr><td>Date</td><td><?php echo $gnrl->displaySiteDate( $d_time );?></td></tr>
-											<tr><td>Start</td><td><?php echo $gnrl->displaySiteDate( $d_start );?></td></tr>
-											<tr><td>End</td><td><?php echo $gnrl->displaySiteDate( $d_end );?></td></tr>
+											<tr><td>Start Time</td><td><?php echo $gnrl->displaySiteDate( $d_start );?></td></tr>
+											<tr><td>End Time</td><td><?php echo $gnrl->displaySiteDate( $d_end );?></td></tr>
+											<!--
+											<tr><td>Ride Time</td><td><?php echo $gnrl->displaySiteDate( $l_data['ride_time'] );?></td></tr>
+											<tr><td>Time Added</td><td><?php echo $gnrl->displaySiteDate( $l_data['time_added'] );?></td></tr>
+											-->
+											<tr><td>Paid</td><td><?php echo $i_paid ? 'Yes' : 'No';?></td></tr>
 											<tr><td>Pin</td><td><?php echo substr( $v_pin, 0, 4 )." - ".substr( $v_pin, 4, 4 );?></td></tr>
-											<tr><td>Vehicle Type</td><td><?php echo ucwords( str_replace( '_', ' ', $vehicle_type ) );?></td></tr>
+
+											<tr><td>Track Code</td><td><?php echo $v_ride_code;?></td></tr>
+											<tr><td>Track Link</td><td><a target="_blank" href="<?php echo str_replace( '_track_code_', $v_ride_code, RIDE_TRACK_URL );?>">(Track)</a></td></td></tr>
 											<tr><td>City</td><td><?php echo ucfirst( $l_data['city'] );?></td></tr>
 											
+											<tr><td>Pickup Latitude / Longitude</td><td><?php echo $l_data['pickup_latitude'];?> / <?php echo $l_data['pickup_longitude'];?></td></tr>
 											<tr><td>Pickup Address</td><td><?php echo ucfirst( $l_data['pickup_address'] );?></td></tr>
+											
+											<tr><td>Destination Latitude / Longitude</td><td><?php echo $l_data['destination_latitude'];?> / <?php echo $l_data['destination_longitude'];?></td></tr>
 											<tr><td>Destination Address</td><td><?php echo ucfirst( $l_data['destination_address'] );?></td></tr>
+											
+											<tr><td>Estimate Time</td><td><?php echo $l_data['estimate_time']; ?></td></tr>
+											<tr><td>Estimate KM [In Min]</td><td><?php echo $l_data['estimate_km']; ?></td></tr>
+											
+											<tr><td>Actual Distance</td><td><?php echo ucfirst( $l_data['actual_distance'] );?></td></tr>
+											<tr><td>Actual Time [In Min]</td><td><?php echo $l_data['trip_time_in_min']; ?></td></tr>
+											
+											<tr><td>Vehicle Type</td><td><?php echo ucwords( str_replace( '_', ' ', $vehicle_type ) );?></td></tr>
 											
                                 		</table>
 									</div>
@@ -278,8 +307,8 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 												<td width="80%" ><?php echo $user_vid;?></td>
 											</tr>
 											<tr><td>Name</td><td><?php echo $user_name;?></td></tr>
-											<tr><td>Email</td><td><?php echo $user_email;?></td></tr>
 											<tr><td>Phone</td><td><?php echo $user_phone;?></td></tr>
+											<tr><td>Email</td><td><?php echo $user_email;?></td></tr>
 											<tr><td>Gender</td><td><?php echo ucfirst( $l_data['v_gender'] );?></td></tr>
 										</table>
 									</div>
@@ -297,7 +326,10 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 											<tr><td>Name</td><td><?php echo $driver_name;?></td></tr>
 											<tr><td>Email</td><td><?php echo $driver_email;?></td></tr>
 											<tr><td>Phone</td><td><?php echo $driver_phone;?></td></tr>
+											
+											<tr><td>Vehicle Type</td><td><?php echo $vehicle_type;?></td></tr>
 											<tr><td>Vehicle Number</td><td><?php echo $vehicle_number;?></td></tr>
+											
 										</table>
 									</div>
 								</div>
@@ -423,12 +455,19 @@ function distance($lat1, $lon1, $lat2, $lon2, $unit) {
 										<table class="table table-bordered viewtable" style="width:100%;" >
 											<tr><th class="text-center" colspan="3" ><h4><strong>Payment Information</strong></h4></th></tr>
 											<tr>
-												<td width="20%" >Paid By Wallet</td>
-												<td width="80%" ><?php echo _price( $l_data['ride_paid_by_wallet'] );?></td>
+												<td width="20%" >Payment Mode</td>
+												<td width="80%" ><?php echo "Cash/Wallet";?></td>
 											</tr>
 											<tr>
-												<td>Paid By Cash</td>
-												<td><?php echo _price( $l_data['ride_paid_by_cash'] );?></td>
+												<td>Paid through Wallet</td><td><?php echo _price( $l_data['ride_paid_by_wallet'] );?></td>
+											</tr>
+											<tr>
+												<td>Paid through Cash </td><td><?php echo _price( $l_data['ride_paid_by_cash'] );?></td>
+											</tr>
+											
+											<tr>
+												<td>Final Amount</td>
+												<td><?php echo _price( $l_data['final_amount'] );?></td>
 											</tr>
 										</table>
 									</div>

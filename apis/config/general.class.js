@@ -194,8 +194,9 @@ var gnrl = {
 	},
 	
 	_curr_date : function(){
+		return new Date();
 		// return new Date( new Date().toLocaleString( "en-US", { timeZone: "Europe/London" }) );
-		return new Date( new Date().toLocaleString( "en-US", { timeZone: "Asia/Kolkata" }) );
+		// return new Date( new Date().toLocaleString( "en-US", { timeZone: "Asia/Kolkata" }) );
 	},
 	
 	_db_ymd : function( format = '', DT = '' ){
@@ -279,7 +280,9 @@ var gnrl = {
 	
 	// Get Datetime, Y-m-d H:i:s
 	_db_datetime : function(){
-		return gnrl._db_ymd();
+		return new Date().toISOString();
+		//return new Date();
+		//return gnrl._db_ymd();
 	},
 
 	_getLangWiseData : function( data, lang, lang_columns ){
@@ -319,14 +322,29 @@ var gnrl = {
 	},
 	
 	// Get TimeStamp
+	/*_timestamp : function( datestr ){
+		if( datestr == undefined ){ datestr = ''; }
+		else if( datestr == null ){ datestr = ''; }
+		else if( datestr == '' ){ datestr = ''; }
+		
+		datestr = datestr ? datestr.toString() : '';
+		
+		// return gnrl._isNull( datestr ) ? '' : new Date( new Date( datestr ).toLocaleString( "en-US", { timeZone: "Asia/Kolkata" }) ).getTime();
+		
+		return gnrl._isNull( datestr ) ? '' : new Date( datestr ).getTime();
+	},*/
+	
+	
 	_timestamp : function( datestr ){
 		if( datestr == undefined ){ datestr = ''; }
 		else if( datestr == null ){ datestr = ''; }
 		else if( datestr == '' ){ datestr = ''; }
 		
 		datestr = datestr ? datestr.toString() : '';
-		return gnrl._isNull( datestr ) ? '' : new Date( datestr ).getTime();
+		return gnrl._isNull( datestr ) ? '' : ( new Date( datestr ).getTime() );
+		
 	},
+	
 
 	_dateDiff : function(_start, _end){
 

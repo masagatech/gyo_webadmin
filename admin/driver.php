@@ -310,7 +310,7 @@ $gnrl->check_login();
 												<input class="form-control" type="file" name="v_image" style="height:auto;"  >
 												<?php 
 													if( $putFile = _is_file( $folder, $v_image ) ){ //echo $putFile; ?>
-													<a href="javascript:;"><img class="edit_img gallery-items" src="<?php echo $putFile;?>" ></a>
+													<a href="javascript:;"><img class="edit_img gallery-items" src="<?php echo $putFile;?>" style="max-width: 100px;max-height: 100px" ></a>
 													<input type="hidden" name="old_files[v_image]" value="<?php echo $v_image; ?>">
 												<?php } ?>
 											</div>
@@ -437,7 +437,7 @@ $gnrl->check_login();
 													<input class="form-control" type="file" id="<?php echo $kk;?>" name="<?php echo $kk;?>" style="height:auto;"  >
 													<?php 
 													if( $putFile = _is_file( $folder, $$kk ) ){ //echo $putFile; ?>
-														 <a href="javascript:;" ><img class="edit_img gallery-items" src="<?php echo $putFile;?>" ></a>
+														 <a href="javascript:;" ><img class="edit_img gallery-items" src="<?php echo $putFile;?>"  style="max-width: 125px;max-height: 125px"></a>
 														<input type="hidden" name="old_files[<?php echo $kk;?>]" value="<?php echo $$kk; ?>">
 													<?php } ?>
 												</div>
@@ -764,7 +764,7 @@ $gnrl->check_login();
 																if( $putFile = _is_file( $folder, $row['v_image'] ) ){ //echo $putFile; ?>
 																	<!-- <a href="javascript:;" onclick="open_Image('<?php echo $putFile;?>');" ><img class="edit_img" name="" id="v_image<?php echo $row['id']; ?>" src="<?php echo $putFile;?>" ></a> -->
 																	<a href="javascript:;" >
-																		<img class="edit_img  gallery-items" name="" id="v_image<?php echo $row['id']; ?>" src="<?php echo $putFile;?>" >
+																		<img class="edit_img  gallery-items" name="" id="v_image<?php echo $row['id']; ?>" src="<?php echo $putFile;?>" style="max-width: 100px;max-height: 100px" >
 																	</a>
 																<?php }else{ ?>
 																	<span class="text-danger">No Image.</span>

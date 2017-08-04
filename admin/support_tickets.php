@@ -58,6 +58,7 @@ $gnrl->check_login();
 				
 				$user = $dclass->select( '*', 'tbl_user'," AND id = '".$row['i_user_id']."'");
 				$user = $user[0];
+				
 				$user['l_data'] = json_decode( $user['l_data'], true );
 
 				$isSendEmail = $gnrl->_EMAIL( array(

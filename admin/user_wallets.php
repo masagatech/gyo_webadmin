@@ -14,75 +14,75 @@ $gnrl->check_login();
     $script = ( isset( $_REQUEST['script'] ) && ( $_REQUEST['script'] == 'add' || $_REQUEST['script'] == 'edit' || $_REQUEST['script'] == 'view' || $_REQUEST['script'] == 'manual' ) ) ? $_REQUEST['script'] : "";
     
     if( isset( $_REQUEST['submit_btn'] ) && $_REQUEST['submit_btn'] == 'manual_submit' ){
-		
+        
         $i_wallet_id = $_REQUEST['id'];
         
-		## Sum of all transaction 
-        $ssql 			= "SELECT * from ".$table." where id = ".$i_wallet_id." ";
-        $restepm 		= $dclass->query($ssql);
-        $wallet_data 	= $dclass->fetchResults($restepm);
-        $wallet_data	= $wallet_data[0];
+        ## Sum of all transaction 
+        $ssql           = "SELECT * from ".$table." where id = ".$i_wallet_id." ";
+        $restepm        = $dclass->query($ssql);
+        $wallet_data    = $dclass->fetchResults($restepm);
+        $wallet_data    = $wallet_data[0];
         // _p( $wallet_data ); exit;
         
         if( $amount < 0 ){
             
         } 
-		else if( $amount > 0 ){
+        else if( $amount > 0 ){
             
         }
-		else{
+        else{
             $gnrl->redirectTo( $page.".php?succ=0&msg=wallet_error&a=2&script=manual&id=".$_REQUEST['id'] );
         }
         $ins = array(
-            'i_user_id' 	=> $wallet_data['i_user_id'],
-            'v_type' 		=> 'custom',
-            'f_amount'		=> $amount,
-            'l_data'		=> json_encode( $l_data ),
-            'd_added' 		=> date('Y-m-d H:i:s'),
-            'i_wallet_id' 	=> $i_wallet_id,
+            'i_user_id'     => $wallet_data['i_user_id'],
+            'v_type'        => 'custom',
+            'f_amount'      => $amount,
+            'l_data'        => json_encode( $l_data ),
+            'd_added'       => date('Y-m-d H:i:s'),
+            'i_wallet_id'   => $i_wallet_id,
         );
         $id = $dclass->insert( $table2, $ins );
-		
-		##Sum of all transaction 
-		$ssql 		= "SELECT SUM( f_amount ) as TOTAL from ".$table2." where i_wallet_id = ".$i_wallet_id." ";
-		$restepm 	= $dclass->query($ssql);
-		$row 		= $dclass->fetchResults($restepm);
-		$row 		= $row[0];
-		
-		## update the wallet
-		$ssql2 		= "UPDATE ".$table." SET f_amount = ".$row['total']." WHERE id = ".$i_wallet_id." ";
-		$restepm2 	= $dclass->update_sql( $ssql2 );
-		
-		#get user data
-		$user_info = $dclass->select( '*', 'tbl_user', " AND id = '".$wallet_data['i_user_id']."' " );
-		$user_info = $user_info[0];
-		
-		$isSMSSend = $gnrl->_SMS( array(
-			'_to' 			=> $user_info['v_phone'],
-			'_key' 			=> 'user_manual_wallet_update',
-			'_body' 		=> '',
-			'_user_id' 		=> $user_info['id'],
-			'_user_lang' 	=> $user_info['lang'],
-			'_replace_arr' 	=> array(
-				'[user_name]' => $user_info['v_name'],
-				'[free_text]' => $l_data['description'],
-			),
-		) );
-		
-		$isSendEmail = $gnrl->_EMAIL( array(
-			'_to' 			=> $user_info['v_email'],
-			'_key' 			=> 'user_manual_wallet_update',
-			'_subject' 		=> '',
-			'_body' 		=> '',
-			'_user_id' 		=> $user_info['id'],
-			'_user_lang' 	=> $user_info['lang'],
-			'_replace_arr' 	=> array(
-				'[user_name]' => $user_info['v_name'],
-				'[free_text]' => $l_data['description'],
-			),
-		) );
-		
-		$gnrl->redirectTo($page.".php?succ=1&msg=wallet_upd");
+        
+        ##Sum of all transaction 
+        $ssql       = "SELECT SUM( f_amount ) as TOTAL from ".$table2." where i_wallet_id = ".$i_wallet_id." ";
+        $restepm    = $dclass->query($ssql);
+        $row        = $dclass->fetchResults($restepm);
+        $row        = $row[0];
+        
+        ## update the wallet
+        $ssql2      = "UPDATE ".$table." SET f_amount = ".$row['total']." WHERE id = ".$i_wallet_id." ";
+        $restepm2   = $dclass->update_sql( $ssql2 );
+        
+        #get user data
+        $user_info = $dclass->select( '*', 'tbl_user', " AND id = '".$wallet_data['i_user_id']."' " );
+        $user_info = $user_info[0];
+        
+        $isSMSSend = $gnrl->_SMS( array(
+            '_to'           => $user_info['v_phone'],
+            '_key'          => 'user_manual_wallet_update',
+            '_body'         => '',
+            '_user_id'      => $user_info['id'],
+            '_user_lang'    => $user_info['lang'],
+            '_replace_arr'  => array(
+                '[user_name]' => $user_info['v_name'],
+                '[free_text]' => $l_data['description'],
+            ),
+        ) );
+        
+        $isSendEmail = $gnrl->_EMAIL( array(
+            '_to'           => $user_info['v_email'],
+            '_key'          => 'user_manual_wallet_update',
+            '_subject'      => '',
+            '_body'         => '',
+            '_user_id'      => $user_info['id'],
+            '_user_lang'    => $user_info['lang'],
+            '_replace_arr'  => array(
+                '[user_name]' => $user_info['v_name'],
+                '[free_text]' => $l_data['description'],
+            ),
+        ) );
+        
+        $gnrl->redirectTo($page.".php?succ=1&msg=wallet_upd");
             
     }
 
@@ -508,7 +508,8 @@ $gnrl->check_login();
                                 
 
                                 $ssql = "SELECT t1.*,
-                                            t2.v_name as user_name
+                                            t2.v_name as user_name,
+                                            t2.v_id as user_id
                                         FROM 
                                             ".$table."  t1
                                         LEFT JOIN tbl_user as t2 ON t1.i_user_id = t2.id
@@ -578,6 +579,7 @@ $gnrl->check_login();
                                             <table class="table table-bordered" id="datatable" style="width:100%;" >
                                                 <?php
                                                 echo $gnrl->renderTableHeader(array(
+                                                    't2.v_id' => array( 'order' => 1, 'title' => 'User ID' ),
                                                     't2.v_name' => array( 'order' => 1, 'title' => 'Name' ),
                                                     't1.v_wallet_type' => array( 'order' => 1, 'title' => 'Wallet Type' ),
                                                     't1.f_amount' => array( 'order' => 1, 'title' => 'Amount' ),
@@ -592,6 +594,7 @@ $gnrl->check_login();
                                                             
                                                             ?>
                                                             <tr>
+                                                                <td><?php echo $row['user_id'];?></td>
                                                                 <td><?php echo $row['user_name'];?></td>
                                                                 <td><?php echo $row['v_wallet_type'];?></td>
                                                                 <td><?php echo _price($row['f_amount']);?></td>

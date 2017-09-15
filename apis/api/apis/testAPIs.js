@@ -3,6 +3,7 @@ var validator = require('validator');
 var md5 = require('md5');
 var http = require('http');
 var FCM = require('fcm-node');
+var crypto = require('crypto');
 
 
 var async = require('async');
@@ -229,6 +230,76 @@ var currentApi = function saveDriverInfo( req, res, done ){
 		], 
 		function( error, results ){
 			gnrl._api_response( res, 1, '', _row );
+		});
+		
+	}
+	
+	
+	else if( action == 'getHash' ){
+		
+		var _row = {};
+		
+		
+		async.series([
+			
+			function( callback ){
+				
+				PayuBiz.getHashes({
+					txnid : 'fd3e847h2',
+					amount : '10.00',
+					productinfo : 'tshirt100',
+					firstname : 'Ankit',
+					email : 'test@gmail.com',
+					user_credentials : '9999999999',
+					udf1 : '',
+					udf2 : '',
+					udf3 : '',
+					udf4 : '',
+					udf5 : '',
+					offerKey : '',
+					cardBin : '',
+				} , function( data ){
+					_row = data;
+					callback( null );
+				})
+			},
+			
+		], 
+		function( error, results ){
+			gnrl._api_response( res, 1, '', _row );
+		});
+		
+	}
+	
+	else if( action == 'databaseRender' ){
+		
+		/*var _data = {}
+		async.series([
+			function( callback ){
+				var _q = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';";
+				dclass._query( _q, function( status, data ){
+					_data = data;
+					callback( null );
+				});
+			},
+		], 
+		function( error, results ){
+			gnrl._api_response( res, 1, '', _data );
+		});*/
+		
+		var _data = {}
+		async.series([
+			function( callback ){
+				var table = 'tbl_support_types';
+				var _q = "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '"+table+"';";
+				dclass._query( _q, function( status, data ){
+					_data = data;
+					callback( null );
+				});
+			},
+		], 
+		function( error, results ){
+			gnrl._api_response( res, 1, '', _data );
 		});
 		
 	}

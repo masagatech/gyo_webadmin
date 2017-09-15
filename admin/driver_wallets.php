@@ -252,8 +252,13 @@ $gnrl->check_login();
                             }
                             
                             
-                           $ssql = "SELECT * FROM tbl_wallet_transaction WHERE true AND i_wallet_id = ".$_REQUEST['id']." ".$wh;
-                           
+                           $ssql = "SELECT wt.* ,
+                                        ( CASE WHEN (wt.v_type = 'referral') THEN ( select v_id from tbl_user where id = (wt.l_data->>'referred_user_id')::int )::text ELSE '0' END ) AS referral_u_id 
+
+                                    FROM tbl_wallet_transaction wt
+                                        WHERE true 
+                                    AND wt.i_wallet_id = ".$_REQUEST['id']." ".$wh;
+                               
 
                             $sortby = $_REQUEST['sb'] = ( $_REQUEST['st'] ? $_REQUEST['sb'] : 'd_added' );
                             $sorttype = $_REQUEST['st'] = ( $_REQUEST['st'] ? $_REQUEST['st'] : 'DESC' );            
@@ -265,7 +270,12 @@ $gnrl->check_login();
                             $sqltepm = $ssql." ORDER BY ".$sortby." ".$sorttype." OFFSET ".$limitstart." LIMIT ".$limit;
                             $restepm = $dclass->query($sqltepm);
                             $row_Data = $dclass->fetchResults($restepm);
-                            
+                            if($_REQUEST['dd'] == '1'){
+                                echo $sqltepm;
+                                _P($row_Data);
+                                exit;
+                                
+                            }
                             
                             
                             ?>
@@ -328,7 +338,9 @@ $gnrl->check_login();
                                                                    
                                                                     <a href="driver_trips.php?a=2&script=edit&v_ride_code=<?php echo $l_data['ride_code']; ?>" target="_blank" >Ride : <?php echo $l_data['ride_code']; ?></a>
                                                                 <?php }
-                                                                else{
+                                                                elseif ($row['v_type'] == 'referral' ) {
+                                                                    echo "Referral ID : ".$row['referral_u_id'];    
+                                                                }else{
                                                                     echo $l_data['info'] ? nl2br( $l_data['info'] ) : '-';
                                                                 }?>
                                                             </td>
@@ -638,7 +650,6 @@ $gnrl->check_login();
     </div>
     <div class="md-overlay"></div>
 <?php include('_scripts.php');?>
-
 <?php include('jsfunctions/jsfunctions.php');?>
 </body>
 </html>

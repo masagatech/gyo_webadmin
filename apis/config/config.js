@@ -37,7 +37,7 @@ var express = require('express');
 	}
 	
 	// Live Mode
-	if( 1 ){
+	if( 0 ){
 		var _cnf = {
 			_live : 1,
 			_lang : 'en',

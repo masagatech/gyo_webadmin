@@ -34,6 +34,8 @@ var currentApi = function( req, res, next ){
 				_q += " AND a.i_delete = '0' AND a.e_status = 'active' ";
 				_q += " AND now() BETWEEN a.d_start_date AND a.d_end_date ";
 				_q += " AND ( SELECT CAST(b.id AS TEXT) from tbl_city as b where b.i_delete = '0' AND lower(b.v_name) = lower('"+city+"') ) = ANY (string_to_array(a.i_city_ids,',')) ";
+				_q += " AND a.id NOT IN ( SELECT COALESCE( ( l_data->'charges'->>'promocode_id' )::numeric, 0 ) AS promocode_id FROM tbl_ride WHERE i_user_id = '"+login_id+"' ) ";
+				
 				
 				dclass._query( _q, function( status, codes ){
 					if( !status ){

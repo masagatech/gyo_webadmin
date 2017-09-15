@@ -306,6 +306,47 @@ if($_REQUEST['page'] == 'outstanding_view'){
 			$pdf_str .= "</tbody></table>";
 			
 }
+
+if($_REQUEST['page'] == 'referred'){
+
+	$pdf_str = "<table class='table table-bordered' id='datatable' style='width:100%;' >
+            <thead>
+            	<tr>
+            		<td>Customer/Driver ID</td>
+            		<td>Customer/Driver Name</td>
+            		<td>Referred By ID</td>
+            		<td>Referred By Name</td>
+            		<td>Referral Amount</td>
+            		<td>Type</td>
+            	</tr>
+            </thead>
+            <tbody>";
+           
+			if( $nototal > 0 ){
+					$i = 0;
+					foreach( $reportData as $row ){
+			        	$i++;
+			        	$l_data = json_decode($row['l_data'],true);
+
+			        	// if($row['is_onride']== 0){ 
+			        	// 	$is_onride ='NO'
+			        	// }
+			        	 $pdf_str .= "<tr>
+			        	 	<td>".$row['v_id']."</td>
+							<td>".$row['v_name']."</td>
+							<td>".$row['referral_user_id']."</td>
+							<td>".$row['referral_user_name']."</td>
+							<td>".$l_data['referral_amount']."</td>
+							<td>".$l_data['referral_wallet_apply']."</td>
+			            </tr>";
+			        }
+			}
+			else{
+			       $pdf_str .=   "<tr><td colspan='8'>No Record found.</td></tr>";
+			}
+			$pdf_str .= "</tbody></table>";
+			
+}
 $FileName = $gnrl->seoText( $_REQUEST['page_title'] ).'-'.date('Y-m-d').'.pdf';
 
 function make_pdf( $filename = "", $file_data = "" ){

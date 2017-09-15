@@ -104,6 +104,7 @@ var apiRouter = function( app ){
 	app.all(gnrl._api_base+'getNotifications', _is_login, require('./apis/getNotifications') ); // Not Checked
 	
 	app.all(gnrl._api_base+'getPaymentMethods', _is_login, require('./apis/getPaymentMethods') ); // Not Checked
+	app.all(gnrl._api_base+'getPayuBizHashes', _is_login, require('./apis/getPayuBizHashes') ); // Not Checked
 	
 	app.all(gnrl._api_base+'getPromotionCodes', _is_login, require('./apis/getPromotionCodes') );
 	app.all(gnrl._api_base+'getReferralCode', _is_login, require('./apis/getReferralCode') );

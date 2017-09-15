@@ -104,6 +104,17 @@ if( $_REQUEST['page'] == 'outstanding_view' ){
     );
 }
 
+if( $_REQUEST['page'] == 'referred' ){
+	$titleArr = array(
+       	'v_id' => 'Customer/Driver ID',
+		'v_name' => 'Customer/Driver Name',
+		'referral_user_id' => 'Referred By ID',
+		'referral_user_name' => 'Referred By Name',
+		'referral_amount' => 'Referral Amount',
+		'referral_wallet_apply' => 'Type',
+    );
+}
+
 
 $FileName = $gnrl->seoText( $_REQUEST['page_title'] ).'-'.date('Y-m-d').'.xlsx';
 
@@ -136,6 +147,9 @@ foreach( $titleArr as $value ){
 
 $count = 2;
 foreach( $reportData as $rowValue ){
+	// _P($rowValue);
+	// exit;
+	$l_data = json_decode($rowValue['l_data'],true);
 	$char = "A";
 	// if($_REQUEST['page'] == 'outstanding'){
 	// 	if(isset($rowValue['bank_info']) && !empty($rowValue['bank_info'])){
@@ -144,12 +158,23 @@ foreach( $reportData as $rowValue ){
 	// }
 	foreach( $titleArr as $titleKey => $titleValue ){
 
-		// if($_REQUEST['page'] == 'outstanding'){
-		// 	if(isset($rowValue['bank_info']) && !empty($rowValue['bank_info'])){
-		// 		$objPHPExcel->getActiveSheet()->SetCellValue( $char.$count, $bank_info[$titleKey] );
-		// 	}
-		// }
-		$objPHPExcel->getActiveSheet()->SetCellValue( $char.$count, $rowValue[$titleKey] );
+		if( $_REQUEST['page'] == 'referred' ){
+
+			if($titleKey  == 'referral_amount' || $titleKey == 'referral_wallet_apply'){
+
+				$objPHPExcel->getActiveSheet()->SetCellValue( $char.$count, $l_data[$titleKey] );		
+
+			}else{
+
+				$objPHPExcel->getActiveSheet()->SetCellValue( $char.$count, $rowValue[$titleKey] );
+
+			}
+
+		}else{
+
+			$objPHPExcel->getActiveSheet()->SetCellValue( $char.$count, $rowValue[$titleKey] );
+
+		}
 		$tempStyle = array(
 			'fill' => array(
 				'type' => PHPExcel_Style_Fill::FILL_SOLID, // 'color' => array( 'rgb' => 'FF0000' ),

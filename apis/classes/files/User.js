@@ -56,6 +56,8 @@ var currClass = function( params ){
 			var referral_user_id 		= parseInt( params.referral_user_id );
 			var referral_wallet_type 	= params.referral_wallet_type;
 			
+			var wallet_amount = 0;
+			
 			if( !( referral_code && referral_user_id && referral_amount ) ){
 				return cb( 0, {} );
 			}
@@ -136,6 +138,7 @@ var currClass = function( params ){
 				// Refresh Wallet
 				function( callback ){
 					Wallet.refreshWallet( referral_user.wallet_id, function( amount ){ 
+						wallet_amount = amount;
 						callback( null );
 					});
 				},
@@ -151,6 +154,8 @@ var currClass = function( params ){
 							'[user_name]' : referral_user.v_name,
 							'[amount]' 	: referral_amount,
 							'[from]' : Wallet.getPaymentModeName( 'referral' ),
+							//'[balance]' : wallet_amount,
+							//'[transaction_id]' : '-',
 						},
 					}, function( error_sms, error_info ){
 						callback( null );
@@ -167,6 +172,8 @@ var currClass = function( params ){
 							'[user_name]' : referral_user.v_name,
 							'[amount]' 	: referral_amount,
 							'[from]' : Wallet.getPaymentModeName( 'referral' ),
+							//'[balance]' : wallet_amount,
+							//'[transaction_id]' 	: '-',
 						},
 					}, function( error_mail, error_info ){
 						callback( null );

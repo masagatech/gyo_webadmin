@@ -282,6 +282,54 @@ $gnrl->check_login();
                                                     
                                                 </div>
                                             <?php }
+											
+											else if($v_type == 'payubiz'){ 
+
+													
+													$payu_money_arr=array(
+                                                        'merchantId' => 'Merchant Id',
+														'key' => 'Key',
+														'salt' => 'Salt',
+														'productName' => 'Product Name',
+														'firstName' => 'First Name',
+														'email' => 'Email',
+														'phone' => 'Phone',
+                                                        'sUrl' => 'SUrl',
+                                                        'fUrl' => 'FUrl',
+                                                    );
+                                                    
+                                                    
+                                                ?>
+                                                
+                                                <div class="content">
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <h3> Live Mode </h3>
+                                                            <?php 
+                                                            foreach ($payu_money_arr as $p_key => $p_value) { ?>
+                                                                <div class="form-group">
+                                                                <label><?php echo $p_value; ?></label>
+                                                                <input type="text"  class="form-control" name="l_data[live][<?php echo $p_key ?>]" value="<?php echo $l_data['live'][$p_key]; ?>"  />
+                                                            </div>
+                                                            <?php }
+                                                            ?>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <h3> SandBox Mode </h3>
+                                                            <?php 
+                                                            foreach ($payu_money_arr as $p_key => $p_value) { ?>
+                                                                <div class="form-group">
+                                                                <label><?php echo $p_value; ?></label>
+                                                                <input type="text"  class="form-control" name="l_data[sandbox][<?php echo $p_key ?>]" value="<?php echo $l_data['sandbox'][$p_key]; ?>"  />
+                                                            </div>
+                                                            <?php }
+                                                            ?>
+                                                        </div>
+
+                                                    </div>
+                                                    
+                                                </div>
+                                            <?php }
                                             ?>
                                            <div class="row">
                                                 <div class="col-md-12">

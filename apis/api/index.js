@@ -71,7 +71,9 @@ var apiRouter = function(app) {
     };
 
     app.all(gnrl._api_base + 'addMoney', _is_login, require('./apis/addMoney'));
-    app.get(gnrl._api_base + 'api-list', function(req, res) { res.sendFile(path.join(__dirname + '/apis/apiList.html')); });
+    app.get(gnrl._api_base + 'api-list', function(req, res) {
+        res.sendFile(path.join(__dirname + '/apis/apiList.html'));
+    });
     app.all(gnrl._api_base + 'buzzAction', _is_login, require('./apis/buzzAction'));
     app.all(gnrl._api_base + 'cancelRide', _is_login, require('./apis/cancelRide'));
     app.all(gnrl._api_base + 'confirmRide', _is_login, require('./apis/confirmRide'));

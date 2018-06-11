@@ -32,14 +32,18 @@ else {
         _port: 3000,
 
         _db_conn: {
-            host: 'localhost',
-            database: 'db_goyo',
+            host: '192.168.1.108',
+            // host: 'localhost',
+            // host: '35.154.230.244',
+            database: 'goyo_school',
             user: 'postgres',
-            password: 'admin',
+            password: '123',
             port: 5432,
         },
 
-        _db_conn_str: 'postgres://postgres:admin@localhost:5432/db_goyo',
+        _db_conn_str: 'postgres://postgres:123@192.168.1.108:5432/goyo_school',
+        // _db_conn_str: 'postgres://postgres:123@localhost:5432/goyo_school',
+        // _db_conn_str: 'postgres://postgres:sa@123@localhost:5432/goyo_app',
     };
 }
 
@@ -61,7 +65,7 @@ if (0) {
             port: 5432,
         },
 
-        _db_conn_str: 'postgres://postgres:sa@123@35.154.230.244:5432/goyo_app',
+        _db_conn_str: 'postgres://postgres:sa@123@localhost:5432/goyo_app',
     };
 }
 

@@ -21,6 +21,7 @@ var currentApi = function(req, res, next) {
     var v_device_token = gnrl._is_undf(params.v_device_token);
     var v_imei_number = gnrl._is_undf(params.v_imei_number);
     var flag = gnrl._is_undf(params.flag);
+    var v_src = gnrl._is_undf(params.v_src);
 
     if (!v_username) {
         _status = 0;

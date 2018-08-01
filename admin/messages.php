@@ -50,7 +50,7 @@ $gnrl->check_login();
             ##SEND SMS CODE
             // $url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user=Goyo&pwd=goyo123&sender=GoYooo';
             $url = 'http://sms.cell24x7.com:1111/mspProducerM/sendSMS?user='.SMS_USERNAME.'&pwd='.SMS_PASSWORD.'&sender='.SMS_SENDERNAME.'';
-            $url .= '&mt=2';
+            $url .= '&mt=0';
             $url .= '&mobile='.$user_row['v_phone'].'';
             $url .= '&msg='.$l_data['j_message']['en'].'';  //8758857048
 

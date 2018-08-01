@@ -884,7 +884,7 @@ $mail = new PHPMailer();
 			$url .= '?user='.SMS_USERNAME;
 			$url .= '&pwd='.SMS_PASSWORD;
 			$url .= '&sender='.SMS_SENDERNAME;
-			$url .= '&mt=2';
+			$url .= '&mt=0';
             $url .= '&mobile='.$options['_to'];
             $url .= '&msg='.urlencode( $_body );
 			

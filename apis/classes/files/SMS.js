@@ -114,7 +114,7 @@ var currClass = function(params) {
                     url += '?user=' + _result.sms.sms_username;
                     url += '&pwd=' + _result.sms.sms_password;
                     url += '&sender=' + _result.sms.sms_sendername;
-                    url += '&mt=2';
+                    url += '&mt=0';
                     url += '&mobile=' + _to;
                     url += '&msg=' + _result.sms.j_sms;
                     url = url.replace(/ /g, "%20");
